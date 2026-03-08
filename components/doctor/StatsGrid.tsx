@@ -85,7 +85,7 @@ export function StatsGrid({ counts, selectedStatus, onSelectStatus }: StatsGridP
                 onPress={() => handleSelect('stable')}
             />
             <StatCard
-                label="Respondido"
+                label="Finalizados"
                 count={counts?.finished || 0}
                 color="gray"
                 isSelected={selectedStatus === 'finished'}

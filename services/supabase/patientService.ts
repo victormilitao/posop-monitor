@@ -115,26 +115,18 @@ export class SupabasePatientService implements IPatientService {
         const fakeEmail = `${data.cpf}@paciente.app`;
 
         // 1. Create the patient using a database RPC to bypass GoTrue's email ratelimit
+        // The RPC also sets cpf, sex, and phone on the profile (bypasses RLS via SECURITY DEFINER)
         const { data: newPatientId, error: authError } = await (supabase as any).rpc('create_patient_bypass', {
             patient_email: fakeEmail,
             patient_password: 'Password123!', // Paciente vai usar acesso via OTP depois
-            patient_name: data.name
+            patient_name: data.name,
+            patient_cpf: data.cpf,
+            patient_sex: data.sex,
+            patient_phone: data.phone || null
         });
 
         if (authError) throw authError;
-        if (!newPatientId) throw new Error('N\u00e3o foi poss\u00edvel criar o usu\u00e1rio do paciente');
-
-        // Update profiles with all patient fields
-        await supabase
-            .from('profiles')
-            .update({
-                full_name: data.name,
-                role: 'patient',
-                cpf: data.cpf,
-                sex: data.sex,
-                phone: data.phone || null
-            })
-            .eq('id', newPatientId);
+        if (!newPatientId) throw new Error('Não foi possível criar o usuário do paciente');
 
         // 3. Create the surgery
         const { data: surgeryData, error: surgeryError } = await supabase
