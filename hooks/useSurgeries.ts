@@ -1,4 +1,5 @@
-import { useMutation, UseMutationOptions, useQuery, UseQueryOptions } from '@tanstack/react-query';
+import { useMutation, UseMutationOptions, useQuery, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
 import { surgeryService } from '../services';
 import { SurgeryWithDetails } from '../services/types';
 import { Database } from '../types/supabase';
@@ -62,4 +63,20 @@ export const useCreateSurgery = (
     mutationFn: (data) => surgeryService.createSurgery(data),
     ...options
   });
+};
+
+export const useAutoFinalizeSurgeries = (doctorId: string | undefined) => {
+  const queryClient = useQueryClient();
+  const hasRun = useRef(false);
+
+  useEffect(() => {
+    if (!doctorId || hasRun.current) return;
+    hasRun.current = true;
+
+    surgeryService.finalizeSurgeriesPastRecovery(doctorId).then(() => {
+      queryClient.invalidateQueries({ queryKey: ['surgeries', 'doctor', doctorId] });
+    }).catch((err) => {
+      console.error('Error auto-finalizing surgeries:', err);
+    });
+  }, [doctorId, queryClient]);
 };

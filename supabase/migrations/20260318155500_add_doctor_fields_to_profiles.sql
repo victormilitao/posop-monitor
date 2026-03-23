@@ -1,0 +1,2 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS crm TEXT UNIQUE;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS phone_personal TEXT;

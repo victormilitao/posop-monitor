@@ -34,6 +34,13 @@ export default function PatientDashboard() {
     const handleDailyReportPress = async () => {
         if (!session?.user.id) return;
 
+        // Ensure patient waits until the next day
+        const currentDayOfSurgery = Math.max(0, dashboardData?.daysSinceSurgery || 0);
+        if (currentDayOfSurgery < 1) {
+            Alert.alert('Aguarde', 'O questionário estará disponível a partir do dia seguinte ao cadastro da cirurgia.');
+            return;
+        }
+
         try {
             // Check if report for today already exists
             const reports = await reportService.getPatientReports(session.user.id);

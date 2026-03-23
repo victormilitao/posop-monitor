@@ -10,7 +10,7 @@ interface PatientListItemProps {
     surgeryDate: string;
     day: number;
     status: PatientStatus;
-    lastUpdate: string;
+    lastResponseDate: string | null;
     alerts?: string[];
     sex?: string | null;
     onPress: () => void;
@@ -21,7 +21,7 @@ export function PatientListItem({
     surgeryDate,
     day,
     status,
-    lastUpdate,
+    lastResponseDate,
     alerts = [],
     sex,
     onPress
@@ -41,7 +41,7 @@ export function PatientListItem({
         badgeVariant = 'warning';
     } else if (status === 'finished') {
         statusColor = '#3b82f6'; // blue
-        statusLabel = 'Respondido';
+        statusLabel = 'Finalizado';
         badgeVariant = 'success';
     } else {
         badgeVariant = 'success'; // stable is green
@@ -75,17 +75,26 @@ export function PatientListItem({
                     </View>
                 )}
 
-                <View className="flex-row justify-between items-center mt-1">
-                    <View className="flex-row items-center">
-                        <View className={`w-2 h-2 rounded-full mr-2`} style={{ backgroundColor: statusColor }} />
-                        <Text className="text-gray-600 text-sm">{statusLabel}</Text>
-                        {status === 'finished' && <CheckCircle size={14} color="#3b82f6" style={{ marginLeft: 4 }} />}
+                {status !== 'finished' && (
+                    <View className="flex-row justify-between items-center mt-1">
+                        {lastResponseDate ? (
+                            <View className="flex-row items-center">
+                                <View className={`w-2 h-2 rounded-full mr-2`} style={{ backgroundColor: statusColor }} />
+                                <Text className="text-gray-600 text-sm">{statusLabel}</Text>
+                            </View>
+                        ) : (
+                            <View />
+                        )}
+                        <View className="flex-row items-center">
+                            <Text className="text-gray-400 text-xs mr-2">
+                                {lastResponseDate
+                                    ? `Última resposta em ${new Date(lastResponseDate + 'T00:00:00').toLocaleDateString('pt-BR')}`
+                                    : 'Sem respostas'}
+                            </Text>
+                            <ChevronRight size={16} color="#9ca3af" />
+                        </View>
                     </View>
-                    <View className="flex-row items-center">
-                        <Text className="text-gray-400 text-xs mr-2">Atualizado: {lastUpdate}</Text>
-                        <ChevronRight size={16} color="#9ca3af" />
-                    </View>
-                </View>
+                )}
             </Card>
         </TouchableOpacity>
     );

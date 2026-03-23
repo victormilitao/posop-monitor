@@ -13,6 +13,7 @@ export interface SurgeryWithDetails extends Surgery {
     patient: Pick<Profile, 'full_name' | 'email' | 'phone' | 'sex'>;
     doctor: Pick<Profile, 'full_name'>;
     surgery_type: Pick<SurgeryType, 'name' | 'description' | 'expected_recovery_days'>;
+    lastResponseDate?: string | null;
 }
 
 export interface PatientDashboardData {
@@ -29,7 +30,7 @@ export interface PatientListItem {
     surgeryType: string;
     day: number;
     status: 'active' | 'completed' | 'cancelled';
-    lastUpdate: string;
+    lastResponseDate: string | null;
     alerts?: string[];
 }
 
@@ -59,6 +60,7 @@ export interface ISurgeryService {
         surgeryDate: string;
         notes?: string;
     }): Promise<Surgery>;
+    finalizeSurgeriesPastRecovery(doctorId: string): Promise<number>;
 }
 
 export type Question = Database['public']['Tables']['questions']['Row'];
@@ -94,4 +96,16 @@ export interface DailyReport {
     surgery_id?: string;
     created_at: string;
     alerts?: { severity: 'critical' | 'warning', message: string }[];
+}
+
+export interface IDoctorService {
+    registerDoctor(data: {
+        name: string;
+        cpf: string;
+        crm: string;
+        phone_business: string;
+        phone_personal?: string;
+        email: string;
+        password: string;
+    }): Promise<{ doctorId: string }>;
 }

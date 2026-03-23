@@ -8,7 +8,7 @@ import { PatientListItem, PatientStatus } from '../../components/doctor/PatientL
 import { StatsGrid } from '../../components/doctor/StatsGrid';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../context/AuthContext';
-import { useSurgeriesByDoctor } from '../../hooks/useSurgeries';
+import { useAutoFinalizeSurgeries, useSurgeriesByDoctor } from '../../hooks/useSurgeries';
 
 interface Patient {
   id: string;
@@ -16,7 +16,7 @@ interface Patient {
   surgeryDate: string;
   day: number;
   status: PatientStatus;
-  lastUpdate: string;
+  lastResponseDate: string | null;
   alerts?: string[];
   medicalStatus?: string;
   sex?: string | null;
@@ -31,6 +31,9 @@ export default function DoctorDashboard() {
 
   // Use React Query hook for surgeries
   const { data: surgeriesData, isLoading: isSurgeriesLoading } = useSurgeriesByDoctor(profile?.id);
+
+  // Auto-finalize surgeries past 14 days on dashboard load
+  useAutoFinalizeSurgeries(profile?.id);
 
   // Transform surgery data for UI
   const patients = useMemo<Patient[]>(() => {
@@ -49,7 +52,7 @@ export default function DoctorDashboard() {
       // otherwise fallback to logic or default to stable if cancelled/completed
       let patientStatus: PatientStatus = 'stable';
 
-      if (surgery.status === 'completed') {
+      if (surgery.status === 'completed' || daysSinceSurgery >= 15) {
         patientStatus = 'finished';
       } else if (surgery.status === 'cancelled') {
         patientStatus = 'stable';
@@ -69,7 +72,7 @@ export default function DoctorDashboard() {
         day: Math.max(0, daysSinceSurgery),
         surgeryType: surgery.surgery_type?.name || 'Não especificado',
         status: patientStatus,
-        lastUpdate: new Date(surgery.updated_at || surgery.created_at || new Date()).toLocaleDateString('pt-BR'),
+        lastResponseDate: surgery.lastResponseDate || null,
         alerts: patientStatus === 'critical' ? ['Requer atenção'] : patientStatus === 'warning' ? ['Monitorar'] : undefined,
         sex: (surgery.patient as any)?.sex || null
       };
@@ -152,7 +155,7 @@ export default function DoctorDashboard() {
               surgeryDate={patient.surgeryDate}
               day={patient.day}
               status={patient.status}
-              lastUpdate={patient.lastUpdate}
+              lastResponseDate={patient.lastResponseDate}
               alerts={patient.alerts}
               sex={patient.sex}
               onPress={() => handlePatientClick(patient.id)}

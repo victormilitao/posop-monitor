@@ -12,7 +12,8 @@ export class SupabaseSurgeryService implements ISurgeryService {
                 *,
                 patient:profiles!surgeries_patient_id_fkey(full_name, email, phone, sex),
                 doctor:profiles!surgeries_doctor_id_fkey(full_name),
-                surgery_type:surgery_types(name, description, expected_recovery_days)
+                surgery_type:surgery_types(name, description, expected_recovery_days),
+                daily_reports(date)
             `)
       .eq('doctor_id', doctorId)
       .order('surgery_date', { ascending: false });
@@ -22,11 +23,22 @@ export class SupabaseSurgeryService implements ISurgeryService {
       throw error;
     }
 
-    return (data || []).map(s => ({
-      ...s,
-      patient: s.patient as any,
-      doctor: s.doctor as any
-    }));
+    return (data || []).map(s => {
+      // Find the latest report date from the daily_reports join
+      const reports = (s as any).daily_reports as { date: string }[] | undefined;
+      let lastResponseDate: string | null = null;
+      if (reports && reports.length > 0) {
+        const sorted = [...reports].sort((a, b) => b.date.localeCompare(a.date));
+        lastResponseDate = sorted[0].date;
+      }
+
+      return {
+        ...s,
+        patient: s.patient as any,
+        doctor: s.doctor as any,
+        lastResponseDate,
+      };
+    });
   }
 
   async getSurgeryById(surgeryId: string): Promise<SurgeryWithDetails | null> {
@@ -86,6 +98,31 @@ export class SupabaseSurgeryService implements ISurgeryService {
       .eq('id', data.patientId);
 
     return surgery;
+  }
+
+  async finalizeSurgeriesPastRecovery(doctorId: string): Promise<number> {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - 15);
+    // Use local date to avoid UTC shift (toISOString would shift +1 day at night in UTC-3)
+    const year = cutoffDate.getFullYear();
+    const month = String(cutoffDate.getMonth() + 1).padStart(2, '0');
+    const day = String(cutoffDate.getDate()).padStart(2, '0');
+    const cutoffISO = `${year}-${month}-${day}`;
+
+    const { data, error } = await supabase
+      .from('surgeries')
+      .update({ status: 'completed' })
+      .eq('doctor_id', doctorId)
+      .eq('status', 'active')
+      .lte('surgery_date', cutoffISO)
+      .select('id');
+
+    if (error) {
+      console.error('Error finalizing surgeries:', error);
+      throw error;
+    }
+
+    return data?.length || 0;
   }
 }
 
