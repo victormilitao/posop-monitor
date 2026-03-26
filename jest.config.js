@@ -1,0 +1,40 @@
+module.exports = {
+  preset: 'jest-expo',
+  transformIgnorePatterns: [
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg|@tanstack/.*|lucide-react-native|nativewind|react-native-reanimated|react-native-css-interop)',
+  ],
+  setupFiles: ['./jest.setup.js'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
+    '^expo/src/winter$': '<rootDir>/__mocks__/emptyModule.js',
+    '^expo/src/winter/(.*)$': '<rootDir>/__mocks__/emptyModule.js',
+  },
+  collectCoverageFrom: [
+    'services/**/*.ts',
+    'hooks/**/*.ts',
+    'context/**/*.tsx',
+    'components/**/*.tsx',
+    '!**/__tests__/**',
+    '!**/node_modules/**',
+    '!services/index.ts',
+    '!services/types.ts',
+    '!components/ui/icon-symbol*.tsx',
+    '!components/ui/collapsible.tsx',
+    '!components/external-link.tsx',
+    '!components/haptic-tab.tsx',
+    '!components/hello-wave.tsx',
+    '!components/parallax-scroll-view.tsx',
+    '!components/themed-text.tsx',
+    '!components/themed-view.tsx',
+    '!hooks/use-color-scheme*.ts',
+    '!hooks/use-theme-color.ts',
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 90,
+      lines: 90,
+      statements: 90,
+    },
+  },
+};

@@ -1,0 +1,606 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1774407576518" clover="3.2.0">
+  <project timestamp="1774407576518" name="All files">
+    <metrics statements="513" coveredstatements="496" conditionals="380" coveredconditionals="314" methods="115" coveredmethods="104" elements="1008" coveredelements="914" complexity="0" loc="513" ncloc="513" packages="6" files="23" classes="23"/>
+    <package name="components.doctor">
+      <metrics statements="104" coveredstatements="102" conditionals="66" coveredconditionals="60" methods="17" coveredmethods="17"/>
+      <file name="AddPatientModal.tsx" path="/Users/victormilitao/Documents/apps/medical-surgey/components/doctor/AddPatientModal.tsx">
+        <metrics statements="59" coveredstatements="57" conditionals="29" coveredconditionals="26" methods="8" coveredmethods="8"/>
+        <line num="16" count="40" type="stmt"/>
+        <line num="17" count="40" type="stmt"/>
+        <line num="19" count="40" type="stmt"/>
+        <line num="20" count="40" type="stmt"/>
+        <line num="21" count="40" type="stmt"/>
+        <line num="22" count="40" type="stmt"/>
+        <line num="23" count="40" type="stmt"/>
+        <line num="24" count="10" type="stmt"/>
+        <line num="25" count="10" type="stmt"/>
+        <line num="26" count="10" type="stmt"/>
+        <line num="27" count="10" type="stmt"/>
+        <line num="28" count="10" type="stmt"/>
+        <line num="31" count="40" type="stmt"/>
+        <line num="32" count="40" type="stmt"/>
+        <line num="33" count="40" type="stmt"/>
+        <line num="35" count="40" type="stmt"/>
+        <line num="36" count="5" type="cond" truecount="6" falsecount="0"/>
+        <line num="37" count="1" type="stmt"/>
+        <line num="38" count="1" type="stmt"/>
+        <line num="41" count="4" type="cond" truecount="1" falsecount="1"/>
+        <line num="42" count="0" type="stmt"/>
+        <line num="43" count="0" type="stmt"/>
+        <line num="46" count="4" type="stmt"/>
+        <line num="47" count="4" type="stmt"/>
+        <line num="50" count="4" type="stmt"/>
+        <line num="51" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="52" count="1" type="stmt"/>
+        <line num="53" count="1" type="stmt"/>
+        <line num="54" count="1" type="stmt"/>
+        <line num="57" count="3" type="stmt"/>
+        <line num="58" count="3" type="stmt"/>
+        <line num="59" count="3" type="stmt"/>
+        <line num="61" count="3" type="stmt"/>
+        <line num="63" count="3" type="cond" truecount="3" falsecount="0"/>
+        <line num="67" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="68" count="1" type="stmt"/>
+        <line num="69" count="1" type="stmt"/>
+        <line num="70" count="1" type="stmt"/>
+        <line num="73" count="2" type="stmt"/>
+        <line num="75" count="2" type="stmt"/>
+        <line num="76" count="2" type="stmt"/>
+        <line num="88" count="1" type="stmt"/>
+        <line num="89" count="1" type="stmt"/>
+        <line num="91" count="1" type="stmt"/>
+        <line num="92" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="94" count="2" type="stmt"/>
+        <line num="98" count="40" type="stmt"/>
+        <line num="99" count="2" type="stmt"/>
+        <line num="100" count="2" type="stmt"/>
+        <line num="101" count="2" type="stmt"/>
+        <line num="102" count="2" type="stmt"/>
+        <line num="103" count="2" type="stmt"/>
+        <line num="104" count="2" type="stmt"/>
+        <line num="107" count="68" type="stmt"/>
+        <line num="109" count="40" type="stmt"/>
+        <line num="165" count="5" type="stmt"/>
+        <line num="180" count="10" type="stmt"/>
+        <line num="184" count="5" type="stmt"/>
+        <line num="185" count="5" type="stmt"/>
+      </file>
+      <file name="PatientListItem.tsx" path="/Users/victormilitao/Documents/apps/medical-surgey/components/doctor/PatientListItem.tsx">
+        <metrics statements="18" coveredstatements="18" conditionals="17" coveredconditionals="16" methods="2" coveredmethods="2"/>
+        <line num="30" count="8" type="stmt"/>
+        <line num="31" count="8" type="stmt"/>
+        <line num="32" count="8" type="stmt"/>
+        <line num="34" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="35" count="1" type="stmt"/>
+        <line num="36" count="1" type="stmt"/>
+        <line num="37" count="1" type="stmt"/>
+        <line num="38" count="7" type="cond" truecount="2" falsecount="0"/>
+        <line num="39" count="1" type="stmt"/>
+        <line num="40" count="1" type="stmt"/>
+        <line num="41" count="1" type="stmt"/>
+        <line num="42" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="43" count="1" type="stmt"/>
+        <line num="44" count="1" type="stmt"/>
+        <line num="45" count="1" type="stmt"/>
+        <line num="47" count="5" type="stmt"/>
+        <line num="50" count="8" type="stmt"/>
+        <line num="71" count="2" type="stmt"/>
+      </file>
+      <file name="StatsGrid.tsx" path="/Users/victormilitao/Documents/apps/medical-surgey/components/doctor/StatsGrid.tsx">
+        <metrics statements="27" coveredstatements="27" conditionals="20" coveredconditionals="18" methods="7" coveredmethods="7"/>
+        <line num="14" count="32" type="stmt"/>
+        <line num="15" count="32" type="stmt"/>
+        <line num="16" count="32" type="stmt"/>
+        <line num="18" count="32" type="cond" truecount="2" falsecount="0"/>
+        <line num="19" count="8" type="stmt"/>
+        <line num="20" count="8" type="stmt"/>
+        <line num="21" count="8" type="stmt"/>
+        <line num="22" count="24" type="cond" truecount="2" falsecount="0"/>
+        <line num="23" count="8" type="stmt"/>
+        <line num="24" count="8" type="stmt"/>
+        <line num="25" count="8" type="stmt"/>
+        <line num="26" count="16" type="cond" truecount="2" falsecount="0"/>
+        <line num="27" count="8" type="stmt"/>
+        <line num="28" count="8" type="stmt"/>
+        <line num="29" count="8" type="stmt"/>
+        <line num="30" count="8" type="cond" truecount="1" falsecount="1"/>
+        <line num="31" count="8" type="stmt"/>
+        <line num="32" count="8" type="stmt"/>
+        <line num="33" count="8" type="stmt"/>
+        <line num="36" count="32" type="stmt"/>
+        <line num="60" count="8" type="stmt"/>
+        <line num="61" count="5" type="cond" truecount="1" falsecount="1"/>
+        <line num="64" count="8" type="stmt"/>
+        <line num="71" count="2" type="stmt"/>
+        <line num="78" count="1" type="stmt"/>
+        <line num="85" count="1" type="stmt"/>
+        <line num="92" count="1" type="stmt"/>
+      </file>
+    </package>
+    <package name="components.patient">
+      <metrics statements="29" coveredstatements="29" conditionals="24" coveredconditionals="23" methods="13" coveredmethods="13"/>
+      <file name="ActionMenuItem.tsx" path="/Users/victormilitao/Documents/apps/medical-surgey/components/patient/ActionMenuItem.tsx">
+        <metrics statements="1" coveredstatements="1" conditionals="4" coveredconditionals="4" methods="1" coveredmethods="1"/>
+        <line num="23" count="4" type="stmt"/>
+      </file>
+      <file name="PhaseGuidelinesSheet.tsx" path="/Users/victormilitao/Documents/apps/medical-surgey/components/patient/PhaseGuidelinesSheet.tsx">
+        <metrics statements="25" coveredstatements="25" conditionals="20" coveredconditionals="19" methods="10" coveredmethods="10"/>
+        <line num="13" count="1" type="stmt"/>
+        <line num="14" count="1" type="stmt"/>
+        <line num="17" count="20" type="cond" truecount="4" falsecount="0"/>
+        <line num="18" count="11" type="cond" truecount="2" falsecount="0"/>
+        <line num="19" count="5" type="stmt"/>
+        <line num="23" count="21" type="stmt"/>
+        <line num="24" count="21" type="stmt"/>
+        <line num="25" count="21" type="stmt"/>
+        <line num="26" count="21" type="stmt"/>
+        <line num="28" count="21" type="stmt"/>
+        <line num="29" count="11" type="cond" truecount="2" falsecount="0"/>
+        <line num="30" count="10" type="stmt"/>
+        <line num="34" count="21" type="stmt"/>
+        <line num="35" count="10" type="cond" truecount="2" falsecount="0"/>
+        <line num="36" count="9" type="stmt"/>
+        <line num="37" count="9" type="stmt"/>
+        <line num="50" count="1" type="stmt"/>
+        <line num="61" count="1" type="stmt"/>
+        <line num="65" count="21" type="cond" truecount="2" falsecount="0"/>
+        <line num="67" count="11" type="stmt"/>
+        <line num="73" count="11" type="stmt"/>
+        <line num="128" count="20" type="cond" truecount="1" falsecount="1"/>
+        <line num="155" count="20" type="stmt"/>
+        <line num="186" count="9" type="stmt"/>
+        <line num="215" count="9" type="stmt"/>
+      </file>
+      <file name="ProgressBar.tsx" path="/Users/victormilitao/Documents/apps/medical-surgey/components/patient/ProgressBar.tsx">
+        <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="10" count="5" type="stmt"/>
+        <line num="12" count="5" type="stmt"/>
+      </file>
+      <file name="WelcomeHeader.tsx" path="/Users/victormilitao/Documents/apps/medical-surgey/components/patient/WelcomeHeader.tsx">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="9" count="3" type="stmt"/>
+      </file>
+    </package>
+    <package name="components.ui">
+      <metrics statements="45" coveredstatements="43" conditionals="44" coveredconditionals="41" methods="7" coveredmethods="6"/>
+      <file name="Badge.tsx" path="/Users/victormilitao/Documents/apps/medical-surgey/components/ui/Badge.tsx">
+        <metrics statements="12" coveredstatements="12" conditionals="7" coveredconditionals="7" methods="1" coveredmethods="1"/>
+        <line num="9" count="13" type="stmt"/>
+        <line num="10" count="13" type="stmt"/>
+        <line num="12" count="13" type="cond" truecount="2" falsecount="0"/>
+        <line num="13" count="1" type="stmt"/>
+        <line num="14" count="1" type="stmt"/>
+        <line num="15" count="12" type="cond" truecount="2" falsecount="0"/>
+        <line num="16" count="1" type="stmt"/>
+        <line num="17" count="1" type="stmt"/>
+        <line num="18" count="11" type="cond" truecount="2" falsecount="0"/>
+        <line num="19" count="1" type="stmt"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="23" count="13" type="stmt"/>
+      </file>
+      <file name="Button.tsx" path="/Users/victormilitao/Documents/apps/medical-surgey/components/ui/Button.tsx">
+        <metrics statements="16" coveredstatements="16" conditionals="28" coveredconditionals="27" methods="1" coveredmethods="1"/>
+        <line num="14" count="90" type="stmt"/>
+        <line num="15" count="90" type="stmt"/>
+        <line num="17" count="90" type="cond" truecount="2" falsecount="0"/>
+        <line num="18" count="41" type="stmt"/>
+        <line num="19" count="41" type="stmt"/>
+        <line num="20" count="49" type="cond" truecount="2" falsecount="0"/>
+        <line num="21" count="1" type="stmt"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="23" count="48" type="cond" truecount="2" falsecount="0"/>
+        <line num="24" count="1" type="stmt"/>
+        <line num="25" count="1" type="stmt"/>
+        <line num="26" count="47" type="cond" truecount="2" falsecount="0"/>
+        <line num="27" count="1" type="stmt"/>
+        <line num="28" count="1" type="stmt"/>
+        <line num="31" count="90" type="cond" truecount="2" falsecount="0"/>
+        <line num="33" count="90" type="stmt"/>
+      </file>
+      <file name="Card.tsx" path="/Users/victormilitao/Documents/apps/medical-surgey/components/ui/Card.tsx">
+        <metrics statements="1" coveredstatements="1" conditionals="3" coveredconditionals="3" methods="1" coveredmethods="1"/>
+        <line num="8" count="16" type="stmt"/>
+      </file>
+      <file name="Toast.tsx" path="/Users/victormilitao/Documents/apps/medical-surgey/components/ui/Toast.tsx">
+        <metrics statements="16" coveredstatements="14" conditionals="6" coveredconditionals="4" methods="4" coveredmethods="3"/>
+        <line num="34" count="2" type="stmt"/>
+        <line num="62" count="10" type="stmt"/>
+        <line num="63" count="10" type="stmt"/>
+        <line num="64" count="10" type="stmt"/>
+        <line num="65" count="10" type="stmt"/>
+        <line num="66" count="10" type="cond" truecount="2" falsecount="0"/>
+        <line num="68" count="10" type="stmt"/>
+        <line num="69" count="9" type="stmt"/>
+        <line num="70" count="9" type="stmt"/>
+        <line num="73" count="9" type="stmt"/>
+        <line num="78" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="79" count="0" type="stmt"/>
+        <line num="84" count="9" type="stmt"/>
+        <line num="90" count="10" type="stmt"/>
+        <line num="95" count="10" type="stmt"/>
+        <line num="121" count="2" type="stmt"/>
+      </file>
+    </package>
+    <package name="context">
+      <metrics statements="42" coveredstatements="41" conditionals="8" coveredconditionals="8" methods="18" coveredmethods="13"/>
+      <file name="AuthContext.tsx" path="/Users/victormilitao/Documents/apps/medical-surgey/context/AuthContext.tsx">
+        <metrics statements="30" coveredstatements="30" conditionals="8" coveredconditionals="8" methods="9" coveredmethods="8"/>
+        <line num="19" count="1" type="stmt"/>
+        <line num="31" count="18" type="stmt"/>
+        <line num="32" count="18" type="stmt"/>
+        <line num="33" count="18" type="stmt"/>
+        <line num="35" count="18" type="stmt"/>
+        <line num="37" count="8" type="stmt"/>
+        <line num="38" count="8" type="stmt"/>
+        <line num="39" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="40" count="5" type="stmt"/>
+        <line num="42" count="3" type="stmt"/>
+        <line num="46" count="8" type="stmt"/>
+        <line num="47" count="2" type="stmt"/>
+        <line num="48" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="49" count="1" type="stmt"/>
+        <line num="51" count="1" type="stmt"/>
+        <line num="52" count="1" type="stmt"/>
+        <line num="56" count="8" type="stmt"/>
+        <line num="59" count="18" type="stmt"/>
+        <line num="60" count="6" type="stmt"/>
+        <line num="61" count="6" type="stmt"/>
+        <line num="67" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="68" count="1" type="stmt"/>
+        <line num="70" count="4" type="stmt"/>
+        <line num="73" count="1" type="stmt"/>
+        <line num="75" count="6" type="stmt"/>
+        <line num="79" count="18" type="stmt"/>
+        <line num="80" count="1" type="stmt"/>
+        <line num="83" count="18" type="stmt"/>
+        <line num="94" count="18" type="stmt"/>
+        <line num="97" count="18" type="stmt"/>
+      </file>
+      <file name="ToastContext.tsx" path="/Users/victormilitao/Documents/apps/medical-surgey/context/ToastContext.tsx">
+        <metrics statements="12" coveredstatements="11" conditionals="0" coveredconditionals="0" methods="9" coveredmethods="5"/>
+        <line num="17" count="1" type="stmt"/>
+        <line num="22" count="8" type="stmt"/>
+        <line num="26" count="8" type="stmt"/>
+        <line num="27" count="8" type="stmt"/>
+        <line num="29" count="8" type="stmt"/>
+        <line num="30" count="4" type="stmt"/>
+        <line num="31" count="4" type="stmt"/>
+        <line num="34" count="8" type="stmt"/>
+        <line num="35" count="0" type="stmt"/>
+        <line num="38" count="8" type="stmt"/>
+        <line num="43" count="5" type="stmt"/>
+        <line num="50" count="1" type="stmt"/>
+      </file>
+    </package>
+    <package name="hooks">
+      <metrics statements="39" coveredstatements="38" conditionals="16" coveredconditionals="10" methods="20" coveredmethods="19"/>
+      <file name="usePatientDashboard.ts" path="/Users/victormilitao/Documents/apps/medical-surgey/hooks/usePatientDashboard.ts">
+        <metrics statements="4" coveredstatements="4" conditionals="2" coveredconditionals="1" methods="2" coveredmethods="2"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="9" count="5" type="stmt"/>
+        <line num="12" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="13" count="2" type="stmt"/>
+      </file>
+      <file name="usePatients.ts" path="/Users/victormilitao/Documents/apps/medical-surgey/hooks/usePatients.ts">
+        <metrics statements="8" coveredstatements="8" conditionals="4" coveredconditionals="2" methods="4" coveredmethods="4"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="9" count="3" type="stmt"/>
+        <line num="12" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="13" count="1" type="stmt"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="24" count="3" type="stmt"/>
+        <line num="27" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="28" count="1" type="stmt"/>
+      </file>
+      <file name="useSurgeries.ts" path="/Users/victormilitao/Documents/apps/medical-surgey/hooks/useSurgeries.ts">
+        <metrics statements="20" coveredstatements="19" conditionals="8" coveredconditionals="6" methods="10" coveredmethods="9"/>
+        <line num="9" count="1" type="stmt"/>
+        <line num="13" count="3" type="stmt"/>
+        <line num="16" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="17" count="1" type="stmt"/>
+        <line num="24" count="1" type="stmt"/>
+        <line num="28" count="3" type="stmt"/>
+        <line num="31" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="32" count="1" type="stmt"/>
+        <line num="39" count="1" type="stmt"/>
+        <line num="53" count="2" type="stmt"/>
+        <line num="65" count="1" type="stmt"/>
+        <line num="70" count="1" type="stmt"/>
+        <line num="71" count="2" type="stmt"/>
+        <line num="72" count="2" type="stmt"/>
+        <line num="74" count="2" type="stmt"/>
+        <line num="75" count="2" type="cond" truecount="4" falsecount="0"/>
+        <line num="76" count="1" type="stmt"/>
+        <line num="78" count="1" type="stmt"/>
+        <line num="79" count="1" type="stmt"/>
+        <line num="81" count="0" type="stmt"/>
+      </file>
+      <file name="useSurgeryTypes.ts" path="/Users/victormilitao/Documents/apps/medical-surgey/hooks/useSurgeryTypes.ts">
+        <metrics statements="7" coveredstatements="7" conditionals="2" coveredconditionals="1" methods="4" coveredmethods="4"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="10" count="2" type="stmt"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="17" count="1" type="stmt"/>
+        <line num="21" count="3" type="stmt"/>
+        <line num="24" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="25" count="1" type="stmt"/>
+      </file>
+    </package>
+    <package name="services.supabase">
+      <metrics statements="254" coveredstatements="243" conditionals="222" coveredconditionals="172" methods="40" coveredmethods="36"/>
+      <file name="doctorService.ts" path="/Users/victormilitao/Documents/apps/medical-surgey/services/supabase/doctorService.ts">
+        <metrics statements="22" coveredstatements="20" conditionals="16" coveredconditionals="12" methods="1" coveredmethods="1"/>
+        <line num="15" count="5" type="stmt"/>
+        <line num="16" count="5" type="stmt"/>
+        <line num="21" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="22" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="23" count="1" type="stmt"/>
+        <line num="25" count="0" type="stmt"/>
+        <line num="28" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="29" count="1" type="stmt"/>
+        <line num="33" count="3" type="stmt"/>
+        <line num="38" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="39" count="1" type="stmt"/>
+        <line num="40" count="1" type="stmt"/>
+        <line num="44" count="2" type="stmt"/>
+        <line num="56" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="57" count="1" type="stmt"/>
+        <line num="58" count="1" type="stmt"/>
+        <line num="59" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="60" count="1" type="stmt"/>
+        <line num="62" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="66" count="1" type="stmt"/>
+        <line num="68" count="1" type="stmt"/>
+        <line num="73" count="1" type="stmt"/>
+      </file>
+      <file name="patientService.ts" path="/Users/victormilitao/Documents/apps/medical-surgey/services/supabase/patientService.ts">
+        <metrics statements="42" coveredstatements="41" conditionals="39" coveredconditionals="27" methods="5" coveredmethods="5"/>
+        <line num="10" count="2" type="stmt"/>
+        <line num="18" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="19" count="1" type="stmt"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="23" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="30" count="2" type="stmt"/>
+        <line num="39" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="40" count="1" type="stmt"/>
+        <line num="41" count="1" type="stmt"/>
+        <line num="44" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="52" count="3" type="stmt"/>
+        <line num="58" count="3" type="cond" truecount="4" falsecount="0"/>
+        <line num="59" count="1" type="stmt"/>
+        <line num="60" count="1" type="stmt"/>
+        <line num="64" count="2" type="stmt"/>
+        <line num="70" count="2" type="stmt"/>
+        <line num="71" count="2" type="stmt"/>
+        <line num="72" count="2" type="stmt"/>
+        <line num="74" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="75" count="1" type="stmt"/>
+        <line num="84" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="85" count="1" type="stmt"/>
+        <line num="86" count="1" type="cond" truecount="1" falsecount="2"/>
+        <line num="88" count="1" type="stmt"/>
+        <line num="89" count="1" type="stmt"/>
+        <line num="91" count="1" type="stmt"/>
+        <line num="92" count="1" type="stmt"/>
+        <line num="93" count="1" type="stmt"/>
+        <line num="97" count="2" type="stmt"/>
+        <line num="117" count="3" type="stmt"/>
+        <line num="121" count="3" type="stmt"/>
+        <line num="130" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="131" count="1" type="cond" truecount="2" falsecount="2"/>
+        <line num="132" count="1" type="stmt"/>
+        <line num="134" count="0" type="stmt"/>
+        <line num="136" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="139" count="1" type="stmt"/>
+        <line num="153" count="1" type="cond" truecount="3" falsecount="3"/>
+        <line num="156" count="1" type="stmt"/>
+        <line num="163" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="165" count="1" type="stmt"/>
+        <line num="170" count="1" type="stmt"/>
+      </file>
+      <file name="questionService.ts" path="/Users/victormilitao/Documents/apps/medical-surgey/services/supabase/questionService.ts">
+        <metrics statements="14" coveredstatements="14" conditionals="14" coveredconditionals="11" methods="4" coveredmethods="4"/>
+        <line num="6" count="4" type="stmt"/>
+        <line num="20" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="21" count="1" type="stmt"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="25" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="29" count="2" type="stmt"/>
+        <line num="32" count="4" type="stmt"/>
+        <line num="34" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="37" count="3" type="cond" truecount="3" falsecount="1"/>
+        <line num="38" count="3" type="cond" truecount="2" falsecount="2"/>
+        <line num="41" count="3" type="stmt"/>
+        <line num="46" count="4" type="stmt"/>
+        <line num="48" count="2" type="stmt"/>
+        <line num="51" count="1" type="stmt"/>
+      </file>
+      <file name="reportService.ts" path="/Users/victormilitao/Documents/apps/medical-surgey/services/supabase/reportService.ts">
+        <metrics statements="122" coveredstatements="116" conditionals="116" coveredconditionals="91" methods="20" coveredmethods="16"/>
+        <line num="12" count="10" type="stmt"/>
+        <line num="13" count="10" type="stmt"/>
+        <line num="14" count="10" type="stmt"/>
+        <line num="15" count="10" type="stmt"/>
+        <line num="16" count="10" type="stmt"/>
+        <line num="19" count="10" type="stmt"/>
+        <line num="20" count="22" type="stmt"/>
+        <line num="23" count="22" type="cond" truecount="4" falsecount="1"/>
+        <line num="25" count="22" type="cond" truecount="2" falsecount="0"/>
+        <line num="26" count="22" type="stmt"/>
+        <line num="29" count="22" type="cond" truecount="2" falsecount="0"/>
+        <line num="30" count="5" type="stmt"/>
+        <line num="31" count="5" type="cond" truecount="1" falsecount="1"/>
+        <line num="32" count="5" type="cond" truecount="1" falsecount="1"/>
+        <line num="33" count="5" type="stmt"/>
+        <line num="36" count="5" type="stmt"/>
+        <line num="37" count="5" type="cond" truecount="4" falsecount="0"/>
+        <line num="38" count="1" type="stmt"/>
+        <line num="39" count="4" type="cond" truecount="4" falsecount="0"/>
+        <line num="40" count="1" type="stmt"/>
+        <line num="43" count="17" type="cond" truecount="4" falsecount="0"/>
+        <line num="45" count="17" type="stmt"/>
+        <line num="46" count="16" type="cond" truecount="1" falsecount="1"/>
+        <line num="47" count="16" type="stmt"/>
+        <line num="48" count="16" type="cond" truecount="2" falsecount="0"/>
+        <line num="49" count="15" type="stmt"/>
+        <line num="50" count="15" type="stmt"/>
+        <line num="51" count="15" type="stmt"/>
+        <line num="54" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="56" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="57" count="1" type="stmt"/>
+        <line num="58" count="1" type="stmt"/>
+        <line num="59" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="60" count="1" type="cond" truecount="3" falsecount="1"/>
+        <line num="61" count="1" type="stmt"/>
+        <line num="62" count="1" type="stmt"/>
+        <line num="63" count="1" type="stmt"/>
+        <line num="69" count="22" type="cond" truecount="2" falsecount="0"/>
+        <line num="70" count="18" type="cond" truecount="2" falsecount="0"/>
+        <line num="71" count="8" type="stmt"/>
+        <line num="73" count="10" type="stmt"/>
+        <line num="79" count="10" type="stmt"/>
+        <line num="80" count="10" type="stmt"/>
+        <line num="82" count="10" type="cond" truecount="2" falsecount="0"/>
+        <line num="83" count="2" type="stmt"/>
+        <line num="84" count="2" type="stmt"/>
+        <line num="85" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="86" count="1" type="stmt"/>
+        <line num="87" count="1" type="stmt"/>
+        <line num="88" count="7" type="cond" truecount="2" falsecount="0"/>
+        <line num="89" count="1" type="stmt"/>
+        <line num="90" count="1" type="stmt"/>
+        <line num="95" count="10" type="stmt"/>
+        <line num="96" count="10" type="stmt"/>
+        <line num="100" count="10" type="stmt"/>
+        <line num="108" count="10" type="cond" truecount="2" falsecount="0"/>
+        <line num="109" count="1" type="stmt"/>
+        <line num="110" count="1" type="stmt"/>
+        <line num="114" count="9" type="cond" truecount="2" falsecount="0"/>
+        <line num="115" count="4" type="stmt"/>
+        <line num="122" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="123" count="1" type="stmt"/>
+        <line num="129" count="9" type="cond" truecount="2" falsecount="0"/>
+        <line num="133" count="9" type="stmt"/>
+        <line num="141" count="9" type="cond" truecount="2" falsecount="0"/>
+        <line num="142" count="1" type="stmt"/>
+        <line num="149" count="5" type="stmt"/>
+        <line num="154" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="155" count="1" type="stmt"/>
+        <line num="156" count="1" type="stmt"/>
+        <line num="159" count="4" type="cond" truecount="1" falsecount="1"/>
+        <line num="161" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="164" count="3" type="stmt"/>
+        <line num="170" count="3" type="stmt"/>
+        <line num="172" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="173" count="3" type="stmt"/>
+        <line num="178" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="179" count="1" type="stmt"/>
+        <line num="181" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="182" count="1" type="cond" truecount="3" falsecount="0"/>
+        <line num="183" count="1" type="stmt"/>
+        <line num="193" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="194" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="195" count="2" type="stmt"/>
+        <line num="196" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="197" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="198" count="1" type="stmt"/>
+        <line num="199" count="1" type="stmt"/>
+        <line num="200" count="1" type="stmt"/>
+        <line num="201" count="2" type="stmt"/>
+        <line num="209" count="2" type="stmt"/>
+        <line num="215" count="2" type="stmt"/>
+        <line num="217" count="2" type="stmt"/>
+        <line num="222" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="223" count="1" type="stmt"/>
+        <line num="225" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="226" count="0" type="cond" truecount="0" falsecount="3"/>
+        <line num="227" count="0" type="stmt"/>
+        <line num="234" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="235" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="236" count="2" type="stmt"/>
+        <line num="238" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="239" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="240" count="0" type="stmt"/>
+        <line num="241" count="0" type="stmt"/>
+        <line num="242" count="0" type="stmt"/>
+        <line num="244" count="2" type="stmt"/>
+        <line num="252" count="5" type="stmt"/>
+        <line num="258" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="259" count="1" type="stmt"/>
+        <line num="260" count="1" type="stmt"/>
+        <line num="264" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="265" count="3" type="stmt"/>
+        <line num="267" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="269" count="2" type="stmt"/>
+        <line num="274" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="275" count="2" type="cond" truecount="3" falsecount="0"/>
+        <line num="277" count="2" type="stmt"/>
+        <line num="278" count="2" type="stmt"/>
+        <line num="280" count="1" type="stmt"/>
+        <line num="285" count="2" type="stmt"/>
+        <line num="292" count="1" type="stmt"/>
+      </file>
+      <file name="surgeryService.ts" path="/Users/victormilitao/Documents/apps/medical-surgey/services/supabase/surgeryService.ts">
+        <metrics statements="43" coveredstatements="41" conditionals="31" coveredconditionals="25" methods="8" coveredmethods="8"/>
+        <line num="9" count="3" type="stmt"/>
+        <line num="21" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="23" count="1" type="stmt"/>
+        <line num="26" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="28" count="2" type="stmt"/>
+        <line num="29" count="2" type="stmt"/>
+        <line num="30" count="2" type="cond" truecount="4" falsecount="0"/>
+        <line num="31" count="1" type="stmt"/>
+        <line num="32" count="1" type="stmt"/>
+        <line num="35" count="2" type="stmt"/>
+        <line num="45" count="2" type="stmt"/>
+        <line num="56" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="57" count="1" type="stmt"/>
+        <line num="58" count="1" type="stmt"/>
+        <line num="61" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="76" count="2" type="stmt"/>
+        <line num="91" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="92" count="1" type="stmt"/>
+        <line num="93" count="1" type="stmt"/>
+        <line num="97" count="1" type="stmt"/>
+        <line num="102" count="1" type="stmt"/>
+        <line num="107" count="4" type="stmt"/>
+        <line num="118" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="119" count="1" type="stmt"/>
+        <line num="120" count="1" type="stmt"/>
+        <line num="123" count="3" type="cond" truecount="4" falsecount="0"/>
+        <line num="125" count="2" type="stmt"/>
+        <line num="126" count="2" type="stmt"/>
+        <line num="129" count="2" type="stmt"/>
+        <line num="130" count="2" type="cond" truecount="1" falsecount="2"/>
+        <line num="131" count="2" type="stmt"/>
+        <line num="132" count="2" type="stmt"/>
+        <line num="133" count="2" type="stmt"/>
+        <line num="134" count="2" type="stmt"/>
+        <line num="137" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="139" count="1" type="stmt"/>
+        <line num="141" count="1" type="stmt"/>
+        <line num="147" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="148" count="0" type="stmt"/>
+        <line num="149" count="0" type="stmt"/>
+        <line num="152" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="156" count="1" type="stmt"/>
+      </file>
+      <file name="surgeryTypeService.ts" path="/Users/victormilitao/Documents/apps/medical-surgey/services/supabase/surgeryTypeService.ts">
+        <metrics statements="11" coveredstatements="11" conditionals="6" coveredconditionals="6" methods="2" coveredmethods="2"/>
+        <line num="13" count="3" type="stmt"/>
+        <line num="19" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="21" count="1" type="stmt"/>
+        <line num="24" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="28" count="2" type="stmt"/>
+        <line num="34" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="35" count="1" type="stmt"/>
+        <line num="36" count="1" type="stmt"/>
+        <line num="39" count="1" type="stmt"/>
+        <line num="43" count="1" type="stmt"/>
+      </file>
+    </package>
+  </project>
+</coverage>
