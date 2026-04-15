@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowLeft, CheckCircle, ChevronRight } from 'lucide-react-native';
+import { ArrowLeft, CheckCircle, ChevronRight, Pencil } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,6 +10,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import { reportService, surgeryService } from '../../../services';
 import { SurgeryWithDetails } from '../../../services/types';
+import { AppColors } from '../../../constants/colors';
 
 interface TimelineDay {
   day: number;
@@ -154,6 +155,13 @@ export default function DoctorPatientTimelineScreen() {
 
       <ScrollView className="flex-1 p-4" showsVerticalScrollIndicator={false}>
         <View className="mb-6">
+          <TouchableOpacity
+            className="flex-row items-center self-start bg-primary-50 px-3 py-2 rounded-lg border border-primary-200 mb-3"
+            onPress={() => router.push({ pathname: '/doctor/edit-patient/[surgeryId]', params: { surgeryId: surgeryId as string } })}
+          >
+            <Pencil size={14} color={AppColors.primary[700]} />
+            <Text className="text-primary-700 font-medium text-sm ml-1.5">Editar paciente</Text>
+          </TouchableOpacity>
           <Text className="text-gray-500 text-base">
             Acompanhando evolução de {surgery?.surgery_type.name || 'cirurgia'}
           </Text>

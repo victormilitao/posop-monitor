@@ -34,6 +34,18 @@ export interface PatientListItem {
     alerts?: string[];
 }
 
+export interface UpdatePatientData {
+    patientId: string;
+    surgeryId: string;
+    name?: string;
+    cpf?: string;
+    phone?: string;
+    sex?: string;
+    surgeryDate?: string;
+    followUpDays?: number;
+    surgeryTypeId?: string;
+}
+
 export interface IPatientService {
     getPatientsByDoctorId(doctorId: string): Promise<PatientWithProfile[]>;
     getPatientById(patientId: string): Promise<PatientWithProfile | null>;
@@ -49,6 +61,7 @@ export interface IPatientService {
         doctorId: string;
         followUpDays?: number;
     }): Promise<{ patientId: string; surgeryId: string }>;
+    updatePatient(data: UpdatePatientData): Promise<void>;
 }
 
 export interface ISurgeryService {

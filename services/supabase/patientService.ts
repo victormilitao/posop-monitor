@@ -1,6 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import { Database } from '../../types/supabase';
-import { IPatientService, PatientDashboardData, PatientWithProfile } from '../types';
+import { IPatientService, PatientDashboardData, PatientWithProfile, UpdatePatientData } from '../types';
 
 type Surgery = Database['public']['Tables']['surgeries']['Row'];
 type SurgeryType = Database['public']['Tables']['surgery_types']['Row'];
@@ -166,6 +166,44 @@ export class SupabasePatientService implements IPatientService {
         if (patientLinkError) throw patientLinkError;
 
         return { patientId: newPatientId, surgeryId: surgeryData.id };
+    }
+
+    async updatePatient(data: UpdatePatientData): Promise<void> {
+        // Update profile fields via RPC (SECURITY DEFINER bypasses RLS)
+        const hasProfileUpdates = data.name !== undefined || data.cpf !== undefined ||
+            data.phone !== undefined || data.sex !== undefined;
+
+        if (hasProfileUpdates) {
+            const { error: profileError } = await (supabase as any).rpc('update_patient_profile', {
+                p_patient_id: data.patientId,
+                p_full_name: data.name ?? null,
+                p_cpf: data.cpf ?? null,
+                p_phone: data.phone || null,
+                p_sex: data.sex ?? null,
+            });
+
+            if (profileError) {
+                if (profileError.code === '23505' && profileError.message?.includes('profiles_phone_unique')) {
+                    throw new Error('Já existe um paciente cadastrado com este número de telefone.');
+                }
+                throw profileError;
+            }
+        }
+
+        // Update surgery fields (surgery_date, follow_up_days, surgery_type_id)
+        const surgeryUpdates: Record<string, string | number | null> = {};
+        if (data.surgeryDate !== undefined) surgeryUpdates.surgery_date = data.surgeryDate;
+        if (data.followUpDays !== undefined) surgeryUpdates.follow_up_days = data.followUpDays;
+        if (data.surgeryTypeId !== undefined) surgeryUpdates.surgery_type_id = data.surgeryTypeId;
+
+        if (Object.keys(surgeryUpdates).length > 0) {
+            const { error: surgeryError } = await supabase
+                .from('surgeries')
+                .update(surgeryUpdates)
+                .eq('id', data.surgeryId);
+
+            if (surgeryError) throw surgeryError;
+        }
     }
 }
 
