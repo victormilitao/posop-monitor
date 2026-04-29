@@ -46,10 +46,19 @@ export interface UpdatePatientData {
     surgeryTypeId?: string;
 }
 
+export interface DoctorContactInfo {
+    name: string;
+    crm: string;
+    email: string;
+    phone: string;
+    phonePersonal: string | null;
+}
+
 export interface IPatientService {
     getPatientsByDoctorId(doctorId: string): Promise<PatientWithProfile[]>;
     getPatientById(patientId: string): Promise<PatientWithProfile | null>;
     getPatientDashboardData(patientId: string): Promise<PatientDashboardData | null>;
+    getDoctorByPatientId(patientId: string): Promise<DoctorContactInfo | null>;
     createPatient(data: {
         name: string;
         cpf: string;

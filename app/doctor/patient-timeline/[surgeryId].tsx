@@ -1,38 +1,37 @@
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowLeft, CheckCircle, ChevronRight, Clock, Pencil } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Image as ImageIcon, User } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { PatientDetailHeader } from '../../../components/doctor/PatientDetailHeader';
+import { PatientDetailMenuItem } from '../../../components/doctor/PatientDetailMenu';
+import { PatientGalleryView } from '../../../components/doctor/PatientGalleryView';
+import { PatientProfileView, PatientProfileData } from '../../../components/doctor/PatientProfileView';
+import { PatientTimelineView, TimelineDay } from '../../../components/doctor/PatientTimelineView';
+import { AppColors } from '../../../constants/colors';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
-import { reportService, surgeryService } from '../../../services';
-import { SurgeryWithDetails } from '../../../services/types';
-import { AppColors } from '../../../constants/colors';
-import { PendingReturnModal } from '../../../components/doctor/PendingReturnModal';
 import { useDismissPendingReturn } from '../../../hooks/useSurgeries';
+import { patientService, reportService, surgeryService } from '../../../services';
+import { SurgeryWithDetails } from '../../../services/types';
 
-interface TimelineDay {
-  day: number;
-  date: Date;
-  status: 'pending' | 'completed' | 'missed' | 'future';
-  reportId?: string;
-  alertSeverity?: 'critical' | 'warning';
-}
+type TabType = 'menu' | 'profile' | 'timeline' | 'gallery';
 
-export default function DoctorPatientTimelineScreen() {
+export default function DoctorPatientDetailScreen() {
   const router = useRouter();
   const { surgeryId } = useLocalSearchParams();
   const { session, isDoctor } = useAuth();
   const { showToast } = useToast();
   const insets = useSafeAreaInsets();
 
+  const [activeTab, setActiveTab] = useState<TabType>('menu');
   const [loading, setLoading] = useState(true);
   const [timeline, setTimeline] = useState<TimelineDay[]>([]);
   const [surgery, setSurgery] = useState<SurgeryWithDetails | null>(null);
+  const [profileData, setProfileData] = useState<PatientProfileData | null>(null);
   const [showReturnModal, setShowReturnModal] = useState(false);
+  const [isFinalized, setIsFinalized] = useState(false);
   const dismissPendingReturn = useDismissPendingReturn();
 
   useFocusEffect(
@@ -56,13 +55,56 @@ export default function DoctorPatientTimelineScreen() {
 
       setSurgery(surgeryData);
 
+      // Check if surgery is finalized
+      const surgeryStatus = (surgeryData as any).status as string;
+      setIsFinalized(surgeryStatus !== 'active');
+
+      // Build profile data
+      const dateParts = surgeryData.surgery_date.split('T')[0].split('-');
+      const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+      const followUpDays = (surgeryData as any).follow_up_days ?? surgeryData.surgery_type.expected_recovery_days ?? 14;
+
+      // Load CPF
+      let cpfValue = '';
+      try {
+        const dashData = await patientService.getPatientDashboardData(surgeryData.patient_id);
+        if (dashData?.profile?.cpf) {
+          const digits = (dashData.profile.cpf as string).replace(/\D/g, '');
+          if (digits.length === 11) {
+            cpfValue = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+          } else {
+            cpfValue = dashData.profile.cpf as string;
+          }
+        }
+      } catch {
+        // CPF is optional for display
+      }
+
+      // Format phone
+      let phoneValue = (surgeryData.patient as any)?.phone || '';
+      const phoneDigits = phoneValue.replace(/\D/g, '');
+      if (phoneDigits.length >= 10) {
+        phoneValue = `(${phoneDigits.slice(0, 2)}) ${phoneDigits.slice(2, 7)}-${phoneDigits.slice(7)}`;
+      }
+
+      setProfileData({
+        name: surgeryData.patient.full_name || '',
+        cpf: cpfValue,
+        sex: (surgeryData.patient as any)?.sex || '',
+        phone: phoneValue,
+        surgeryType: surgeryData.surgery_type.name || '',
+        surgeryDate: formattedDate,
+        followUpDays: String(followUpDays),
+        status: surgeryStatus,
+      });
+
+      // Build timeline
       const reports = await reportService.getReportsBySurgeryId(surgeryId as string);
 
-      // Parse surgery date safely as Local YYYY-MM-DD
       const [sYear, sMonth, sDay] = surgeryData.surgery_date.split('-').map(Number);
       const sDate = new Date(sYear, sMonth - 1, sDay);
 
-      const recoveryDays = (surgeryData as any).follow_up_days ?? surgeryData.surgery_type.expected_recovery_days ?? 14;
+      const recoveryDays = followUpDays;
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -115,16 +157,10 @@ export default function DoctorPatientTimelineScreen() {
       setTimeline(days);
 
     } catch (error) {
-      console.error('Error loading timeline:', error);
-      showToast({ type: 'error', title: 'Erro', message: 'Não foi possível carregar a linha do tempo do paciente.' });
+      console.error('Error loading patient data:', error);
+      showToast({ type: 'error', title: 'Erro', message: 'Não foi possível carregar os dados do paciente.' });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDayPress = (day: TimelineDay) => {
-    if (day.status === 'completed' && day.reportId) {
-      router.push({ pathname: '/doctor/report-details/[reportId]', params: { reportId: day.reportId } });
     }
   };
 
@@ -140,147 +176,133 @@ export default function DoctorPatientTimelineScreen() {
     }
   };
 
+  const handleBackPress = () => {
+    if (activeTab !== 'menu') {
+      setActiveTab('menu');
+    } else {
+      router.back();
+    }
+  };
+
+  const getHeaderTitle = () => {
+    switch (activeTab) {
+      case 'profile':
+        return 'Perfil do Paciente';
+      case 'timeline':
+        return 'Linha do Tempo';
+      case 'gallery':
+        return 'Galeria de Fotos';
+      default:
+        return surgery?.patient.full_name || 'Detalhes do Paciente';
+    }
+  };
+
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-gray-50">
-        <ActivityIndicator size="large" color="#2563EB" />
+        <ActivityIndicator size="large" color={AppColors.primary[700]} />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-gray-50">
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style="light" />
 
-      <View className="bg-primary-700" style={{ paddingTop: insets.top }}>
-        <View className="flex-row items-center px-4 py-3 relative">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="p-2 z-10"
-          >
-            <ArrowLeft size={24} color="#ffffff" />
-          </TouchableOpacity>
-          <View className="absolute left-0 right-0 top-0 bottom-0 justify-center items-center pointer-events-none">
-            <Text className="text-lg font-semibold text-white">
-              {surgery?.patient.full_name || 'Linha do Tempo'}
-            </Text>
+      {/* Header */}
+      {activeTab === 'menu' ? (
+        <PatientDetailHeader
+          patientName={surgery?.patient.full_name || ''}
+          surgeryType={surgery?.surgery_type.name || ''}
+          surgeryDate={profileData?.surgeryDate || ''}
+          onBackPress={handleBackPress}
+        />
+      ) : (
+        <View style={{ backgroundColor: AppColors.primary[700], paddingTop: insets.top }}>
+          <View className="flex-row items-center px-4 py-3 relative">
+            <TouchableOpacity
+              testID="back-button"
+              onPress={handleBackPress}
+              className="p-2 z-10"
+            >
+              <ArrowLeft size={24} color={AppColors.white} />
+            </TouchableOpacity>
+            <View className="absolute left-0 right-0 top-0 bottom-0 justify-center items-center pointer-events-none">
+              <Text className="text-lg font-semibold" style={{ color: AppColors.white }}>
+                {getHeaderTitle()}
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
+      )}
 
-      <ScrollView className="flex-1 p-4" showsVerticalScrollIndicator={false}>
-        <View className="mb-6">
-          <TouchableOpacity
-            className="flex-row items-center self-start bg-primary-50 px-3 py-2 rounded-lg border border-primary-200 mb-3"
-            onPress={() => router.push({ pathname: '/doctor/edit-patient/[surgeryId]', params: { surgeryId: surgeryId as string } })}
-          >
-            <Pencil size={14} color={AppColors.primary[700]} />
-            <Text className="text-primary-700 font-medium text-sm ml-1.5">Editar paciente</Text>
-          </TouchableOpacity>
-          <Text className="text-gray-500 text-base">
-            Acompanhando evolução de {surgery?.surgery_type.name || 'cirurgia'}
-          </Text>
+      {/* Content */}
+      {activeTab === 'menu' && (
+        <View className="flex-1 px-6 pt-6">
+          {/* Menu Items */}
+          <PatientDetailMenuItem
+            testID="menu-profile"
+            title="Perfil do Paciente"
+            subtitle="Visualize e edite os dados cadastrais"
+            icon={User}
+            iconColor={AppColors.primary[700]}
+            iconBgColor={AppColors.primary[50]}
+            onPress={() => setActiveTab('profile')}
+          />
+          <PatientDetailMenuItem
+            testID="menu-timeline"
+            title="Linha do Tempo"
+            subtitle="Acompanhe a evolução diária"
+            icon={Calendar}
+            iconColor={AppColors.success.DEFAULT}
+            iconBgColor={AppColors.success.light}
+            onPress={() => setActiveTab('timeline')}
+          />
+          <PatientDetailMenuItem
+            testID="menu-gallery"
+            title="Galeria de Fotos"
+            subtitle="Fotos do acompanhamento"
+            icon={ImageIcon}
+            iconColor={AppColors.info.DEFAULT}
+            iconBgColor={AppColors.info.light}
+            onPress={() => setActiveTab('gallery')}
+          />
         </View>
+      )}
 
-        {surgery?.status === 'pending_return' && (
-          <TouchableOpacity
-            className="flex-row items-center justify-between bg-orange-50 p-4 rounded-xl border border-orange-200 mb-4"
-            onPress={() => setShowReturnModal(true)}
-            activeOpacity={0.7}
-          >
-            <View className="flex-row items-center flex-1">
-              <Clock size={20} color="#f97316" style={{ marginRight: 8 }} />
-              <View className="flex-1">
-                <Text className="text-orange-800 font-semibold text-base">Pendente Retorno</Text>
-                <Text className="text-orange-600 text-sm">Toque para confirmar o retorno do paciente</Text>
-              </View>
-            </View>
-            <ChevronRight size={20} color="#f97316" />
-          </TouchableOpacity>
-        )}
+      {activeTab === 'profile' && (
+        <PatientProfileView
+          data={profileData}
+          isLoading={false}
+          isFinalized={isFinalized}
+          onEditPress={() =>
+            router.push({
+              pathname: '/doctor/edit-patient/[surgeryId]',
+              params: { surgeryId: surgeryId as string },
+            })
+          }
+        />
+      )}
 
-        {timeline.map((item) => (
-          <TouchableOpacity
-            key={item.day}
-            disabled={item.status !== 'completed'} // Only clickable if completed
-            onPress={() => handleDayPress(item)}
-            className={`mb-4 p-4 rounded-xl border flex-row items-center justify-between ${item.status === 'future' ? 'bg-gray-50 border-gray-100 opacity-60' :
-              item.status === 'pending' ? 'bg-white border-blue-200' :
-                item.status === 'missed' ? 'bg-gray-100 border-gray-200' :
-                  item.alertSeverity === 'critical' ? 'bg-red-50 border-red-200' :
-                    item.alertSeverity === 'warning' ? 'bg-yellow-50 border-yellow-200' :
-                      'bg-green-50 border-green-200'
-              }`}
-          >
-            <View className="flex-row items-center flex-1">
-              <View className={`w-10 h-10 rounded-full justify-center items-center mr-4 ${item.status === 'pending' ? 'bg-blue-50' :
-                item.status === 'future' ? 'bg-gray-200' :
-                  item.status === 'missed' ? 'bg-gray-300' :
-                    item.alertSeverity === 'critical' ? 'bg-red-100' :
-                      item.alertSeverity === 'warning' ? 'bg-yellow-100' :
-                        'bg-green-100'
-                }`}>
-                <Text className={`font-bold ${item.status === 'pending' ? 'text-blue-500' :
-                  item.status === 'future' ? 'text-gray-500' :
-                    item.status === 'missed' ? 'text-gray-500' :
-                      item.alertSeverity === 'critical' ? 'text-red-700' :
-                        item.alertSeverity === 'warning' ? 'text-yellow-700' :
-                          'text-green-700'
-                  }`}>{item.day}</Text>
-              </View>
+      {activeTab === 'timeline' && (
+        <PatientTimelineView
+          timeline={timeline}
+          surgeryTypeName={surgery?.surgery_type.name}
+          surgeryStatus={(surgery as any)?.status}
+          patientName={surgery?.patient.full_name || undefined}
+          isLoading={false}
+          onConfirmReturn={handleConfirmReturn}
+          showReturnModal={showReturnModal}
+          onOpenReturnModal={() => setShowReturnModal(true)}
+          onCloseReturnModal={() => setShowReturnModal(false)}
+          isReturnLoading={dismissPendingReturn.isPending}
+        />
+      )}
 
-              <View>
-                <Text className="font-semibold text-gray-800 text-lg">
-                  Dia {item.day}
-                </Text>
-                <Text className="text-gray-500 text-sm">
-                  {format(item.date, "d 'de' MMMM", { locale: ptBR })}
-                </Text>
-              </View>
-            </View>
-
-            <View>
-              {item.status === 'completed' && (
-                <View className="flex-row items-center">
-                  {item.alertSeverity === 'critical' ? (
-                    <Text className="text-red-600 font-medium mr-2">Crítico</Text>
-                  ) : item.alertSeverity === 'warning' ? (
-                    <Text className="text-yellow-600 font-medium mr-2">Atenção</Text>
-                  ) : (
-                    <>
-                      <Text className="text-green-600 font-medium mr-1">Respondido</Text>
-                      <CheckCircle size={16} color="#16A34A" />
-                    </>
-                  )}
-                  <ChevronRight size={20} color={
-                    item.alertSeverity === 'critical' ? '#DC2626' :
-                      item.alertSeverity === 'warning' ? '#D97706' :
-                        '#16A34A'
-                  } />
-                </View>
-              )}
-              {item.status === 'missed' && (
-                <Text className="text-gray-400 text-xs">Não respondido</Text>
-              )}
-              {item.status === 'pending' && (
-                <Text className="text-blue-500 font-medium text-xs">Aguardando resposta</Text>
-              )}
-              {item.status === 'future' && (
-                <Text className="text-gray-300 text-xs">Futuro</Text>
-              )}
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      <PendingReturnModal
-        visible={showReturnModal}
-        patientName={surgery?.patient.full_name || ''}
-        onConfirm={handleConfirmReturn}
-        onClose={() => setShowReturnModal(false)}
-        isLoading={dismissPendingReturn.isPending}
-      />
+      {activeTab === 'gallery' && (
+        <PatientGalleryView />
+      )}
     </View>
   );
 }

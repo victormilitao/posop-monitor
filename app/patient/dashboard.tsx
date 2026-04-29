@@ -1,13 +1,15 @@
 import { Redirect, Stack, useRouter } from 'expo-router';
-import { Calendar, FileText, Info, LogOut } from 'lucide-react-native';
+import { Calendar, FileText, Image, Info, LogOut, Stethoscope } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActionMenuItem } from '../../components/patient/ActionMenuItem';
+
 import { PhaseGuidelinesSheet } from '../../components/patient/PhaseGuidelinesSheet';
 import { ProgressBar } from '../../components/patient/ProgressBar';
 import { WelcomeHeader } from '../../components/patient/WelcomeHeader';
 import { Button } from '../../components/ui/Button';
+import { AppColors } from '../../constants/colors';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePatientDashboard } from '../../hooks/usePatientDashboard';
@@ -17,6 +19,7 @@ export default function PatientDashboard() {
     const router = useRouter();
     const { session, isLoading: isAuthLoading, isPatient, signOut, profile } = useAuth();
     const [isGuidelinesVisible, setIsGuidelinesVisible] = useState(false);
+
     const { showToast } = useToast();
     const insets = useSafeAreaInsets();
 
@@ -141,6 +144,15 @@ export default function PatientDashboard() {
                         onPress={handleDailyReportPress}
                     />
                     <ActionMenuItem
+                        title="Galeria de Fotos"
+                        subtitle="Veja suas fotos de acompanhamento"
+                        // @ts-ignore
+                        icon={Image}
+                        iconColor="#b45309"
+                        iconBgColor="bg-amber-100"
+                        onPress={() => router.push('/patient/photo-gallery')}
+                    />
+                    <ActionMenuItem
                         title="Linha do Tempo"
                         subtitle="Veja sua evolução diária"
                         // @ts-ignore
@@ -156,6 +168,15 @@ export default function PatientDashboard() {
                         iconBgColor="bg-purple-100"
                         onPress={() => setIsGuidelinesVisible(true)}
                     />
+                    <ActionMenuItem
+                        title="Contato Médico"
+                        subtitle="Dados do seu médico responsável"
+                        // @ts-ignore
+                        icon={Stethoscope}
+                        iconColor={AppColors.primary[700]}
+                        iconBgColor="bg-primary-100"
+                        onPress={() => router.push('/patient/doctor-contact')}
+                    />
                 </View>
             </ScrollView>
 
@@ -165,6 +186,8 @@ export default function PatientDashboard() {
                 currentDay={currentDay}
                 surgeryTypeId={dashboardData?.currentSurgery?.surgery_type_id}
             />
+
+
         </View>
     );
 }

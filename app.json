@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "PosOp Monitor",
-    "slug": "posop-monitor",
+    "slug": "medical-surgey",
     "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -60,6 +60,7 @@
     },
     "updates": {
       "url": "https://u.expo.dev/f7963815-e620-41e4-86b3-27a3efecab8c"
-    }
+    },
+    "owner": "victormilitao"
   }
 }

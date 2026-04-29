@@ -1,6 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import { Database } from '../../types/supabase';
-import { IPatientService, PatientDashboardData, PatientWithProfile, UpdatePatientData } from '../types';
+import { DoctorContactInfo, IPatientService, PatientDashboardData, PatientWithProfile, UpdatePatientData } from '../types';
 
 type Surgery = Database['public']['Tables']['surgeries']['Row'];
 type SurgeryType = Database['public']['Tables']['surgery_types']['Row'];
@@ -99,6 +99,52 @@ export class SupabasePatientService implements IPatientService {
             currentSurgery,
             daysSinceSurgery,
             totalRecoveryDays
+        };
+    }
+
+    async getDoctorByPatientId(patientId: string): Promise<DoctorContactInfo | null> {
+        // Get surgery_id from the patients table
+        const { data: patient, error: patientError } = await supabase
+            .from('patients')
+            .select('surgery_id')
+            .eq('id', patientId)
+            .single();
+
+        if (patientError || !patient?.surgery_id) {
+            console.error('Error fetching patient surgery_id:', patientError);
+            return null;
+        }
+
+        // Get doctor_id from the surgeries table
+        const { data: surgery, error: surgeryError } = await supabase
+            .from('surgeries')
+            .select('doctor_id')
+            .eq('id', patient.surgery_id)
+            .single();
+
+        if (surgeryError || !surgery?.doctor_id) {
+            console.error('Error fetching surgery doctor_id:', surgeryError);
+            return null;
+        }
+
+        // Get doctor profile
+        const { data: doctor, error: doctorError } = await supabase
+            .from('profiles')
+            .select('full_name, crm, email, phone, phone_personal')
+            .eq('id', surgery.doctor_id)
+            .single();
+
+        if (doctorError || !doctor) {
+            console.error('Error fetching doctor profile:', doctorError);
+            return null;
+        }
+
+        return {
+            name: doctor.full_name || '',
+            crm: doctor.crm || '',
+            email: doctor.email || '',
+            phone: doctor.phone || '',
+            phonePersonal: doctor.phone_personal || null,
         };
     }
 

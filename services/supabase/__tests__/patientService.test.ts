@@ -333,4 +333,139 @@ describe('SupabasePatientService', () => {
       })).rejects.toEqual({ message: 'Surgery update failed' });
     });
   });
+
+  describe('getDoctorByPatientId', () => {
+    it('deve retornar dados do médico com sucesso', async () => {
+      const mockPatient = { surgery_id: 's1' };
+      const mockSurgery = { doctor_id: 'd1' };
+      const mockDoctor = {
+        full_name: 'Dr. Carlos Silva',
+        crm: 'CRM/CE 12345',
+        email: 'carlos@medico.com',
+        phone: '85999001122',
+        phone_personal: '85988001122',
+      };
+
+      const patientBuilder = createMockQueryBuilder();
+      patientBuilder.single.mockResolvedValue({ data: mockPatient, error: null });
+
+      const surgeryBuilder = createMockQueryBuilder();
+      surgeryBuilder.single.mockResolvedValue({ data: mockSurgery, error: null });
+
+      const doctorBuilder = createMockQueryBuilder();
+      doctorBuilder.single.mockResolvedValue({ data: mockDoctor, error: null });
+
+      let callCount = 0;
+      mockFrom.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return patientBuilder;
+        if (callCount === 2) return surgeryBuilder;
+        return doctorBuilder;
+      });
+
+      const result = await service.getDoctorByPatientId('p1');
+
+      expect(result).not.toBeNull();
+      expect(result?.name).toBe('Dr. Carlos Silva');
+      expect(result?.crm).toBe('CRM/CE 12345');
+      expect(result?.email).toBe('carlos@medico.com');
+      expect(result?.phone).toBe('85999001122');
+      expect(result?.phonePersonal).toBe('85988001122');
+    });
+
+    it('deve retornar null quando paciente não tem surgery_id', async () => {
+      const patientBuilder = createMockQueryBuilder();
+      patientBuilder.single.mockResolvedValue({ data: { surgery_id: null }, error: null });
+      mockFrom.mockReturnValue(patientBuilder);
+
+      const result = await service.getDoctorByPatientId('p1');
+
+      expect(result).toBeNull();
+    });
+
+    it('deve retornar null quando paciente não encontrado', async () => {
+      const patientBuilder = createMockQueryBuilder();
+      patientBuilder.single.mockResolvedValue({ data: null, error: { message: 'Not found' } });
+      mockFrom.mockReturnValue(patientBuilder);
+
+      const result = await service.getDoctorByPatientId('p999');
+
+      expect(result).toBeNull();
+    });
+
+    it('deve retornar null quando cirurgia não tem doctor_id', async () => {
+      const patientBuilder = createMockQueryBuilder();
+      patientBuilder.single.mockResolvedValue({ data: { surgery_id: 's1' }, error: null });
+
+      const surgeryBuilder = createMockQueryBuilder();
+      surgeryBuilder.single.mockResolvedValue({ data: { doctor_id: null }, error: null });
+
+      let callCount = 0;
+      mockFrom.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return patientBuilder;
+        return surgeryBuilder;
+      });
+
+      const result = await service.getDoctorByPatientId('p1');
+
+      expect(result).toBeNull();
+    });
+
+    it('deve retornar null quando perfil do médico não encontrado', async () => {
+      const patientBuilder = createMockQueryBuilder();
+      patientBuilder.single.mockResolvedValue({ data: { surgery_id: 's1' }, error: null });
+
+      const surgeryBuilder = createMockQueryBuilder();
+      surgeryBuilder.single.mockResolvedValue({ data: { doctor_id: 'd1' }, error: null });
+
+      const doctorBuilder = createMockQueryBuilder();
+      doctorBuilder.single.mockResolvedValue({ data: null, error: { message: 'Doctor not found' } });
+
+      let callCount = 0;
+      mockFrom.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return patientBuilder;
+        if (callCount === 2) return surgeryBuilder;
+        return doctorBuilder;
+      });
+
+      const result = await service.getDoctorByPatientId('p1');
+
+      expect(result).toBeNull();
+    });
+
+    it('deve retornar phonePersonal como null quando não disponível', async () => {
+      const mockPatient = { surgery_id: 's1' };
+      const mockSurgery = { doctor_id: 'd1' };
+      const mockDoctor = {
+        full_name: 'Dr. Ana',
+        crm: 'CRM/SP 99999',
+        email: 'ana@medico.com',
+        phone: '11999998888',
+        phone_personal: null,
+      };
+
+      const patientBuilder = createMockQueryBuilder();
+      patientBuilder.single.mockResolvedValue({ data: mockPatient, error: null });
+
+      const surgeryBuilder = createMockQueryBuilder();
+      surgeryBuilder.single.mockResolvedValue({ data: mockSurgery, error: null });
+
+      const doctorBuilder = createMockQueryBuilder();
+      doctorBuilder.single.mockResolvedValue({ data: mockDoctor, error: null });
+
+      let callCount = 0;
+      mockFrom.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return patientBuilder;
+        if (callCount === 2) return surgeryBuilder;
+        return doctorBuilder;
+      });
+
+      const result = await service.getDoctorByPatientId('p1');
+
+      expect(result?.phonePersonal).toBeNull();
+    });
+  });
 });

@@ -19,7 +19,13 @@ describe('PatientListItem', () => {
   it('deve renderizar nome e data da cirurgia', () => {
     render(React.createElement(PatientListItem, baseProps));
     expect(screen.getByText('João Silva')).toBeTruthy();
-    expect(screen.getByText('Cirurgia: 20/03/2026')).toBeTruthy();
+    expect(screen.getByText('Data da Cirurgia: 20/03/2026')).toBeTruthy();
+  });
+
+  it('deve exibir tipo de cirurgia e data em linhas separadas quando surgeryType fornecido', () => {
+    render(React.createElement(PatientListItem, { ...baseProps, surgeryType: 'Histerectomia' }));
+    expect(screen.getByText('Cirurgia: Histerectomia')).toBeTruthy();
+    expect(screen.getByText('Data da Cirurgia: 20/03/2026')).toBeTruthy();
   });
 
   it('deve renderizar badge com dia correto', () => {

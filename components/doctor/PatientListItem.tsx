@@ -7,6 +7,7 @@ export type PatientStatus = 'critical' | 'warning' | 'stable' | 'finished' | 'pe
 
 interface PatientListItemProps {
     name: string;
+    surgeryType?: string;
     surgeryDate: string;
     day: number;
     status: PatientStatus;
@@ -18,6 +19,7 @@ interface PatientListItemProps {
 
 export function PatientListItem({
     name,
+    surgeryType,
     surgeryDate,
     day,
     status,
@@ -61,9 +63,16 @@ export function PatientListItem({
                             color={sex === 'F' ? '#EC4899' : '#3B82F6'}
                             style={{ marginRight: 6 }}
                         />
-                        <View>
+                        <View className="flex-1">
                             <Text className="text-gray-900 font-bold text-lg">{name}</Text>
-                            <Text className="text-gray-500 text-sm">Cirurgia: {surgeryDate}</Text>
+                            {surgeryType ? (
+                                <>
+                                    <Text className="text-gray-500 text-sm" numberOfLines={1}><Text className="font-bold">Cirurgia:</Text> {surgeryType}</Text>
+                                    <Text className="text-gray-500 text-sm"><Text className="font-bold">Data da Cirurgia:</Text> {surgeryDate}</Text>
+                                </>
+                            ) : (
+                                <Text className="text-gray-500 text-sm"><Text className="font-bold">Data da Cirurgia:</Text> {surgeryDate}</Text>
+                            )}
                         </View>
                     </View>
                     <Badge label={`Dia ${day}`} variant="default" />

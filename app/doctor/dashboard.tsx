@@ -13,6 +13,7 @@ import { useAutoFinalizeSurgeries, useSurgeriesByDoctor } from '../../hooks/useS
 interface Patient {
   id: string;
   name: string;
+  surgeryType?: string;
   surgeryDate: string;
   day: number;
   status: PatientStatus;
@@ -161,6 +162,7 @@ export default function DoctorDashboard() {
             <PatientListItem
               key={patient.id}
               name={patient.name}
+              surgeryType={patient.surgeryType}
               surgeryDate={patient.surgeryDate}
               day={patient.day}
               status={patient.status}
