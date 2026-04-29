@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Href, Stack, useRouter } from 'expo-router';
 import { FileText, Lock, Stethoscope, User } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useToast } from '../context/ToastContext';
 import { Button } from '../components/ui/Button';
 import { AppColors } from '../constants/colors';
@@ -201,12 +201,11 @@ export default function LoginScreen() {
       <View className="flex-1 justify-center items-center px-6 gap-10">
         {/* Logo */}
         <View className="items-center mb-8">
-          <View style={styles.iconContainer}>
-            <Stethoscope size={64} color="#FFFFFF" strokeWidth={1.5} />
-          </View>
-          <Text style={styles.titleText}>
-            PosOp Monitor
-          </Text>
+          <Image
+            source={require('@/assets/images/logo.png')}
+            style={{ width: 250, height: 250 }}
+            resizeMode="contain"
+          />
         </View>
 
         {/* Buttons */}
