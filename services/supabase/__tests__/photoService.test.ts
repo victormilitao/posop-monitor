@@ -129,6 +129,36 @@ describe('SupabasePhotoService', () => {
             expect(result.signedUrl).toBe('https://signed-photo-url');
         });
 
+        it('deve usar photoDate quando fornecido', async () => {
+            mockUpload.mockResolvedValue({ error: null });
+
+            const insertedPhoto = {
+                id: 'photo-1',
+                patient_id: 'p1',
+                surgery_id: 's1',
+                photo_date: '2026-01-05',
+                storage_path: 'p1/2026-01-01_abc.jpg',
+                created_at: '2026-01-01T10:00:00',
+            };
+
+            const chain: any = {};
+            chain.insert = jest.fn().mockReturnValue(chain);
+            chain.select = jest.fn().mockReturnValue(chain);
+            chain.single = jest.fn().mockResolvedValue({ data: insertedPhoto, error: null });
+            mockFrom.mockReturnValue(chain);
+
+            mockCreateSignedUrls.mockResolvedValue({
+                data: [{ signedUrl: 'https://signed-photo-url' }],
+                error: null,
+            });
+
+            await service.uploadPhoto('p1', 's1', 'file:///photo.jpg', '2026-01-05');
+
+            expect(chain.insert).toHaveBeenCalledWith(expect.objectContaining({
+                photo_date: '2026-01-05',
+            }));
+        });
+
         it('deve fazer rollback se inserção falhar', async () => {
             mockUpload.mockResolvedValue({ error: null });
 
@@ -139,6 +169,58 @@ describe('SupabasePhotoService', () => {
             mockFrom.mockReturnValue(chain);
 
             await expect(service.uploadPhoto('p1', 's1', 'file:///photo.jpg')).rejects.toEqual({ message: 'Insert error' });
+            expect(mockRemove).toHaveBeenCalled();
+        });
+    });
+
+    describe('replacePhoto', () => {
+        it('deve comprimir, fazer upload, atualizar registro e deletar imagem antiga', async () => {
+            mockUpload.mockResolvedValue({ error: null });
+            mockRemove.mockResolvedValue({ error: null });
+
+            const updatedPhoto = {
+                id: 'photo-1',
+                patient_id: 'p1',
+                surgery_id: 's1',
+                photo_date: '2026-01-01',
+                storage_path: 'p1/2026-01-01_new.jpg',
+                created_at: '2026-01-01T10:00:00',
+            };
+
+            const chain: any = {};
+            chain.update = jest.fn().mockReturnValue(chain);
+            chain.eq = jest.fn().mockReturnValue(chain);
+            chain.select = jest.fn().mockReturnValue(chain);
+            chain.single = jest.fn().mockResolvedValue({ data: updatedPhoto, error: null });
+            mockFrom.mockReturnValue(chain);
+
+            mockCreateSignedUrls.mockResolvedValue({
+                data: [{ signedUrl: 'https://signed-new-url' }],
+                error: null,
+            });
+
+            const result = await service.replacePhoto('photo-1', 'p1', 'p1/old.jpg', 'file:///new.jpg');
+
+            expect(mockUpload).toHaveBeenCalled();
+            expect(chain.update).toHaveBeenCalled();
+            expect(mockRemove).toHaveBeenCalledWith(['p1/old.jpg']);
+            expect(result.signedUrl).toBe('https://signed-new-url');
+        });
+
+        it('deve fazer rollback se atualização falhar', async () => {
+            mockUpload.mockResolvedValue({ error: null });
+
+            const chain: any = {};
+            chain.update = jest.fn().mockReturnValue(chain);
+            chain.eq = jest.fn().mockReturnValue(chain);
+            chain.select = jest.fn().mockReturnValue(chain);
+            chain.single = jest.fn().mockResolvedValue({ data: null, error: { message: 'Update error' } });
+            mockFrom.mockReturnValue(chain);
+
+            await expect(
+                service.replacePhoto('photo-1', 'p1', 'p1/old.jpg', 'file:///new.jpg')
+            ).rejects.toEqual({ message: 'Update error' });
+            // Nova imagem deve ser removida como rollback
             expect(mockRemove).toHaveBeenCalled();
         });
     });
@@ -189,3 +271,4 @@ describe('SupabasePhotoService', () => {
         });
     });
 });
+

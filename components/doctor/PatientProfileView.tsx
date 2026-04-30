@@ -11,6 +11,7 @@ export interface PatientProfileData {
     surgeryDate: string;
     followUpDays: string;
     status?: string;
+    hospital?: string;
 }
 
 interface PatientProfileViewProps {
@@ -74,6 +75,9 @@ export function PatientProfileView({
                 <DataRow label="Procedimento" value={data.surgeryType} />
                 <DataRow label="Data" value={data.surgeryDate} />
                 <DataRow label="Acompanhamento" value={`${data.followUpDays} dias`} />
+                {data.hospital && (
+                    <DataRow label="Hospital" value={data.hospital} />
+                )}
                 {data.status && (
                     <DataRow
                         label="Status"

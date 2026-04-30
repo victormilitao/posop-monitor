@@ -12,6 +12,7 @@ describe('PatientProfileView', () => {
     surgeryDate: '15/04/2026',
     followUpDays: '14',
     status: 'active',
+    hospital: 'Hospital São Lucas',
   };
 
   const baseProps = {
@@ -38,6 +39,17 @@ describe('PatientProfileView', () => {
     expect(screen.getByText('15/04/2026')).toBeTruthy();
     expect(screen.getByText('14 dias')).toBeTruthy();
     expect(screen.getByText('Ativo')).toBeTruthy();
+  });
+
+  it('deve renderizar hospital quando informado', () => {
+    render(React.createElement(PatientProfileView, baseProps));
+    expect(screen.getByText('Hospital São Lucas')).toBeTruthy();
+  });
+
+  it('não deve renderizar hospital quando não informado', () => {
+    const dataWithoutHospital = { ...sampleData, hospital: undefined };
+    render(React.createElement(PatientProfileView, { ...baseProps, data: dataWithoutHospital }));
+    expect(screen.queryByText('Hospital')).toBeNull();
   });
 
   it('deve exibir Masculino quando sex é M', () => {

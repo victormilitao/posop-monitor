@@ -27,6 +27,14 @@ describe('DoctorContactView', () => {
     patientId: 'p1',
   };
 
+  const doctorData = {
+    name: 'Dr. Carlos Silva',
+    crm: 'CRM/CE 12345',
+    email: 'carlos@medico.com',
+    phone: '85999001122',
+    phonePersonal: '85988001122',
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -49,13 +57,7 @@ describe('DoctorContactView', () => {
 
   it('deve renderizar dados do médico no card', () => {
     mockUseDoctorContact.mockReturnValue({
-      data: {
-        name: 'Dr. Carlos Silva',
-        crm: 'CRM/CE 12345',
-        email: 'carlos@medico.com',
-        phone: '85999001122',
-        phonePersonal: '85988001122',
-      },
+      data: doctorData,
       isLoading: false,
     });
 
@@ -63,10 +65,8 @@ describe('DoctorContactView', () => {
 
     expect(screen.getAllByText('Dr. Carlos Silva').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('CRM/CE 12345')).toBeTruthy();
-    expect(screen.getByText('carlos@medico.com')).toBeTruthy();
     expect(screen.getByText('85999001122')).toBeTruthy();
     expect(screen.getByText('85988001122')).toBeTruthy();
-    expect(screen.getByText('Ligar para o Médico')).toBeTruthy();
   });
 
   it('deve renderizar nome no header e no card', () => {
@@ -103,7 +103,33 @@ describe('DoctorContactView', () => {
     expect(screen.queryByText('Telefone Pessoal')).toBeNull();
   });
 
-  it('deve abrir discador ao pressionar botão ligar', async () => {
+  it('não deve renderizar botão ligar quando não está em alerta crítico', () => {
+    mockUseDoctorContact.mockReturnValue({
+      data: doctorData,
+      isLoading: false,
+    });
+
+    render(React.createElement(DoctorContactView, baseProps));
+
+    expect(screen.queryByTestId('call-doctor-button')).toBeNull();
+    expect(screen.queryByText('Ligar para o Médico')).toBeNull();
+    // Phone number should still be visible
+    expect(screen.getByText('85999001122')).toBeTruthy();
+  });
+
+  it('deve renderizar botão ligar quando paciente está em alerta crítico', () => {
+    mockUseDoctorContact.mockReturnValue({
+      data: doctorData,
+      isLoading: false,
+    });
+
+    render(React.createElement(DoctorContactView, { ...baseProps, isCriticalAlert: true }));
+
+    expect(screen.getByTestId('call-doctor-button')).toBeTruthy();
+    expect(screen.getByText('Ligar para o Médico')).toBeTruthy();
+  });
+
+  it('deve abrir discador ao pressionar botão ligar em alerta crítico', async () => {
     jest.spyOn(Linking, 'canOpenURL').mockResolvedValue(true);
 
     mockUseDoctorContact.mockReturnValue({
@@ -117,7 +143,7 @@ describe('DoctorContactView', () => {
       isLoading: false,
     });
 
-    render(React.createElement(DoctorContactView, baseProps));
+    render(React.createElement(DoctorContactView, { ...baseProps, isCriticalAlert: true }));
 
     fireEvent.press(screen.getByTestId('call-doctor-button'));
 

@@ -6,11 +6,15 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DoctorContactView } from '../../components/patient/DoctorContactView';
 import { useAuth } from '../../context/AuthContext';
+import { usePatientDashboard } from '../../hooks/usePatientDashboard';
 
 export default function DoctorContactScreen() {
     const router = useRouter();
     const { profile } = useAuth();
     const insets = useSafeAreaInsets();
+    const { data: dashboardData } = usePatientDashboard(profile?.id);
+
+    const isCriticalAlert = dashboardData?.currentSurgery?.medical_status === 'critical';
 
     return (
         <View className="flex-1 bg-white">
@@ -31,7 +35,7 @@ export default function DoctorContactScreen() {
                 </View>
             </View>
 
-            <DoctorContactView patientId={profile?.id} />
+            <DoctorContactView patientId={profile?.id} isCriticalAlert={isCriticalAlert} />
         </View>
     );
 }

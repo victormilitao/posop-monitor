@@ -42,6 +42,7 @@ export default function EditPatientScreen() {
   const [surgeryTypeId, setSurgeryTypeId] = useState('');
   const [surgeryDate, setSurgeryDate] = useState('');
   const [followUpDays, setFollowUpDays] = useState('');
+  const [hospital, setHospital] = useState('');
   const [surgeryTypes, setSurgeryTypes] = useState<SurgeryType[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
@@ -87,6 +88,7 @@ export default function EditPatientScreen() {
       setPhone(formatPhone((surgery.patient?.phone as string) || ''));
       setSurgeryTypeId(surgery.surgery_type_id);
       setFollowUpDays(String((surgery as any).follow_up_days ?? surgery.surgery_type?.expected_recovery_days ?? 14));
+      setHospital((surgery as any).hospital || '');
 
       // Format surgery_date from YYYY-MM-DD to DD/MM/YYYY
       const dateParts = surgery.surgery_date.split('T')[0].split('-');
@@ -194,6 +196,7 @@ export default function EditPatientScreen() {
         cpf: cleanCpf,
         sex,
         phone: cleanPhone,
+        hospital: hospital.trim(),
       };
 
       // Include surgery fields only when editing is allowed (no reports)
@@ -463,6 +466,20 @@ export default function EditPatientScreen() {
                 }
               </Text>
             )}
+          </View>
+
+          {/* Hospital */}
+          <View className={`mb-8 ${isFinalized ? 'opacity-80' : ''}`}>
+            <Text className={`font-medium mb-2 ${isFinalized ? 'text-gray-400' : 'text-gray-700'}`}>Hospital / Clínica</Text>
+            <TextInput
+              testID="hospital-input"
+              className={`rounded-xl px-4 ${isFinalized ? 'bg-gray-100 border border-gray-200 text-gray-400' : 'bg-white border border-gray-300 text-gray-800'}`}
+              style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
+              placeholder="Nome do hospital ou clínica"
+              value={hospital}
+              onChangeText={!isFinalized ? setHospital : undefined}
+              editable={!isFinalized}
+            />
           </View>
 
           {/* Submit */}

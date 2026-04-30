@@ -44,6 +44,7 @@ export interface UpdatePatientData {
     surgeryDate?: string;
     followUpDays?: number;
     surgeryTypeId?: string;
+    hospital?: string;
 }
 
 export interface DoctorContactInfo {
@@ -69,6 +70,7 @@ export interface IPatientService {
         surgeryDate: string;
         doctorId: string;
         followUpDays?: number;
+        hospital?: string;
     }): Promise<{ patientId: string; surgeryId: string }>;
     updatePatient(data: UpdatePatientData): Promise<void>;
 }
@@ -83,6 +85,7 @@ export interface ISurgeryService {
         surgeryDate: string;
         notes?: string;
         followUpDays?: number;
+        hospital?: string;
     }): Promise<Surgery>;
     finalizeSurgeriesPastRecovery(doctorId: string): Promise<number>;
     dismissPendingReturn(surgeryId: string): Promise<void>;
@@ -175,6 +178,13 @@ export interface IPhotoService {
     uploadPhoto(
         patientId: string,
         surgeryId: string,
+        imageUri: string,
+        photoDate?: string
+    ): Promise<PatientPhoto>;
+    replacePhoto(
+        photoId: string,
+        patientId: string,
+        oldStoragePath: string,
         imageUri: string
     ): Promise<PatientPhoto>;
     deletePhoto(photoId: string, storagePath: string): Promise<void>;

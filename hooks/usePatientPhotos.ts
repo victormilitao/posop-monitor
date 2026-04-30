@@ -39,6 +39,7 @@ export function usePhotosCountByDate(patientId: string | undefined, date: string
 
 /**
  * Mutation para upload de foto.
+ * Suporta photoDate opcional para adicionar fotos a dias passados.
  * Invalida queries relacionadas após sucesso.
  */
 export function useUploadPhoto() {
@@ -49,11 +50,44 @@ export function useUploadPhoto() {
             patientId,
             surgeryId,
             imageUri,
+            photoDate,
         }: {
             patientId: string;
             surgeryId: string;
             imageUri: string;
-        }) => photoService.uploadPhoto(patientId, surgeryId, imageUri),
+            photoDate?: string;
+        }) => photoService.uploadPhoto(patientId, surgeryId, imageUri, photoDate),
+        onSuccess: (_data, variables) => {
+            queryClient.invalidateQueries({
+                queryKey: photoKeys.bySurgery(variables.surgeryId),
+            });
+            queryClient.invalidateQueries({
+                queryKey: photoKeys.all,
+            });
+        },
+    });
+}
+
+/**
+ * Mutation para substituir a imagem de uma foto existente.
+ * Invalida queries relacionadas após sucesso.
+ */
+export function useReplacePhoto() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({
+            photoId,
+            patientId,
+            oldStoragePath,
+            imageUri,
+        }: {
+            photoId: string;
+            patientId: string;
+            oldStoragePath: string;
+            imageUri: string;
+            surgeryId: string;
+        }) => photoService.replacePhoto(photoId, patientId, oldStoragePath, imageUri),
         onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({
                 queryKey: photoKeys.bySurgery(variables.surgeryId),

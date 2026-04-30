@@ -17,6 +17,7 @@ export default function PhotoGalleryScreen() {
 
     const patientId = profile?.id;
     const surgeryId = dashboardData?.currentSurgery?.id;
+    const surgeryDate = dashboardData?.currentSurgery?.surgery_date;
 
     return (
         <View className="flex-1 bg-white">
@@ -42,6 +43,7 @@ export default function PhotoGalleryScreen() {
             <PatientPhotoGalleryView
                 patientId={patientId}
                 surgeryId={surgeryId}
+                surgeryDate={surgeryDate}
             />
         </View>
     );

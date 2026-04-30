@@ -176,10 +176,15 @@ describe('SupabasePatientService', () => {
         surgeryTypeId: 'st1',
         surgeryDate: '2026-03-20',
         doctorId: 'd1',
+        hospital: 'Hospital São Lucas',
       });
 
       expect(result.patientId).toBe('new-patient-id');
       expect(result.surgeryId).toBe('surgery-1');
+      expect(mockFrom).toHaveBeenCalledWith('surgeries');
+      expect(surgeryBuilder.insert).toHaveBeenCalledWith(
+        expect.objectContaining({ hospital: 'Hospital São Lucas' })
+      );
     });
 
     it('deve lançar erro de CPF duplicado', async () => {
@@ -331,6 +336,23 @@ describe('SupabasePatientService', () => {
         surgeryId: 's1',
         surgeryDate: '2026-05-01',
       })).rejects.toEqual({ message: 'Surgery update failed' });
+    });
+
+    it('deve atualizar hospital com sucesso', async () => {
+      const surgeryBuilder = createMockQueryBuilder(null, null);
+      mockFrom.mockReturnValue(surgeryBuilder);
+
+      await service.updatePatient({
+        patientId: 'p1',
+        surgeryId: 's1',
+        hospital: 'Hospital São Lucas',
+      });
+
+      expect(mockFrom).toHaveBeenCalledWith('surgeries');
+      expect(surgeryBuilder.update).toHaveBeenCalledWith({
+        hospital: 'Hospital São Lucas',
+      });
+      expect(surgeryBuilder.eq).toHaveBeenCalledWith('id', 's1');
     });
   });
 
