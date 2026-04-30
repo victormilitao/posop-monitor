@@ -54,14 +54,7 @@ describe('PatientTimelineView', () => {
   const baseProps = {
     timeline: sampleTimeline,
     surgeryTypeName: 'Colecistectomia',
-    surgeryStatus: 'active',
-    patientName: 'Maria Oliveira',
     isLoading: false,
-    onConfirmReturn: jest.fn(),
-    showReturnModal: false,
-    onOpenReturnModal: jest.fn(),
-    onCloseReturnModal: jest.fn(),
-    isReturnLoading: false,
   };
 
   beforeEach(() => {
@@ -113,32 +106,9 @@ describe('PatientTimelineView', () => {
     expect(screen.getByText('Futuro')).toBeTruthy();
   });
 
-  it('deve mostrar aviso de retorno pendente quando status é pending_return', () => {
-    render(React.createElement(PatientTimelineView, {
-      ...baseProps,
-      surgeryStatus: 'pending_return',
-    }));
-    expect(screen.getByText('Pendente Retorno')).toBeTruthy();
-    expect(screen.getByText('Toque para confirmar o retorno do paciente')).toBeTruthy();
-  });
-
-  it('deve chamar onOpenReturnModal ao pressionar aviso de retorno', () => {
-    render(React.createElement(PatientTimelineView, {
-      ...baseProps,
-      surgeryStatus: 'pending_return',
-    }));
-    fireEvent.press(screen.getByText('Pendente Retorno'));
-    expect(baseProps.onOpenReturnModal).toHaveBeenCalledTimes(1);
-  });
-
   it('deve mostrar loading quando isLoading é true', () => {
     render(React.createElement(PatientTimelineView, { ...baseProps, isLoading: true }));
     expect(screen.queryByText('Dia 1')).toBeNull();
-  });
-
-  it('não deve mostrar aviso de retorno quando status é active', () => {
-    render(React.createElement(PatientTimelineView, baseProps));
-    expect(screen.queryByText('Pendente Retorno')).toBeNull();
   });
 
   it('deve renderizar texto padrão quando surgeryTypeName não fornecido', () => {
@@ -175,4 +145,3 @@ describe('PatientTimelineView', () => {
     expect(mockPush).not.toHaveBeenCalled();
   });
 });
-

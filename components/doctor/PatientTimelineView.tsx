@@ -1,11 +1,10 @@
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useRouter } from 'expo-router';
-import { CheckCircle, ChevronRight, Clock } from 'lucide-react-native';
+import { CheckCircle, ChevronRight } from 'lucide-react-native';
 import React from 'react';
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { AppColors } from '../../constants/colors';
-import { PendingReturnModal } from './PendingReturnModal';
 
 export interface TimelineDay {
     day: number;
@@ -18,27 +17,13 @@ export interface TimelineDay {
 interface PatientTimelineViewProps {
     timeline: TimelineDay[];
     surgeryTypeName?: string;
-    surgeryStatus?: string;
-    patientName?: string;
     isLoading: boolean;
-    onConfirmReturn: () => void;
-    showReturnModal: boolean;
-    onOpenReturnModal: () => void;
-    onCloseReturnModal: () => void;
-    isReturnLoading: boolean;
 }
 
 export function PatientTimelineView({
     timeline,
     surgeryTypeName,
-    surgeryStatus,
-    patientName,
     isLoading,
-    onConfirmReturn,
-    showReturnModal,
-    onOpenReturnModal,
-    onCloseReturnModal,
-    isReturnLoading,
 }: PatientTimelineViewProps) {
     const router = useRouter();
 
@@ -65,30 +50,6 @@ export function PatientTimelineView({
                     </Text>
                 </View>
 
-                {surgeryStatus === 'pending_return' && (
-                    <TouchableOpacity
-                        className="flex-row items-center justify-between p-4 rounded-xl border mb-4"
-                        style={{
-                            backgroundColor: AppColors.warning.light,
-                            borderColor: '#fed7aa',
-                        }}
-                        onPress={onOpenReturnModal}
-                        activeOpacity={0.7}
-                    >
-                        <View className="flex-row items-center flex-1">
-                            <Clock size={20} color="#f97316" style={{ marginRight: 8 }} />
-                            <View className="flex-1">
-                                <Text className="font-semibold text-base" style={{ color: '#9a3412' }}>
-                                    Pendente Retorno
-                                </Text>
-                                <Text className="text-sm" style={{ color: '#ea580c' }}>
-                                    Toque para confirmar o retorno do paciente
-                                </Text>
-                            </View>
-                        </View>
-                        <ChevronRight size={20} color="#f97316" />
-                    </TouchableOpacity>
-                )}
 
                 {timeline.map((item) => (
                     <TouchableOpacity
@@ -163,14 +124,6 @@ export function PatientTimelineView({
                     </TouchableOpacity>
                 ))}
             </ScrollView>
-
-            <PendingReturnModal
-                visible={showReturnModal}
-                patientName={patientName || ''}
-                onConfirm={onConfirmReturn}
-                onClose={onCloseReturnModal}
-                isLoading={isReturnLoading}
-            />
         </View>
     );
 }

@@ -1,11 +1,13 @@
 import { Image as ExpoImage } from 'expo-image';
-import { ImageOff, Plus, Trash2, X } from 'lucide-react-native';
-import React, { useCallback, useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight, ImageOff, Plus, Trash2, X } from 'lucide-react-native';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
     ActivityIndicator,
     Dimensions,
     FlatList,
     Modal,
+    NativeScrollEvent,
+    NativeSyntheticEvent,
     ScrollView,
     Text,
     TouchableOpacity,
@@ -16,6 +18,7 @@ import { AppColors } from '../../constants/colors';
 import { PatientPhoto } from '../../services/types';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
+const SCREEN_HEIGHT = Dimensions.get('window').height;
 const GRID_GAP = 8;
 const GRID_PADDING = 16;
 const COLUMN_COUNT = 2;
@@ -57,7 +60,8 @@ export function PhotoGalleryGrid({
     onDeletePhoto,
     isUploading = false,
 }: PhotoGalleryGridProps) {
-    const [selectedPhoto, setSelectedPhoto] = useState<PatientPhoto | null>(null);
+    const insets = useSafeAreaInsets();
+    const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
 
     // Agrupar fotos por data
     const sections = useMemo<PhotoSection[]>(() => {
@@ -79,12 +83,22 @@ export function PhotoGalleryGrid({
             }));
     }, [photos]);
 
+    // Flat list of all photos in display order for swipe navigation
+    const allPhotosFlat = useMemo(() => {
+        const result: PatientPhoto[] = [];
+        for (const section of sections) {
+            result.push(...section.photos);
+        }
+        return result;
+    }, [sections]);
+
     const handlePhotoPress = useCallback((photo: PatientPhoto) => {
-        setSelectedPhoto(photo);
-    }, []);
+        const index = allPhotosFlat.findIndex(p => p.id === photo.id);
+        setSelectedPhotoIndex(index >= 0 ? index : null);
+    }, [allPhotosFlat]);
 
     const handleCloseModal = useCallback(() => {
-        setSelectedPhoto(null);
+        setSelectedPhotoIndex(null);
     }, []);
 
     if (isLoading) {
@@ -147,8 +161,11 @@ export function PhotoGalleryGrid({
             {/* Botão flutuante de adicionar foto */}
             {canAddPhotos && onAddPhoto && (
                 <View
-                    className="absolute bottom-0 left-0 right-0 px-4 pb-6 pt-3"
-                    style={{ backgroundColor: AppColors.white }}
+                    className="absolute bottom-0 left-0 right-0 px-4 pt-3"
+                    style={{
+                        backgroundColor: AppColors.white,
+                        paddingBottom: Math.max(insets.bottom, 16) + 8,
+                    }}
                 >
                     <AddPhotoButton onPress={onAddPhoto} isUploading={isUploading} />
                 </View>
@@ -156,7 +173,8 @@ export function PhotoGalleryGrid({
 
             {/* Modal de visualização em tela cheia */}
             <FullScreenPhotoModal
-                photo={selectedPhoto}
+                photos={allPhotosFlat}
+                initialIndex={selectedPhotoIndex}
                 onClose={handleCloseModal}
             />
         </View>
@@ -270,18 +288,85 @@ function EmptyState({ isPatient }: EmptyStateProps) {
 }
 
 interface FullScreenPhotoModalProps {
-    photo: PatientPhoto | null;
+    photos: PatientPhoto[];
+    initialIndex: number | null;
     onClose: () => void;
 }
 
-function FullScreenPhotoModal({ photo, onClose }: FullScreenPhotoModalProps) {
+function FullScreenPhotoModal({ photos, initialIndex, onClose }: FullScreenPhotoModalProps) {
     const insets = useSafeAreaInsets();
+    const flatListRef = useRef<FlatList<PatientPhoto>>(null);
+    const [currentIndex, setCurrentIndex] = useState(initialIndex ?? 0);
 
-    if (!photo) return null;
+    const isVisible = initialIndex !== null && photos.length > 0;
+
+    // Sync currentIndex when modal opens with a new initialIndex
+    React.useEffect(() => {
+        if (initialIndex !== null) {
+            setCurrentIndex(initialIndex);
+        }
+    }, [initialIndex]);
+
+    const handleMomentumEnd = useCallback(
+        (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+            const offsetX = e.nativeEvent.contentOffset.x;
+            const index = Math.round(offsetX / SCREEN_WIDTH);
+            setCurrentIndex(index);
+        },
+        []
+    );
+
+    const currentPhoto = isVisible ? photos[currentIndex] : null;
+
+    const renderItem = useCallback(
+        ({ item }: { item: PatientPhoto }) => (
+            <ScrollView
+                contentContainerStyle={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}
+                maximumZoomScale={4}
+                minimumZoomScale={1}
+                showsHorizontalScrollIndicator={false}
+                showsVerticalScrollIndicator={false}
+                bouncesZoom
+                key={item.id}
+            >
+                {item.signedUrl ? (
+                    <ExpoImage
+                        source={{ uri: item.signedUrl }}
+                        style={{
+                            width: SCREEN_WIDTH,
+                            height: SCREEN_HEIGHT * 0.75,
+                        }}
+                        contentFit="contain"
+                        transition={300}
+                    />
+                ) : (
+                    <View className="flex-1 justify-center items-center">
+                        <ImageOff size={48} color={AppColors.gray[400]} />
+                    </View>
+                )}
+            </ScrollView>
+        ),
+        []
+    );
+
+    const getItemLayout = useCallback(
+        (_: any, index: number) => ({
+            length: SCREEN_WIDTH,
+            offset: SCREEN_WIDTH * index,
+            index,
+        }),
+        []
+    );
+
+    if (!isVisible) return null;
 
     return (
         <Modal
-            visible={!!photo}
+            visible={isVisible}
             transparent
             animationType="fade"
             onRequestClose={onClose}
@@ -293,44 +378,48 @@ function FullScreenPhotoModal({ photo, onClose }: FullScreenPhotoModalProps) {
                     className="flex-row items-center justify-between px-4 py-3"
                     style={{ paddingTop: insets.top + 8 }}
                 >
-                    <Text className="text-white text-sm">
-                        {formatDateSection(photo.photo_date)}
-                    </Text>
-                    <TouchableOpacity
-                        testID="close-fullscreen-photo"
-                        onPress={onClose}
-                        className="w-10 h-10 rounded-full items-center justify-center"
-                        style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
+                    <View className="flex-1">
+                        {currentPhoto && (
+                            <Text className="text-sm" style={{ color: AppColors.gray[300] }}>
+                                {formatDateSection(currentPhoto.photo_date)}
+                            </Text>
+                        )}
+                    </View>
+                    {/* Counter */}
+                    <Text
+                        testID="photo-counter"
+                        className="text-sm font-semibold"
+                        style={{ color: AppColors.white }}
                     >
-                        <X size={20} color={AppColors.white} />
-                    </TouchableOpacity>
+                        {currentIndex + 1} / {photos.length}
+                    </Text>
+                    <View className="flex-1 items-end">
+                        <TouchableOpacity
+                            testID="close-fullscreen-photo"
+                            onPress={onClose}
+                            className="w-10 h-10 rounded-full items-center justify-center"
+                            style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
+                        >
+                            <X size={20} color={AppColors.white} />
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
-                {/* Image with zoom via ScrollView */}
-                <ScrollView
-                    contentContainerStyle={{
-                        flex: 1,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                    }}
-                    maximumZoomScale={4}
-                    minimumZoomScale={1}
+                {/* Horizontal paging gallery */}
+                <FlatList
+                    ref={flatListRef}
+                    testID="fullscreen-photo-list"
+                    data={photos}
+                    renderItem={renderItem}
+                    keyExtractor={(item) => item.id}
+                    horizontal
+                    pagingEnabled
                     showsHorizontalScrollIndicator={false}
-                    showsVerticalScrollIndicator={false}
-                    bouncesZoom
-                >
-                    {photo.signedUrl && (
-                        <ExpoImage
-                            source={{ uri: photo.signedUrl }}
-                            style={{
-                                width: SCREEN_WIDTH,
-                                height: SCREEN_WIDTH,
-                            }}
-                            contentFit="contain"
-                            transition={300}
-                        />
-                    )}
-                </ScrollView>
+                    initialScrollIndex={initialIndex ?? 0}
+                    getItemLayout={getItemLayout}
+                    onMomentumScrollEnd={handleMomentumEnd}
+                    bounces={false}
+                />
             </View>
         </Modal>
     );

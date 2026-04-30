@@ -9,7 +9,6 @@ describe('imageUtils', () => {
     describe('PHOTO_CONFIG', () => {
         it('deve ter configurações corretas de compressão', () => {
             expect(PHOTO_CONFIG.maxWidth).toBe(1280);
-            expect(PHOTO_CONFIG.maxHeight).toBe(1280);
             expect(PHOTO_CONFIG.quality).toBe(0.7);
         });
     });
@@ -21,7 +20,7 @@ describe('imageUtils', () => {
 
             expect(ImageManipulator.manipulateAsync).toHaveBeenCalledWith(
                 inputUri,
-                [{ resize: { width: 1280, height: 1280 } }],
+                [{ resize: { width: 1280 } }],
                 {
                     compress: 0.7,
                     format: ImageManipulator.SaveFormat.JPEG,

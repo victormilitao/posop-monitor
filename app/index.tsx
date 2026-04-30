@@ -479,9 +479,10 @@ export default function LoginScreen() {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       className="flex-1"
+      style={{ backgroundColor: AppColors.primary[900] }}
     >
       <Stack.Screen options={{ headerShown: false }} />
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} style={{ backgroundColor: AppColors.primary[900] }}>
         {role === 'none' && renderRoleSelection()}
         {role === 'patient' && renderPatientLogin()}
         {role === 'doctor' && !isRegisteringDoctor && renderDoctorLogin()}

@@ -105,4 +105,71 @@ describe('PatientPhotoGalleryView', () => {
         expect(screen.getByTestId('delete-photo-photo-today')).toBeTruthy();
         expect(screen.queryByTestId('delete-photo-photo-old')).toBeNull();
     });
+
+    it('deve abrir modal fullscreen com contador ao tocar em uma foto', () => {
+        const mockPhotos = [
+            {
+                id: 'photo-1',
+                patient_id: 'p1',
+                surgery_id: 's1',
+                photo_date: '2026-01-15',
+                storage_path: 'p1/photo1.jpg',
+                created_at: '2026-01-15T10:00:00',
+                signedUrl: 'https://signed-url-1',
+            },
+            {
+                id: 'photo-2',
+                patient_id: 'p1',
+                surgery_id: 's1',
+                photo_date: '2026-01-15',
+                storage_path: 'p1/photo2.jpg',
+                created_at: '2026-01-15T11:00:00',
+                signedUrl: 'https://signed-url-2',
+            },
+        ];
+        mockUsePatientPhotos.mockReturnValue({
+            data: mockPhotos,
+            isLoading: false,
+        });
+
+        render(React.createElement(PatientPhotoGalleryView, { patientId: 'p1', surgeryId: 's1' }));
+
+        // Tocar na primeira foto
+        fireEvent.press(screen.getByTestId('photo-thumbnail-photo-1'));
+
+        // Deve exibir o contador "1 / 2"
+        expect(screen.getByTestId('photo-counter')).toBeTruthy();
+        expect(screen.getByText('1 / 2')).toBeTruthy();
+
+        // Deve exibir a lista paginada
+        expect(screen.getByTestId('fullscreen-photo-list')).toBeTruthy();
+    });
+
+    it('deve fechar modal fullscreen ao pressionar botão fechar', () => {
+        const mockPhotos = [
+            {
+                id: 'photo-1',
+                patient_id: 'p1',
+                surgery_id: 's1',
+                photo_date: '2026-01-15',
+                storage_path: 'p1/photo1.jpg',
+                created_at: '2026-01-15T10:00:00',
+                signedUrl: 'https://signed-url-1',
+            },
+        ];
+        mockUsePatientPhotos.mockReturnValue({
+            data: mockPhotos,
+            isLoading: false,
+        });
+
+        render(React.createElement(PatientPhotoGalleryView, { patientId: 'p1', surgeryId: 's1' }));
+
+        // Abrir modal
+        fireEvent.press(screen.getByTestId('photo-thumbnail-photo-1'));
+        expect(screen.getByTestId('photo-counter')).toBeTruthy();
+
+        // Fechar modal
+        fireEvent.press(screen.getByTestId('close-fullscreen-photo'));
+        expect(screen.queryByTestId('photo-counter')).toBeNull();
+    });
 });

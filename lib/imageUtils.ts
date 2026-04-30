@@ -6,14 +6,13 @@ import * as ImageManipulator from 'expo-image-manipulator';
  */
 export const PHOTO_CONFIG = {
     maxWidth: 1280,
-    maxHeight: 1280,
     quality: 0.7,
 } as const;
 
 /**
  * Comprime e redimensiona uma imagem para upload.
  * 
- * - Redimensiona para no máximo 1280x1280 mantendo aspect ratio
+ * - Redimensiona para largura máxima de 1280px, mantendo aspect ratio original
  * - Converte para JPEG com 70% de qualidade
  * - Resultado típico: ~100-300KB (vs 3-8MB original)
  * 
@@ -23,7 +22,7 @@ export const PHOTO_CONFIG = {
 export async function compressImage(uri: string): Promise<string> {
     const result = await ImageManipulator.manipulateAsync(
         uri,
-        [{ resize: { width: PHOTO_CONFIG.maxWidth, height: PHOTO_CONFIG.maxHeight } }],
+        [{ resize: { width: PHOTO_CONFIG.maxWidth } }],
         {
             compress: PHOTO_CONFIG.quality,
             format: ImageManipulator.SaveFormat.JPEG,

@@ -1,6 +1,6 @@
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowLeft, Calendar, Image as ImageIcon, User } from 'lucide-react-native';
+import { ArrowLeft, Calendar, ChevronRight, Clock, Image as ImageIcon, User } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import { PatientDetailHeader } from '../../../components/doctor/PatientDetailHea
 import { PatientDetailMenuItem } from '../../../components/doctor/PatientDetailMenu';
 import { PatientGalleryView } from '../../../components/doctor/PatientGalleryView';
 import { PatientProfileView, PatientProfileData } from '../../../components/doctor/PatientProfileView';
+import { PendingReturnModal } from '../../../components/doctor/PendingReturnModal';
 import { PatientTimelineView, TimelineDay } from '../../../components/doctor/PatientTimelineView';
 import { AppColors } from '../../../constants/colors';
 import { useAuth } from '../../../context/AuthContext';
@@ -240,6 +241,33 @@ export default function DoctorPatientDetailScreen() {
       {/* Content */}
       {activeTab === 'menu' && (
         <View className="flex-1 px-6 pt-6">
+          {/* Pending Return Banner */}
+          {(surgery as any)?.status === 'pending_return' && (
+            <TouchableOpacity
+              testID="pending-return-banner"
+              className="flex-row items-center justify-between p-4 rounded-xl border mb-4"
+              style={{
+                backgroundColor: AppColors.warning.light,
+                borderColor: '#fed7aa',
+              }}
+              onPress={() => setShowReturnModal(true)}
+              activeOpacity={0.7}
+            >
+              <View className="flex-row items-center flex-1">
+                <Clock size={20} color={AppColors.warning.DEFAULT} style={{ marginRight: 8 }} />
+                <View className="flex-1">
+                  <Text className="font-semibold text-base" style={{ color: AppColors.warning.dark }}>
+                    Pendente Retorno
+                  </Text>
+                  <Text className="text-sm" style={{ color: '#ea580c' }}>
+                    Toque para confirmar o retorno do paciente
+                  </Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color={AppColors.warning.DEFAULT} />
+            </TouchableOpacity>
+          )}
+
           {/* Menu Items */}
           <PatientDetailMenuItem
             testID="menu-profile"
@@ -289,20 +317,22 @@ export default function DoctorPatientDetailScreen() {
         <PatientTimelineView
           timeline={timeline}
           surgeryTypeName={surgery?.surgery_type.name}
-          surgeryStatus={(surgery as any)?.status}
-          patientName={surgery?.patient.full_name || undefined}
           isLoading={false}
-          onConfirmReturn={handleConfirmReturn}
-          showReturnModal={showReturnModal}
-          onOpenReturnModal={() => setShowReturnModal(true)}
-          onCloseReturnModal={() => setShowReturnModal(false)}
-          isReturnLoading={dismissPendingReturn.isPending}
         />
       )}
 
       {activeTab === 'gallery' && (
         <PatientGalleryView surgeryId={surgeryId as string} />
       )}
+
+      {/* Pending Return Modal - accessible from menu screen */}
+      <PendingReturnModal
+        visible={showReturnModal}
+        patientName={surgery?.patient.full_name || ''}
+        onConfirm={handleConfirmReturn}
+        onClose={() => setShowReturnModal(false)}
+        isLoading={dismissPendingReturn.isPending}
+      />
     </View>
   );
 }
