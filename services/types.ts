@@ -159,3 +159,25 @@ export interface IGuidanceService {
     getSignsBySurgeryTypeId(surgeryTypeId: string): Promise<SurgeryTypeSign[]>;
     getPhaseGuidelinesBySurgeryTypeId(surgeryTypeId: string): Promise<SurgeryTypePhaseGuideline[]>;
 }
+
+export interface PatientPhoto {
+    id: string;
+    patient_id: string;
+    surgery_id: string;
+    photo_date: string;
+    storage_path: string;
+    created_at: string;
+    signedUrl?: string;
+}
+
+export interface IPhotoService {
+    getPhotosBySurgeryId(surgeryId: string): Promise<PatientPhoto[]>;
+    uploadPhoto(
+        patientId: string,
+        surgeryId: string,
+        imageUri: string
+    ): Promise<PatientPhoto>;
+    deletePhoto(photoId: string, storagePath: string): Promise<void>;
+    getPhotosCountByDate(patientId: string, date: string): Promise<number>;
+}
+

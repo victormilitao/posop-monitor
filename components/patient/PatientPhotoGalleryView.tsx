@@ -1,22 +1,177 @@
-import { ImageOff } from 'lucide-react-native';
-import { Text, View } from 'react-native';
-import { AppColors } from '../../constants/colors';
+import * as ImagePicker from 'expo-image-picker';
+import React, { useCallback } from 'react';
+import { ActionSheetIOS, Alert, Platform, View } from 'react-native';
+import { PhotoGalleryGrid } from '../ui/PhotoGalleryGrid';
+import { useToast } from '../../context/ToastContext';
+import { useDeletePhoto, usePatientPhotos, useUploadPhoto } from '../../hooks/usePatientPhotos';
+import { getLocalDateString } from '../../lib/imageUtils';
+import { PatientPhoto } from '../../services/types';
 
-export function PatientPhotoGalleryView() {
+const MAX_PHOTOS_PER_DAY = 2;
+
+interface PatientPhotoGalleryViewProps {
+    patientId: string | undefined;
+    surgeryId: string | undefined;
+}
+
+/**
+ * Visão da galeria de fotos do paciente.
+ * Permite adicionar fotos (câmera ou galeria) e deletar fotos do dia vigente.
+ */
+export function PatientPhotoGalleryView({ patientId, surgeryId }: PatientPhotoGalleryViewProps) {
+    const { showToast } = useToast();
+    const { data: photos = [], isLoading } = usePatientPhotos(surgeryId);
+    const uploadPhoto = useUploadPhoto();
+    const deletePhoto = useDeletePhoto();
+
+    const todayDateString = getLocalDateString();
+
+    // Contar fotos de hoje localmente (evita query extra)
+    const todayPhotosCount = photos.filter(p => p.photo_date === todayDateString).length;
+
+    const handlePickImage = useCallback(async (source: 'camera' | 'gallery') => {
+        if (!patientId || !surgeryId) return;
+
+        // Verificar limite
+        if (todayPhotosCount >= MAX_PHOTOS_PER_DAY) {
+            showToast({
+                type: 'info',
+                title: 'Limite atingido',
+                message: `Você já adicionou ${MAX_PHOTOS_PER_DAY} fotos hoje.`,
+            });
+            return;
+        }
+
+        try {
+            let result: ImagePicker.ImagePickerResult;
+
+            if (source === 'camera') {
+                const permission = await ImagePicker.requestCameraPermissionsAsync();
+                if (!permission.granted) {
+                    showToast({
+                        type: 'error',
+                        title: 'Permissão necessária',
+                        message: 'Permita o acesso à câmera nas configurações.',
+                    });
+                    return;
+                }
+                result = await ImagePicker.launchCameraAsync({
+                    mediaTypes: ['images'],
+                    quality: 1, // Qualidade total, a compressão é feita depois
+                    allowsEditing: false,
+                });
+            } else {
+                const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                if (!permission.granted) {
+                    showToast({
+                        type: 'error',
+                        title: 'Permissão necessária',
+                        message: 'Permita o acesso à galeria nas configurações.',
+                    });
+                    return;
+                }
+                result = await ImagePicker.launchImageLibraryAsync({
+                    mediaTypes: ['images'],
+                    quality: 1,
+                    allowsEditing: false,
+                });
+            }
+
+            if (result.canceled || !result.assets?.[0]) return;
+
+            await uploadPhoto.mutateAsync({
+                patientId,
+                surgeryId,
+                imageUri: result.assets[0].uri,
+            });
+
+            showToast({
+                type: 'success',
+                title: 'Foto enviada',
+                message: 'Sua foto foi adicionada com sucesso.',
+            });
+        } catch (error) {
+            console.error('Error uploading photo:', error);
+            showToast({
+                type: 'error',
+                title: 'Erro',
+                message: 'Não foi possível enviar a foto. Tente novamente.',
+            });
+        }
+    }, [patientId, surgeryId, todayPhotosCount, showToast, uploadPhoto]);
+
+    const handleAddPhoto = useCallback(() => {
+        if (Platform.OS === 'ios') {
+            ActionSheetIOS.showActionSheetWithOptions(
+                {
+                    options: ['Cancelar', 'Tirar Foto', 'Escolher da Galeria'],
+                    cancelButtonIndex: 0,
+                },
+                (buttonIndex) => {
+                    if (buttonIndex === 1) handlePickImage('camera');
+                    else if (buttonIndex === 2) handlePickImage('gallery');
+                }
+            );
+        } else {
+            Alert.alert(
+                'Adicionar Foto',
+                'Como deseja adicionar a foto?',
+                [
+                    { text: 'Cancelar', style: 'cancel' },
+                    { text: 'Tirar Foto', onPress: () => handlePickImage('camera') },
+                    { text: 'Galeria', onPress: () => handlePickImage('gallery') },
+                ]
+            );
+        }
+    }, [handlePickImage]);
+
+    const handleDeletePhoto = useCallback(async (photo: PatientPhoto) => {
+        if (!surgeryId) return;
+
+        Alert.alert(
+            'Excluir Foto',
+            'Tem certeza que deseja excluir esta foto?',
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Excluir',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await deletePhoto.mutateAsync({
+                                photoId: photo.id,
+                                storagePath: photo.storage_path,
+                                surgeryId,
+                            });
+                            showToast({
+                                type: 'success',
+                                title: 'Foto excluída',
+                                message: 'A foto foi removida com sucesso.',
+                            });
+                        } catch (error) {
+                            console.error('Error deleting photo:', error);
+                            showToast({
+                                type: 'error',
+                                title: 'Erro',
+                                message: 'Não foi possível excluir a foto.',
+                            });
+                        }
+                    },
+                },
+            ]
+        );
+    }, [surgeryId, deletePhoto, showToast]);
+
     return (
-        <View className="flex-1 justify-center items-center px-6">
-            <View
-                className="w-20 h-20 rounded-full items-center justify-center mb-6"
-                style={{ backgroundColor: AppColors.gray[100] }}
-            >
-                <ImageOff size={36} color={AppColors.gray[400]} />
-            </View>
-            <Text className="text-lg font-semibold mb-2" style={{ color: AppColors.gray[700] }}>
-                Nenhuma foto adicionada
-            </Text>
-            <Text className="text-sm text-center" style={{ color: AppColors.gray[400] }}>
-                Suas fotos aparecerão aqui quando forem adicionadas pelo médico.
-            </Text>
-        </View>
+        <PhotoGalleryGrid
+            photos={photos}
+            isLoading={isLoading}
+            canAddPhotos={true}
+            canDeletePhotos={true}
+            todayDateString={todayDateString}
+            onAddPhoto={handleAddPhoto}
+            onDeletePhoto={handleDeletePhoto}
+            isUploading={uploadPhoto.isPending}
+        />
     );
 }

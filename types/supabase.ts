@@ -469,6 +469,48 @@ export type Database = {
           },
         ]
       }
+      patient_photos: {
+        Row: {
+          id: string
+          patient_id: string
+          surgery_id: string
+          photo_date: string
+          storage_path: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          patient_id: string
+          surgery_id: string
+          photo_date?: string
+          storage_path: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          patient_id?: string
+          surgery_id?: string
+          photo_date?: string
+          storage_path?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_photos_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_photos_surgery_id_fkey"
+            columns: ["surgery_id"]
+            isOneToOne: false
+            referencedRelation: "surgeries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

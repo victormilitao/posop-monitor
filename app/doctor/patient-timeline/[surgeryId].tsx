@@ -301,7 +301,7 @@ export default function DoctorPatientDetailScreen() {
       )}
 
       {activeTab === 'gallery' && (
-        <PatientGalleryView />
+        <PatientGalleryView surgeryId={surgeryId as string} />
       )}
     </View>
   );

@@ -1,22 +1,24 @@
-import { ImageOff } from 'lucide-react-native';
-import { Text, View } from 'react-native';
-import { AppColors } from '../../constants/colors';
+import React from 'react';
+import { PhotoGalleryGrid } from '../ui/PhotoGalleryGrid';
+import { usePatientPhotos } from '../../hooks/usePatientPhotos';
 
-export function PatientGalleryView() {
+interface PatientGalleryViewProps {
+    surgeryId: string | undefined;
+}
+
+/**
+ * Visão da galeria de fotos na tela do médico.
+ * Somente visualização (read-only), sem possibilidade de adicionar ou deletar.
+ */
+export function PatientGalleryView({ surgeryId }: PatientGalleryViewProps) {
+    const { data: photos = [], isLoading } = usePatientPhotos(surgeryId);
+
     return (
-        <View className="flex-1 justify-center items-center px-6">
-            <View
-                className="w-20 h-20 rounded-full items-center justify-center mb-6"
-                style={{ backgroundColor: AppColors.gray[100] }}
-            >
-                <ImageOff size={36} color={AppColors.gray[400]} />
-            </View>
-            <Text className="text-lg font-semibold mb-2" style={{ color: AppColors.gray[700] }}>
-                Nenhuma foto adicionada
-            </Text>
-            <Text className="text-sm text-center" style={{ color: AppColors.gray[400] }}>
-                As fotos do paciente aparecerão aqui quando forem adicionadas.
-            </Text>
-        </View>
+        <PhotoGalleryGrid
+            photos={photos}
+            isLoading={isLoading}
+            canAddPhotos={false}
+            canDeletePhotos={false}
+        />
     );
 }

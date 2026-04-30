@@ -82,6 +82,30 @@ jest.mock('expo-haptics', () => ({
   NotificationFeedbackType: { Success: 'success', Warning: 'warning', Error: 'error' },
 }));
 
+// Mock expo-image
+jest.mock('expo-image', () => {
+  const React = require('react');
+  const { Image } = require('react-native');
+  return {
+    Image: (props) => React.createElement(Image, { ...props, testID: props.testID || 'expo-image' }),
+  };
+});
+
+// Mock expo-image-picker
+jest.mock('expo-image-picker', () => ({
+  launchCameraAsync: jest.fn(),
+  launchImageLibraryAsync: jest.fn(),
+  requestCameraPermissionsAsync: jest.fn(() => Promise.resolve({ granted: true })),
+  requestMediaLibraryPermissionsAsync: jest.fn(() => Promise.resolve({ granted: true })),
+  MediaTypeOptions: { Images: 'Images' },
+}));
+
+// Mock expo-image-manipulator
+jest.mock('expo-image-manipulator', () => ({
+  manipulateAsync: jest.fn((uri) => Promise.resolve({ uri: uri + '_compressed' })),
+  SaveFormat: { JPEG: 'jpeg', PNG: 'png' },
+}));
+
 // Mock react-native-url-polyfill
 jest.mock('react-native-url-polyfill/auto', () => {});
 
