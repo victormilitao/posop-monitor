@@ -97,6 +97,7 @@ export default function DoctorPatientDetailScreen() {
         surgeryDate: formattedDate,
         followUpDays: String(followUpDays),
         status: surgeryStatus,
+        hospital: (surgeryData as any).hospital || '',
       });
 
       // Build timeline
@@ -322,7 +323,7 @@ export default function DoctorPatientDetailScreen() {
       )}
 
       {activeTab === 'gallery' && (
-        <PatientGalleryView surgeryId={surgeryId as string} />
+        <PatientGalleryView surgeryId={surgeryId as string} surgeryDate={surgery?.surgery_date} />
       )}
 
       {/* Pending Return Modal - accessible from menu screen */}

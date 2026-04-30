@@ -8,6 +8,7 @@ interface DoctorContactSheetProps {
     visible: boolean;
     onClose: () => void;
     patientId?: string;
+    isCriticalAlert?: boolean;
 }
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
@@ -38,7 +39,7 @@ function DataRow({ label, value, onPress }: { label: string; value: string; onPr
     return content;
 }
 
-export function DoctorContactSheet({ visible, onClose, patientId }: DoctorContactSheetProps) {
+export function DoctorContactSheet({ visible, onClose, patientId, isCriticalAlert }: DoctorContactSheetProps) {
     const [mounted, setMounted] = useState(false);
     const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
     const backdropOpacity = useRef(new Animated.Value(0)).current;
@@ -174,7 +175,6 @@ export function DoctorContactSheet({ visible, onClose, patientId }: DoctorContac
                                     <Text className="text-lg font-bold mb-4" style={{ color: AppColors.gray[900] }}>
                                         Contato
                                     </Text>
-                                    <DataRow label="E-mail" value={doctor.email} />
                                     <DataRow
                                         label="Telefone"
                                         value={doctor.phone}
@@ -189,8 +189,8 @@ export function DoctorContactSheet({ visible, onClose, patientId }: DoctorContac
                                     )}
                                 </View>
 
-                                {/* Call Button */}
-                                {doctor.phone && (
+                                {/* Call Button - only shown when patient has critical alert */}
+                                {isCriticalAlert && doctor.phone && (
                                     <Pressable
                                         className="flex-row items-center justify-center py-4 rounded-xl"
                                         style={{ backgroundColor: AppColors.primary[700] }}

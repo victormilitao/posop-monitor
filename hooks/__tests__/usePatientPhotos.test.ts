@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 const mockGetPhotosBySurgeryId = jest.fn();
 const mockUploadPhoto = jest.fn();
 const mockDeletePhoto = jest.fn();
+const mockReplacePhoto = jest.fn();
 const mockGetPhotosCountByDate = jest.fn();
 
 jest.mock('../../services', () => ({
@@ -12,11 +13,12 @@ jest.mock('../../services', () => ({
         getPhotosBySurgeryId: (...args: any[]) => mockGetPhotosBySurgeryId(...args),
         uploadPhoto: (...args: any[]) => mockUploadPhoto(...args),
         deletePhoto: (...args: any[]) => mockDeletePhoto(...args),
+        replacePhoto: (...args: any[]) => mockReplacePhoto(...args),
         getPhotosCountByDate: (...args: any[]) => mockGetPhotosCountByDate(...args),
     },
 }));
 
-import { usePatientPhotos, usePhotosCountByDate, useUploadPhoto, useDeletePhoto } from '../usePatientPhotos';
+import { usePatientPhotos, usePhotosCountByDate, useUploadPhoto, useDeletePhoto, useReplacePhoto } from '../usePatientPhotos';
 
 function createWrapper() {
     const queryClient = new QueryClient({
@@ -110,6 +112,19 @@ describe('useDeletePhoto', () => {
 
     it('deve retornar estado inicial de mutation', () => {
         const { result } = renderHook(() => useDeletePhoto(), {
+            wrapper: createWrapper(),
+        });
+        expect(result.current.isPending).toBe(false);
+    });
+});
+
+describe('useReplacePhoto', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('deve retornar estado inicial de mutation', () => {
+        const { result } = renderHook(() => useReplacePhoto(), {
             wrapper: createWrapper(),
         });
         expect(result.current.isPending).toBe(false);

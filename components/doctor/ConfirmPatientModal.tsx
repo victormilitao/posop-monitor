@@ -11,6 +11,7 @@ export interface ConfirmPatientData {
     surgeryType: string;
     surgeryDate: string;
     followUpDays: string;
+    hospital?: string;
 }
 
 interface ConfirmPatientModalProps {
@@ -65,6 +66,7 @@ export function ConfirmPatientModal({ visible, data, onConfirm, onClose, isLoadi
                             <DataRow label="Procedimento" value={data.surgeryType} />
                             <DataRow label="Data" value={data.surgeryDate} />
                             <DataRow label="Acompanhamento" value={`${data.followUpDays} dias`} />
+                            {data.hospital ? <DataRow label="Hospital" value={data.hospital} /> : null}
                         </View>
                     </ScrollView>
 

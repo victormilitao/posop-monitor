@@ -4,13 +4,14 @@ import { usePatientPhotos } from '../../hooks/usePatientPhotos';
 
 interface PatientGalleryViewProps {
     surgeryId: string | undefined;
+    surgeryDate?: string;
 }
 
 /**
  * Visão da galeria de fotos na tela do médico.
  * Somente visualização (read-only), sem possibilidade de adicionar ou deletar.
  */
-export function PatientGalleryView({ surgeryId }: PatientGalleryViewProps) {
+export function PatientGalleryView({ surgeryId, surgeryDate }: PatientGalleryViewProps) {
     const { data: photos = [], isLoading } = usePatientPhotos(surgeryId);
 
     return (
@@ -19,6 +20,7 @@ export function PatientGalleryView({ surgeryId }: PatientGalleryViewProps) {
             isLoading={isLoading}
             canAddPhotos={false}
             canDeletePhotos={false}
+            surgeryDate={surgeryDate}
         />
     );
 }

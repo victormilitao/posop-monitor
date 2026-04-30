@@ -6,6 +6,7 @@ import { useDoctorContact } from '../../hooks/useDoctorContact';
 
 interface DoctorContactViewProps {
     patientId?: string;
+    isCriticalAlert?: boolean;
 }
 
 function DataRow({ label, value, onPress }: { label: string; value: string; onPress?: () => void }) {
@@ -32,7 +33,7 @@ function DataRow({ label, value, onPress }: { label: string; value: string; onPr
     );
 }
 
-export function DoctorContactView({ patientId }: DoctorContactViewProps) {
+export function DoctorContactView({ patientId, isCriticalAlert }: DoctorContactViewProps) {
     const { data: doctor, isLoading } = useDoctorContact(patientId);
 
     const handleCopyPhone = async (phoneNumber: string) => {
@@ -95,7 +96,6 @@ export function DoctorContactView({ patientId }: DoctorContactViewProps) {
             >
                 <DataRow label="Nome" value={doctor.name} />
                 <DataRow label="CRM" value={doctor.crm} />
-                <DataRow label="E-mail" value={doctor.email} />
                 <DataRow
                     label="Telefone"
                     value={doctor.phone}
@@ -110,8 +110,8 @@ export function DoctorContactView({ patientId }: DoctorContactViewProps) {
                 )}
             </View>
 
-            {/* Call Button */}
-            {doctor.phone && (
+            {/* Call Button - only shown when patient has critical alert */}
+            {isCriticalAlert && doctor.phone && (
                 <TouchableOpacity
                     className="flex-row items-center justify-center py-4 rounded-xl mb-6"
                     style={{ backgroundColor: AppColors.primary[700] }}

@@ -1,46 +1,37 @@
 import * as ImagePicker from 'expo-image-picker';
-import React, { useCallback } from 'react';
-import { ActionSheetIOS, Alert, Platform, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { ActionSheetIOS, Alert, Platform } from 'react-native';
 import { PhotoGalleryGrid } from '../ui/PhotoGalleryGrid';
 import { useToast } from '../../context/ToastContext';
-import { useDeletePhoto, usePatientPhotos, useUploadPhoto } from '../../hooks/usePatientPhotos';
-import { getLocalDateString } from '../../lib/imageUtils';
+import { useDeletePhoto, usePatientPhotos, useReplacePhoto, useUploadPhoto } from '../../hooks/usePatientPhotos';
 import { PatientPhoto } from '../../services/types';
-
-const MAX_PHOTOS_PER_DAY = 2;
 
 interface PatientPhotoGalleryViewProps {
     patientId: string | undefined;
     surgeryId: string | undefined;
+    surgeryDate?: string;
 }
 
 /**
  * Visão da galeria de fotos do paciente.
- * Permite adicionar fotos (câmera ou galeria) e deletar fotos do dia vigente.
+ * Permite adicionar fotos a qualquer dia pós-operatório (passado ou atual),
+ * substituir fotos existentes e deletar fotos de qualquer dia.
  */
-export function PatientPhotoGalleryView({ patientId, surgeryId }: PatientPhotoGalleryViewProps) {
+export function PatientPhotoGalleryView({ patientId, surgeryId, surgeryDate }: PatientPhotoGalleryViewProps) {
     const { showToast } = useToast();
     const { data: photos = [], isLoading } = usePatientPhotos(surgeryId);
     const uploadPhoto = useUploadPhoto();
     const deletePhoto = useDeletePhoto();
+    const replacePhoto = useReplacePhoto();
 
-    const todayDateString = getLocalDateString();
+    // Estado para controlar a ação pendente (usado em "replace" para saber qual foto substituir)
+    const [pendingReplace, setPendingReplace] = useState<PatientPhoto | null>(null);
 
-    // Contar fotos de hoje localmente (evita query extra)
-    const todayPhotosCount = photos.filter(p => p.photo_date === todayDateString).length;
-
-    const handlePickImage = useCallback(async (source: 'camera' | 'gallery') => {
+    /**
+     * Seleciona imagem da câmera ou galeria e faz upload.
+     */
+    const handlePickAndUpload = useCallback(async (source: 'camera' | 'gallery', photoDate: string) => {
         if (!patientId || !surgeryId) return;
-
-        // Verificar limite
-        if (todayPhotosCount >= MAX_PHOTOS_PER_DAY) {
-            showToast({
-                type: 'info',
-                title: 'Limite atingido',
-                message: `Você já adicionou ${MAX_PHOTOS_PER_DAY} fotos hoje.`,
-            });
-            return;
-        }
 
         try {
             let result: ImagePicker.ImagePickerResult;
@@ -57,7 +48,7 @@ export function PatientPhotoGalleryView({ patientId, surgeryId }: PatientPhotoGa
                 }
                 result = await ImagePicker.launchCameraAsync({
                     mediaTypes: ['images'],
-                    quality: 1, // Qualidade total, a compressão é feita depois
+                    quality: 1,
                     allowsEditing: false,
                 });
             } else {
@@ -83,6 +74,7 @@ export function PatientPhotoGalleryView({ patientId, surgeryId }: PatientPhotoGa
                 patientId,
                 surgeryId,
                 imageUri: result.assets[0].uri,
+                photoDate,
             });
 
             showToast({
@@ -98,9 +90,80 @@ export function PatientPhotoGalleryView({ patientId, surgeryId }: PatientPhotoGa
                 message: 'Não foi possível enviar a foto. Tente novamente.',
             });
         }
-    }, [patientId, surgeryId, todayPhotosCount, showToast, uploadPhoto]);
+    }, [patientId, surgeryId, showToast, uploadPhoto]);
 
-    const handleAddPhoto = useCallback(() => {
+    /**
+     * Seleciona imagem e substitui uma foto existente.
+     */
+    const handlePickAndReplace = useCallback(async (source: 'camera' | 'gallery', photo: PatientPhoto) => {
+        if (!patientId || !surgeryId) return;
+
+        try {
+            let result: ImagePicker.ImagePickerResult;
+
+            if (source === 'camera') {
+                const permission = await ImagePicker.requestCameraPermissionsAsync();
+                if (!permission.granted) {
+                    showToast({
+                        type: 'error',
+                        title: 'Permissão necessária',
+                        message: 'Permita o acesso à câmera nas configurações.',
+                    });
+                    return;
+                }
+                result = await ImagePicker.launchCameraAsync({
+                    mediaTypes: ['images'],
+                    quality: 1,
+                    allowsEditing: false,
+                });
+            } else {
+                const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                if (!permission.granted) {
+                    showToast({
+                        type: 'error',
+                        title: 'Permissão necessária',
+                        message: 'Permita o acesso à galeria nas configurações.',
+                    });
+                    return;
+                }
+                result = await ImagePicker.launchImageLibraryAsync({
+                    mediaTypes: ['images'],
+                    quality: 1,
+                    allowsEditing: false,
+                });
+            }
+
+            if (result.canceled || !result.assets?.[0]) return;
+
+            await replacePhoto.mutateAsync({
+                photoId: photo.id,
+                patientId,
+                oldStoragePath: photo.storage_path,
+                imageUri: result.assets[0].uri,
+                surgeryId,
+            });
+
+            showToast({
+                type: 'success',
+                title: 'Foto substituída',
+                message: 'A foto foi atualizada com sucesso.',
+            });
+        } catch (error) {
+            console.error('Error replacing photo:', error);
+            showToast({
+                type: 'error',
+                title: 'Erro',
+                message: 'Não foi possível substituir a foto. Tente novamente.',
+            });
+        } finally {
+            setPendingReplace(null);
+        }
+    }, [patientId, surgeryId, showToast, replacePhoto]);
+
+    /**
+     * Abre o picker de câmera/galeria para adicionar foto no dia selecionado.
+     */
+    const handleAddPhoto = useCallback((photoDate: string) => {
         if (Platform.OS === 'ios') {
             ActionSheetIOS.showActionSheetWithOptions(
                 {
@@ -108,8 +171,8 @@ export function PatientPhotoGalleryView({ patientId, surgeryId }: PatientPhotoGa
                     cancelButtonIndex: 0,
                 },
                 (buttonIndex) => {
-                    if (buttonIndex === 1) handlePickImage('camera');
-                    else if (buttonIndex === 2) handlePickImage('gallery');
+                    if (buttonIndex === 1) handlePickAndUpload('camera', photoDate);
+                    else if (buttonIndex === 2) handlePickAndUpload('gallery', photoDate);
                 }
             );
         } else {
@@ -118,12 +181,43 @@ export function PatientPhotoGalleryView({ patientId, surgeryId }: PatientPhotoGa
                 'Como deseja adicionar a foto?',
                 [
                     { text: 'Cancelar', style: 'cancel' },
-                    { text: 'Tirar Foto', onPress: () => handlePickImage('camera') },
-                    { text: 'Galeria', onPress: () => handlePickImage('gallery') },
+                    { text: 'Tirar Foto', onPress: () => handlePickAndUpload('camera', photoDate) },
+                    { text: 'Galeria', onPress: () => handlePickAndUpload('gallery', photoDate) },
                 ]
             );
         }
-    }, [handlePickImage]);
+    }, [handlePickAndUpload]);
+
+    /**
+     * Abre o picker de câmera/galeria para substituir uma foto existente.
+     */
+    const handleReplacePhoto = useCallback((photo: PatientPhoto) => {
+        setPendingReplace(photo);
+
+        if (Platform.OS === 'ios') {
+            ActionSheetIOS.showActionSheetWithOptions(
+                {
+                    options: ['Cancelar', 'Tirar Foto', 'Escolher da Galeria'],
+                    cancelButtonIndex: 0,
+                },
+                (buttonIndex) => {
+                    if (buttonIndex === 1) handlePickAndReplace('camera', photo);
+                    else if (buttonIndex === 2) handlePickAndReplace('gallery', photo);
+                    else setPendingReplace(null);
+                }
+            );
+        } else {
+            Alert.alert(
+                'Substituir Foto',
+                'Como deseja substituir a foto?',
+                [
+                    { text: 'Cancelar', style: 'cancel', onPress: () => setPendingReplace(null) },
+                    { text: 'Tirar Foto', onPress: () => handlePickAndReplace('camera', photo) },
+                    { text: 'Galeria', onPress: () => handlePickAndReplace('gallery', photo) },
+                ]
+            );
+        }
+    }, [handlePickAndReplace]);
 
     const handleDeletePhoto = useCallback(async (photo: PatientPhoto) => {
         if (!surgeryId) return;
@@ -168,10 +262,12 @@ export function PatientPhotoGalleryView({ patientId, surgeryId }: PatientPhotoGa
             isLoading={isLoading}
             canAddPhotos={true}
             canDeletePhotos={true}
-            todayDateString={todayDateString}
+            canReplacePhotos={true}
             onAddPhoto={handleAddPhoto}
             onDeletePhoto={handleDeletePhoto}
-            isUploading={uploadPhoto.isPending}
+            onReplacePhoto={handleReplacePhoto}
+            isUploading={uploadPhoto.isPending || replacePhoto.isPending}
+            surgeryDate={surgeryDate}
         />
     );
 }

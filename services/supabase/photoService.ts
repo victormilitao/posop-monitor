@@ -29,7 +29,8 @@ export class SupabasePhotoService implements IPhotoService {
     async uploadPhoto(
         patientId: string,
         surgeryId: string,
-        imageUri: string
+        imageUri: string,
+        photoDate?: string
     ): Promise<PatientPhoto> {
         // 1. Comprimir imagem
         const compressedUri = await compressImage(imageUri);
@@ -58,14 +59,14 @@ export class SupabasePhotoService implements IPhotoService {
         if (uploadError) throw uploadError;
 
         // 5. Criar registro na tabela
-        const today = getLocalDateString();
+        const dateToUse = photoDate || getLocalDateString();
         const { data, error: insertError } = await supabase
             .from('patient_photos')
             .insert({
                 patient_id: patientId,
                 surgery_id: surgeryId,
                 storage_path: storagePath,
-                photo_date: today,
+                photo_date: dateToUse,
             })
             .select()
             .single();
@@ -75,6 +76,61 @@ export class SupabasePhotoService implements IPhotoService {
             await supabase.storage.from(BUCKET_NAME).remove([storagePath]);
             throw insertError;
         }
+
+        // 6. Retornar com signed URL
+        const photos = await this.attachSignedUrls([data]);
+        return photos[0];
+    }
+
+    /**
+     * Substitui a imagem de uma foto existente.
+     * Mantém o registro original, atualizando apenas o storage_path.
+     */
+    async replacePhoto(
+        photoId: string,
+        patientId: string,
+        oldStoragePath: string,
+        imageUri: string
+    ): Promise<PatientPhoto> {
+        // 1. Comprimir nova imagem
+        const compressedUri = await compressImage(imageUri);
+
+        // 2. Gerar novo path de armazenamento
+        const newStoragePath = generateStoragePath(patientId);
+
+        // 3. Upload da nova imagem
+        const formData = new FormData();
+        formData.append('', {
+            uri: compressedUri,
+            name: newStoragePath.split('/').pop() || 'photo.jpg',
+            type: 'image/jpeg',
+        } as unknown as Blob);
+
+        const { error: uploadError } = await supabase.storage
+            .from(BUCKET_NAME)
+            .upload(newStoragePath, formData, {
+                contentType: 'multipart/form-data',
+                upsert: false,
+            });
+
+        if (uploadError) throw uploadError;
+
+        // 4. Atualizar registro no banco com novo path
+        const { data, error: updateError } = await supabase
+            .from('patient_photos')
+            .update({ storage_path: newStoragePath })
+            .eq('id', photoId)
+            .select()
+            .single();
+
+        if (updateError) {
+            // Rollback: deletar nova imagem do storage
+            await supabase.storage.from(BUCKET_NAME).remove([newStoragePath]);
+            throw updateError;
+        }
+
+        // 5. Deletar imagem antiga do storage (best-effort)
+        await supabase.storage.from(BUCKET_NAME).remove([oldStoragePath]);
 
         // 6. Retornar com signed URL
         const photos = await this.attachSignedUrls([data]);

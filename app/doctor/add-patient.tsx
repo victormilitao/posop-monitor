@@ -43,6 +43,7 @@ export default function AddPatientScreen() {
   const [surgeryTypeId, setSurgeryTypeId] = useState('');
   const [surgeryDate, setSurgeryDate] = useState('');
   const [followUpDays, setFollowUpDays] = useState('');
+  const [hospital, setHospital] = useState('');
   const [surgeryTypes, setSurgeryTypes] = useState<SurgeryType[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingTypes, setLoadingTypes] = useState(true);
@@ -185,6 +186,7 @@ export default function AddPatientScreen() {
       surgeryType: selectedType?.name || '',
       surgeryDate,
       followUpDays,
+      hospital: hospital.trim(),
     });
     setShowConfirmModal(true);
   };
@@ -204,6 +206,7 @@ export default function AddPatientScreen() {
         surgeryDate: validatedIsoDate,
         doctorId: profile.id,
         followUpDays: validatedFollowUpDays,
+        hospital: hospital.trim() || undefined,
       });
 
       // Invalidate queries to refresh data
@@ -391,7 +394,7 @@ export default function AddPatientScreen() {
           </View>
 
           {/* Surgery Date */}
-          <View className="mb-8">
+          <View className="mb-4">
             <Text className="text-gray-700 font-medium mb-2">Data do Procedimento *</Text>
             <TextInput
               className="bg-white border border-gray-300 rounded-xl px-4 text-gray-800"
@@ -401,6 +404,19 @@ export default function AddPatientScreen() {
               onChangeText={(v) => setSurgeryDate(formatDate(v))}
               keyboardType="numeric"
               maxLength={10}
+            />
+          </View>
+
+          {/* Hospital */}
+          <View className="mb-8">
+            <Text className="text-gray-700 font-medium mb-2">Hospital / Clínica</Text>
+            <TextInput
+              testID="hospital-input"
+              className="bg-white border border-gray-300 rounded-xl px-4 text-gray-800"
+              style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
+              placeholder="Nome do hospital ou clínica"
+              value={hospital}
+              onChangeText={setHospital}
             />
           </View>
 

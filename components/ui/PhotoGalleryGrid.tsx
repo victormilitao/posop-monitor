@@ -1,5 +1,5 @@
 import { Image as ExpoImage } from 'expo-image';
-import { ChevronLeft, ChevronRight, ImageOff, Plus, Trash2, X } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, ImageOff, ImagePlus, Pencil, Plus, Trash2, X } from 'lucide-react-native';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
     ActivityIndicator,
@@ -23,20 +23,24 @@ const GRID_GAP = 8;
 const GRID_PADDING = 16;
 const COLUMN_COUNT = 2;
 const ITEM_WIDTH = (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP) / COLUMN_COUNT;
+const MAX_PHOTOS_PER_DAY = 2;
 
 interface PhotoGalleryGridProps {
     photos: PatientPhoto[];
     isLoading: boolean;
     canAddPhotos?: boolean;
     canDeletePhotos?: boolean;
-    todayDateString?: string;
-    onAddPhoto?: () => void;
+    canReplacePhotos?: boolean;
+    onAddPhoto?: (photoDate: string) => void;
     onDeletePhoto?: (photo: PatientPhoto) => void;
+    onReplacePhoto?: (photo: PatientPhoto) => void;
     isUploading?: boolean;
+    surgeryDate?: string;
 }
 
 interface PhotoSection {
     date: string;
+    dayNumber: number;
     formattedDate: string;
     photos: PatientPhoto[];
 }
@@ -55,16 +59,17 @@ export function PhotoGalleryGrid({
     isLoading,
     canAddPhotos = false,
     canDeletePhotos = false,
-    todayDateString,
+    canReplacePhotos = false,
     onAddPhoto,
     onDeletePhoto,
+    onReplacePhoto,
     isUploading = false,
+    surgeryDate,
 }: PhotoGalleryGridProps) {
-    const insets = useSafeAreaInsets();
     const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
 
     // Agrupar fotos por data
-    const sections = useMemo<PhotoSection[]>(() => {
+    const photosByDate = useMemo(() => {
         const grouped = new Map<string, PatientPhoto[]>();
         for (const photo of photos) {
             const date = photo.photo_date;
@@ -73,15 +78,54 @@ export function PhotoGalleryGrid({
             }
             grouped.get(date)!.push(photo);
         }
-
-        return Array.from(grouped.entries())
-            .sort(([a], [b]) => a.localeCompare(b)) // mais antiga primeiro
-            .map(([date, datePhotos]) => ({
-                date,
-                formattedDate: formatDateSection(date),
-                photos: datePhotos,
-            }));
+        return grouped;
     }, [photos]);
+
+    // Gerar seções para TODOS os dias desde a cirurgia até hoje
+    // Para médico (canAddPhotos=false), mostrar apenas dias com fotos
+    const sections = useMemo<PhotoSection[]>(() => {
+        if (!surgeryDate || !canAddPhotos) {
+            // Médico ou sem data: só dias com fotos
+            return Array.from(photosByDate.entries())
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([date, datePhotos]) => {
+                    const dayNumber = computePostOpDay(date, surgeryDate);
+                    return {
+                        date,
+                        dayNumber,
+                        formattedDate: formatDateSectionWithDay(date, dayNumber),
+                        photos: datePhotos,
+                    };
+                });
+        }
+
+        // Paciente: gerar todos os dias de cirurgia+1 até hoje
+        const surgeryDateClean = surgeryDate.split('T')[0];
+        const [sYear, sMonth, sDay] = surgeryDateClean.split('-').map(Number);
+        const sDate = new Date(sYear, sMonth - 1, sDay);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const allSections: PhotoSection[] = [];
+        const currentDate = new Date(sDate);
+        currentDate.setDate(currentDate.getDate() + 1); // Dia 1 = dia seguinte à cirurgia
+
+        while (currentDate <= today) {
+            const dateStr = formatDateToISO(currentDate);
+            const dayNumber = computePostOpDay(dateStr, surgeryDate);
+            const datePhotos = photosByDate.get(dateStr) ?? [];
+            allSections.push({
+                date: dateStr,
+                dayNumber,
+                formattedDate: formatDateSectionWithDay(dateStr, dayNumber),
+                photos: datePhotos,
+            });
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        return allSections;
+    }, [photosByDate, surgeryDate, canAddPhotos]);
 
     // Flat list of all photos in display order for swipe navigation
     const allPhotosFlat = useMemo(() => {
@@ -113,15 +157,10 @@ export function PhotoGalleryGrid({
         return <EmptyState isPatient={false} />;
     }
 
-    if (photos.length === 0 && canAddPhotos) {
+    if (photos.length === 0 && canAddPhotos && sections.length === 0) {
         return (
             <View className="flex-1">
                 <EmptyState isPatient={true} />
-                {canAddPhotos && onAddPhoto && (
-                    <View className="px-4 pb-6">
-                        <AddPhotoButton onPress={onAddPhoto} isUploading={isUploading} />
-                    </View>
-                )}
             </View>
         );
     }
@@ -129,53 +168,72 @@ export function PhotoGalleryGrid({
     return (
         <View className="flex-1">
             <ScrollView
-                contentContainerStyle={{ padding: GRID_PADDING, paddingBottom: canAddPhotos ? 100 : GRID_PADDING }}
+                contentContainerStyle={{ padding: GRID_PADDING }}
                 showsVerticalScrollIndicator={false}
             >
-                {sections.map((section) => (
-                    <View key={section.date} className="mb-4">
-                        {/* Date header */}
-                        <Text
-                            className="text-sm font-semibold mb-2"
-                            style={{ color: AppColors.gray[600] }}
-                        >
-                            {section.formattedDate}
-                        </Text>
+                {sections.map((section) => {
+                    const canAddToDay = canAddPhotos && onAddPhoto && section.photos.length < MAX_PHOTOS_PER_DAY;
 
-                        {/* Photo grid */}
-                        <View className="flex-row flex-wrap" style={{ gap: GRID_GAP }}>
-                            {section.photos.map((photo) => (
-                                <PhotoThumbnail
-                                    key={photo.id}
-                                    photo={photo}
-                                    canDelete={canDeletePhotos && photo.photo_date === todayDateString}
-                                    onPress={handlePhotoPress}
-                                    onDelete={onDeletePhoto}
-                                />
-                            ))}
+                    return (
+                        <View key={section.date} className="mb-4">
+                            {/* Date header com botão de adicionar à direita */}
+                            <View className="flex-row items-center justify-between mb-2">
+                                <Text
+                                    className="text-base font-semibold"
+                                    style={{ color: AppColors.gray[600] }}
+                                >
+                                    {section.formattedDate}
+                                </Text>
+
+                                {canAddToDay && (
+                                    <TouchableOpacity
+                                        testID={`add-photo-day-${section.date}`}
+                                        onPress={() => onAddPhoto!(section.date)}
+                                        disabled={isUploading}
+                                        activeOpacity={0.7}
+                                        className="rounded-lg items-center justify-center"
+                                        style={{
+                                            width: 32,
+                                            height: 32,
+                                            backgroundColor: AppColors.gray[100],
+                                        }}
+                                    >
+                                        {isUploading ? (
+                                            <ActivityIndicator size="small" color={AppColors.primary[700]} />
+                                        ) : (
+                                            <ImagePlus size={16} color={AppColors.primary[600]} />
+                                        )}
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+
+                            {/* Photo grid */}
+                            {section.photos.length > 0 && (
+                                <View className="flex-row flex-wrap" style={{ gap: GRID_GAP }}>
+                                    {section.photos.map((photo) => (
+                                        <PhotoThumbnail
+                                            key={photo.id}
+                                            photo={photo}
+                                            canDelete={canDeletePhotos}
+                                            canReplace={canReplacePhotos}
+                                            onPress={handlePhotoPress}
+                                            onDelete={onDeletePhoto}
+                                            onReplace={onReplacePhoto}
+                                        />
+                                    ))}
+                                </View>
+                            )}
                         </View>
-                    </View>
-                ))}
+                    );
+                })}
             </ScrollView>
-
-            {/* Botão flutuante de adicionar foto */}
-            {canAddPhotos && onAddPhoto && (
-                <View
-                    className="absolute bottom-0 left-0 right-0 px-4 pt-3"
-                    style={{
-                        backgroundColor: AppColors.white,
-                        paddingBottom: Math.max(insets.bottom, 16) + 8,
-                    }}
-                >
-                    <AddPhotoButton onPress={onAddPhoto} isUploading={isUploading} />
-                </View>
-            )}
 
             {/* Modal de visualização em tela cheia */}
             <FullScreenPhotoModal
                 photos={allPhotosFlat}
                 initialIndex={selectedPhotoIndex}
                 onClose={handleCloseModal}
+                surgeryDate={surgeryDate}
             />
         </View>
     );
@@ -188,11 +246,13 @@ export function PhotoGalleryGrid({
 interface PhotoThumbnailProps {
     photo: PatientPhoto;
     canDelete: boolean;
+    canReplace: boolean;
     onPress: (photo: PatientPhoto) => void;
     onDelete?: (photo: PatientPhoto) => void;
+    onReplace?: (photo: PatientPhoto) => void;
 }
 
-function PhotoThumbnail({ photo, canDelete, onPress, onDelete }: PhotoThumbnailProps) {
+function PhotoThumbnail({ photo, canDelete, canReplace, onPress, onDelete, onReplace }: PhotoThumbnailProps) {
     return (
         <View style={{ width: ITEM_WIDTH, height: ITEM_WIDTH }}>
             <TouchableOpacity
@@ -216,6 +276,19 @@ function PhotoThumbnail({ photo, canDelete, onPress, onDelete }: PhotoThumbnailP
                 )}
             </TouchableOpacity>
 
+            {/* Botão de editar (substituir) — canto superior esquerdo */}
+            {canReplace && onReplace && (
+                <TouchableOpacity
+                    testID={`replace-photo-${photo.id}`}
+                    onPress={() => onReplace(photo)}
+                    className="absolute top-2 left-2 w-7 h-7 rounded-full items-center justify-center"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+                >
+                    <Pencil size={14} color={AppColors.white} />
+                </TouchableOpacity>
+            )}
+
+            {/* Botão de deletar — canto superior direito */}
             {canDelete && onDelete && (
                 <TouchableOpacity
                     testID={`delete-photo-${photo.id}`}
@@ -230,36 +303,6 @@ function PhotoThumbnail({ photo, canDelete, onPress, onDelete }: PhotoThumbnailP
     );
 }
 
-interface AddPhotoButtonProps {
-    onPress: () => void;
-    isUploading: boolean;
-}
-
-function AddPhotoButton({ onPress, isUploading }: AddPhotoButtonProps) {
-    return (
-        <TouchableOpacity
-            testID="add-photo-button"
-            onPress={onPress}
-            disabled={isUploading}
-            className="flex-row items-center justify-center py-3 rounded-xl"
-            style={{
-                backgroundColor: isUploading ? AppColors.gray[200] : AppColors.primary[700],
-            }}
-        >
-            {isUploading ? (
-                <>
-                    <ActivityIndicator size="small" color={AppColors.white} />
-                    <Text className="text-white font-semibold ml-2">Enviando...</Text>
-                </>
-            ) : (
-                <>
-                    <Plus size={20} color={AppColors.white} />
-                    <Text className="text-white font-semibold ml-2">Adicionar Foto</Text>
-                </>
-            )}
-        </TouchableOpacity>
-    );
-}
 
 interface EmptyStateProps {
     isPatient: boolean;
@@ -279,7 +322,7 @@ function EmptyState({ isPatient }: EmptyStateProps) {
             </Text>
             <Text className="text-sm text-center" style={{ color: AppColors.gray[400] }}>
                 {isPatient
-                    ? 'Toque no botão abaixo para adicionar sua primeira foto.'
+                    ? 'Suas fotos aparecerão aqui quando forem adicionadas.'
                     : 'As fotos do paciente aparecerão aqui quando forem adicionadas.'
                 }
             </Text>
@@ -287,13 +330,18 @@ function EmptyState({ isPatient }: EmptyStateProps) {
     );
 }
 
+// ============================================================
+// Full Screen Photo Modal
+// ============================================================
+
 interface FullScreenPhotoModalProps {
     photos: PatientPhoto[];
     initialIndex: number | null;
     onClose: () => void;
+    surgeryDate?: string;
 }
 
-function FullScreenPhotoModal({ photos, initialIndex, onClose }: FullScreenPhotoModalProps) {
+function FullScreenPhotoModal({ photos, initialIndex, onClose, surgeryDate }: FullScreenPhotoModalProps) {
     const insets = useSafeAreaInsets();
     const flatListRef = useRef<FlatList<PatientPhoto>>(null);
     const [currentIndex, setCurrentIndex] = useState(initialIndex ?? 0);
@@ -381,7 +429,7 @@ function FullScreenPhotoModal({ photos, initialIndex, onClose }: FullScreenPhoto
                     <View className="flex-1">
                         {currentPhoto && (
                             <Text className="text-sm" style={{ color: AppColors.gray[300] }}>
-                                {formatDateSection(currentPhoto.photo_date)}
+                                {formatDateSectionWithDay(currentPhoto.photo_date, computePostOpDay(currentPhoto.photo_date, surgeryDate))}
                             </Text>
                         )}
                     </View>
@@ -430,27 +478,55 @@ function FullScreenPhotoModal({ photos, initialIndex, onClose }: FullScreenPhoto
 // ============================================================
 
 /**
- * Formata uma data YYYY-MM-DD para exibição como header de seção.
+ * Formata um Date para string ISO YYYY-MM-DD usando componentes locais.
  */
-function formatDateSection(dateStr: string): string {
+function formatDateToISO(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+/**
+ * Calcula o dia pós-operatório (1-indexed) com base na data da foto e da cirurgia.
+ * Dia 1 = dia seguinte à cirurgia.
+ * Retorna 0 se surgeryDate não estiver disponível.
+ */
+function computePostOpDay(photoDateStr: string, surgeryDate?: string): number {
+    if (!surgeryDate) return 0;
+    const [pYear, pMonth, pDay] = photoDateStr.split('-').map(Number);
+    const photoDate = new Date(pYear, pMonth - 1, pDay);
+
+    const surgeryDateClean = surgeryDate.split('T')[0];
+    const [sYear, sMonth, sDay] = surgeryDateClean.split('-').map(Number);
+    const sDate = new Date(sYear, sMonth - 1, sDay);
+
+    const diffMs = photoDate.getTime() - sDate.getTime();
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+    return diffDays; // dia 0 = dia da cirurgia, dia 1 = primeiro dia pós-op
+}
+
+/**
+ * Formata o header de seção com o dia pós-operatório.
+ * Ex: "Dia 1 — 15 de janeiro" ou fallback para data formatada se dia não disponível.
+ */
+function formatDateSectionWithDay(dateStr: string, dayNumber: number): string {
     const [year, month, day] = dateStr.split('-');
     const date = new Date(Number(year), Number(month) - 1, Number(day));
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
 
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.getTime() === today.getTime()) {
-        return 'Hoje';
-    }
-    if (date.getTime() === yesterday.getTime()) {
-        return 'Ontem';
-    }
-
-    return date.toLocaleDateString('pt-BR', {
+    const formattedDate = date.toLocaleDateString('pt-BR', {
         day: '2-digit',
         month: 'long',
-        year: 'numeric',
     });
+
+    if (dayNumber > 0) {
+        return `Dia ${dayNumber} — ${formattedDate}`;
+    }
+
+    if (dayNumber === 0) {
+        return `Dia da cirurgia — ${formattedDate}`;
+    }
+
+    // fallback: sem surgeryDate ou data anterior à cirurgia
+    return formattedDate;
 }

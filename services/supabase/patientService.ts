@@ -158,6 +158,7 @@ export class SupabasePatientService implements IPatientService {
         surgeryDate: string;
         doctorId: string;
         followUpDays?: number;
+        hospital?: string;
     }): Promise<{ patientId: string; surgeryId: string }> {
         // Generate fake email for Supabase Auth (patient logs in via CPF, not email)
         const fakeEmail = `${data.cpf}@paciente.app`;
@@ -194,7 +195,8 @@ export class SupabasePatientService implements IPatientService {
                 surgery_date: data.surgeryDate,
                 status: 'active',
                 medical_status: 'stable',
-                follow_up_days: data.followUpDays ?? null
+                follow_up_days: data.followUpDays ?? null,
+                hospital: data.hospital ?? null
             })
             .select()
             .single();
@@ -236,11 +238,12 @@ export class SupabasePatientService implements IPatientService {
             }
         }
 
-        // Update surgery fields (surgery_date, follow_up_days, surgery_type_id)
+        // Update surgery fields (surgery_date, follow_up_days, surgery_type_id, hospital)
         const surgeryUpdates: Record<string, string | number | null> = {};
         if (data.surgeryDate !== undefined) surgeryUpdates.surgery_date = data.surgeryDate;
         if (data.followUpDays !== undefined) surgeryUpdates.follow_up_days = data.followUpDays;
         if (data.surgeryTypeId !== undefined) surgeryUpdates.surgery_type_id = data.surgeryTypeId;
+        if (data.hospital !== undefined) surgeryUpdates.hospital = data.hospital;
 
         if (Object.keys(surgeryUpdates).length > 0) {
             const { error: surgeryError } = await supabase

@@ -148,8 +148,8 @@ export default function PatientDashboard() {
                         subtitle="Veja suas fotos de acompanhamento"
                         // @ts-ignore
                         icon={Image}
-                        iconColor="#b45309"
-                        iconBgColor="bg-amber-100"
+                        iconColor={AppColors.info.DEFAULT}
+                        iconBgColor="bg-blue-100"
                         onPress={() => router.push('/patient/photo-gallery')}
                     />
                     <ActionMenuItem
