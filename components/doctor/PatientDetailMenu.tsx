@@ -10,6 +10,7 @@ interface PatientDetailMenuItemProps {
     iconColor?: string;
     iconBgColor?: string;
     testID?: string;
+    badge?: number;
 }
 
 export function PatientDetailMenuItem({
@@ -20,6 +21,7 @@ export function PatientDetailMenuItem({
     iconColor = AppColors.primary[700],
     iconBgColor = AppColors.primary[50],
     testID,
+    badge,
 }: PatientDetailMenuItemProps) {
     return (
         <TouchableOpacity
@@ -43,6 +45,18 @@ export function PatientDetailMenuItem({
                     {subtitle}
                 </Text>
             </View>
+
+            {badge !== undefined && badge > 0 && (
+                <View
+                    testID={`${testID}-badge`}
+                    className="w-6 h-6 rounded-full items-center justify-center mr-2"
+                    style={{ backgroundColor: AppColors.primary[700] }}
+                >
+                    <Text className="text-xs font-bold" style={{ color: AppColors.white }}>
+                        {badge}
+                    </Text>
+                </View>
+            )}
 
             <ChevronRight size={20} color={AppColors.gray[400]} />
         </TouchableOpacity>

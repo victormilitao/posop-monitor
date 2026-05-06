@@ -33,6 +33,9 @@ describe('DoctorContactView', () => {
     email: 'carlos@medico.com',
     phone: '85999001122',
     phonePersonal: '85988001122',
+    contactPhone: '85977001122',
+    contactPhoneBusiness: '85966001122',
+    hospital: 'Hospital São Lucas',
   };
 
   beforeEach(() => {
@@ -65,8 +68,12 @@ describe('DoctorContactView', () => {
 
     expect(screen.getAllByText('Dr. Carlos Silva').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('CRM/CE 12345')).toBeTruthy();
-    expect(screen.getByText('85999001122')).toBeTruthy();
-    expect(screen.getByText('85988001122')).toBeTruthy();
+    expect(screen.getByText('Hospital São Lucas')).toBeTruthy();
+    // Surgery-level contacts should be displayed formatted
+    expect(screen.getByText('(85) 97700-1122')).toBeTruthy();
+    expect(screen.getByText('(85) 96600-1122')).toBeTruthy();
+    expect(screen.getByText('Contato Pessoal')).toBeTruthy();
+    expect(screen.getByText('Contato Empresarial')).toBeTruthy();
   });
 
   it('deve renderizar nome no header e no card', () => {
@@ -77,6 +84,9 @@ describe('DoctorContactView', () => {
         email: 'ana@medico.com',
         phone: '11999998888',
         phonePersonal: null,
+        contactPhone: '11977778888',
+        contactPhoneBusiness: null,
+        hospital: null,
       },
       isLoading: false,
     });
@@ -86,7 +96,7 @@ describe('DoctorContactView', () => {
     expect(screen.getAllByText('Dra. Ana').length).toBe(2);
   });
 
-  it('não deve renderizar telefone pessoal quando não disponível', () => {
+  it('não deve renderizar contato empresarial quando não disponível', () => {
     mockUseDoctorContact.mockReturnValue({
       data: {
         name: 'Dr. Ana',
@@ -94,13 +104,17 @@ describe('DoctorContactView', () => {
         email: 'ana@medico.com',
         phone: '11999998888',
         phonePersonal: null,
+        contactPhone: '11977778888',
+        contactPhoneBusiness: null,
+        hospital: null,
       },
       isLoading: false,
     });
 
     render(React.createElement(DoctorContactView, baseProps));
 
-    expect(screen.queryByText('Telefone Pessoal')).toBeNull();
+    expect(screen.queryByText('Contato Empresarial')).toBeNull();
+    expect(screen.getByText('Contato Pessoal')).toBeTruthy();
   });
 
   it('não deve renderizar botão ligar quando não está em alerta crítico', () => {
@@ -113,8 +127,8 @@ describe('DoctorContactView', () => {
 
     expect(screen.queryByTestId('call-doctor-button')).toBeNull();
     expect(screen.queryByText('Ligar para o Médico')).toBeNull();
-    // Phone number should still be visible
-    expect(screen.getByText('85999001122')).toBeTruthy();
+    // Contact phones should still be visible for copying (formatted)
+    expect(screen.getByText('(85) 97700-1122')).toBeTruthy();
   });
 
   it('deve renderizar botão ligar quando paciente está em alerta crítico', () => {
@@ -137,8 +151,37 @@ describe('DoctorContactView', () => {
         name: 'Dr. Carlos',
         crm: 'CRM/CE 12345',
         email: 'carlos@medico.com',
-        phone: '(85) 99900-1122',
+        phone: '85999001122',
         phonePersonal: null,
+        contactPhone: '85977001122',
+        contactPhoneBusiness: null,
+        hospital: null,
+      },
+      isLoading: false,
+    });
+
+    render(React.createElement(DoctorContactView, { ...baseProps, isCriticalAlert: true }));
+
+    fireEvent.press(screen.getByTestId('call-doctor-button'));
+
+    await waitFor(() => {
+      expect(Linking.openURL).toHaveBeenCalledWith('tel:85977001122');
+    });
+  });
+
+  it('deve usar telefone do perfil do médico como fallback quando não há contatos de cirurgia', async () => {
+    jest.spyOn(Linking, 'canOpenURL').mockResolvedValue(true);
+
+    mockUseDoctorContact.mockReturnValue({
+      data: {
+        name: 'Dr. Carlos',
+        crm: 'CRM/CE 12345',
+        email: 'carlos@medico.com',
+        phone: '85999001122',
+        phonePersonal: null,
+        contactPhone: null,
+        contactPhoneBusiness: null,
+        hospital: null,
       },
       isLoading: false,
     });
@@ -152,53 +195,82 @@ describe('DoctorContactView', () => {
     });
   });
 
-  it('deve copiar telefone ao pressionar linha de telefone', async () => {
-    mockUseDoctorContact.mockReturnValue({
-      data: {
-        name: 'Dr. Carlos',
-        crm: 'CRM/CE 12345',
-        email: 'carlos@medico.com',
-        phone: '(85) 99900-1122',
-        phonePersonal: null,
-      },
-      isLoading: false,
-    });
-
-    render(React.createElement(DoctorContactView, baseProps));
-
-    fireEvent.press(screen.getByText('(85) 99900-1122'));
-
-    await waitFor(() => {
-      expect(mockSetStringAsync).toHaveBeenCalledWith('(85) 99900-1122');
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Copiado!',
-        'Telefone (85) 99900-1122 copiado para a área de transferência.'
-      );
-    });
-  });
-
-  it('deve copiar telefone pessoal ao pressionar linha', async () => {
+  it('deve copiar contato pessoal ao pressionar linha', async () => {
     mockUseDoctorContact.mockReturnValue({
       data: {
         name: 'Dr. Carlos',
         crm: 'CRM/CE 12345',
         email: 'carlos@medico.com',
         phone: '85999001122',
-        phonePersonal: '(85) 98800-1122',
+        phonePersonal: null,
+        contactPhone: '85977001122',
+        contactPhoneBusiness: null,
+        hospital: null,
       },
       isLoading: false,
     });
 
     render(React.createElement(DoctorContactView, baseProps));
 
-    fireEvent.press(screen.getByText('(85) 98800-1122'));
+    fireEvent.press(screen.getByText('(85) 97700-1122'));
 
     await waitFor(() => {
-      expect(mockSetStringAsync).toHaveBeenCalledWith('(85) 98800-1122');
+      expect(mockSetStringAsync).toHaveBeenCalledWith('85977001122');
       expect(Alert.alert).toHaveBeenCalledWith(
         'Copiado!',
-        'Telefone (85) 98800-1122 copiado para a área de transferência.'
+        'Telefone (85) 97700-1122 copiado para a área de transferência.'
       );
     });
+  });
+
+  it('deve copiar contato empresarial ao pressionar linha', async () => {
+    mockUseDoctorContact.mockReturnValue({
+      data: {
+        name: 'Dr. Carlos',
+        crm: 'CRM/CE 12345',
+        email: 'carlos@medico.com',
+        phone: '85999001122',
+        phonePersonal: null,
+        contactPhone: null,
+        contactPhoneBusiness: '85966001122',
+        hospital: null,
+      },
+      isLoading: false,
+    });
+
+    render(React.createElement(DoctorContactView, baseProps));
+
+    fireEvent.press(screen.getByText('(85) 96600-1122'));
+
+    await waitFor(() => {
+      expect(mockSetStringAsync).toHaveBeenCalledWith('85966001122');
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Copiado!',
+        'Telefone (85) 96600-1122 copiado para a área de transferência.'
+      );
+    });
+  });
+
+  it('deve renderizar hospital quando disponível', () => {
+    mockUseDoctorContact.mockReturnValue({
+      data: doctorData,
+      isLoading: false,
+    });
+
+    render(React.createElement(DoctorContactView, baseProps));
+
+    expect(screen.getByText('Hospital')).toBeTruthy();
+    expect(screen.getByText('Hospital São Lucas')).toBeTruthy();
+  });
+
+  it('não deve renderizar hospital quando não disponível', () => {
+    mockUseDoctorContact.mockReturnValue({
+      data: { ...doctorData, hospital: null },
+      isLoading: false,
+    });
+
+    render(React.createElement(DoctorContactView, baseProps));
+
+    expect(screen.queryByText('Hospital')).toBeNull();
   });
 });

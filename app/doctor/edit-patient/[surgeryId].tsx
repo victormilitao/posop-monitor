@@ -15,10 +15,12 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../../components/ui/Button';
+import { AutocompleteInput } from '../../../components/ui/AutocompleteInput';
 import { PickerModal, PickerOption } from '../../../components/ui/SearchablePickerModal';
 import { AppColors } from '../../../constants/colors';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
+import { useHospitalSuggestions } from '../../../hooks/useHospitalSuggestions';
 import { patientService, surgeryService, surgeryTypeService, reportService } from '../../../services';
 
 interface SurgeryType {
@@ -34,6 +36,7 @@ export default function EditPatientScreen() {
   const { profile } = useAuth();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
+  const { data: hospitalSuggestions = [] } = useHospitalSuggestions(profile?.id);
 
   const [name, setName] = useState('');
   const [cpf, setCpf] = useState('');
@@ -43,6 +46,8 @@ export default function EditPatientScreen() {
   const [surgeryDate, setSurgeryDate] = useState('');
   const [followUpDays, setFollowUpDays] = useState('');
   const [hospital, setHospital] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [contactPhoneBusiness, setContactPhoneBusiness] = useState('');
   const [surgeryTypes, setSurgeryTypes] = useState<SurgeryType[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
@@ -89,6 +94,8 @@ export default function EditPatientScreen() {
       setSurgeryTypeId(surgery.surgery_type_id);
       setFollowUpDays(String((surgery as any).follow_up_days ?? surgery.surgery_type?.expected_recovery_days ?? 14));
       setHospital((surgery as any).hospital || '');
+      setContactPhone(formatPhone((surgery as any).contact_phone || ''));
+      setContactPhoneBusiness(formatPhone((surgery as any).contact_phone_business || ''));
 
       // Format surgery_date from YYYY-MM-DD to DD/MM/YYYY
       const dateParts = surgery.surgery_date.split('T')[0].split('-');
@@ -182,6 +189,21 @@ export default function EditPatientScreen() {
       return;
     }
 
+    const cleanContactPhone: string = contactPhone.replace(/\D/g, '');
+    const cleanContactPhoneBusiness: string = contactPhoneBusiness.replace(/\D/g, '');
+    if (!cleanContactPhone && !cleanContactPhoneBusiness) {
+      showToast({ type: 'error', title: 'Erro', message: 'Preencha pelo menos um contato (pessoal ou empresarial).' });
+      return;
+    }
+    if (cleanContactPhone && cleanContactPhone.length < 10) {
+      showToast({ type: 'error', title: 'Erro', message: 'Contato pessoal deve ter DDD + número.' });
+      return;
+    }
+    if (cleanContactPhoneBusiness && cleanContactPhoneBusiness.length < 10) {
+      showToast({ type: 'error', title: 'Erro', message: 'Contato empresarial deve ter DDD + número.' });
+      return;
+    }
+
     if (!profile?.id) {
       showToast({ type: 'error', title: 'Erro', message: 'Sessão expirada.' });
       return;
@@ -197,6 +219,8 @@ export default function EditPatientScreen() {
         sex,
         phone: cleanPhone,
         hospital: hospital.trim(),
+        contactPhone: contactPhone.replace(/\D/g, ''),
+        contactPhoneBusiness: contactPhoneBusiness.replace(/\D/g, ''),
       };
 
       // Include surgery fields only when editing is allowed (no reports)
@@ -230,6 +254,7 @@ export default function EditPatientScreen() {
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['surgeries', 'doctor', profile.id] });
       queryClient.invalidateQueries({ queryKey: ['patients', 'doctor', profile.id] });
+      queryClient.invalidateQueries({ queryKey: ['hospitals', 'doctor', profile.id] });
 
       showToast({ type: 'success', title: 'Sucesso', message: 'Paciente atualizado com sucesso!' });
       setTimeout(() => router.back(), 1500);
@@ -406,7 +431,7 @@ export default function EditPatientScreen() {
               </TouchableOpacity>
             )}
             {(hasReports || isFinalized) && (
-              <Text className="text-gray-400 text-xs mt-1">
+              <Text className="text-gray-500 text-xs mt-1">
                 {isFinalized
                   ? 'Acompanhamento finalizado. Não é possível alterar.'
                   : 'Não é possível alterar pois o paciente já possui registros.'
@@ -437,7 +462,7 @@ export default function EditPatientScreen() {
               keyboardType="numeric"
             />
             {(hasReports || isFinalized) && (
-              <Text className="text-gray-400 text-xs mt-1">
+              <Text className="text-gray-500 text-xs mt-1">
                 {isFinalized
                   ? 'Acompanhamento finalizado. Não é possível alterar.'
                   : 'Não é possível alterar pois o paciente já possui registros.'
@@ -459,7 +484,7 @@ export default function EditPatientScreen() {
               maxLength={10}
             />
             {(hasReports || isFinalized) && (
-              <Text className="text-gray-400 text-xs mt-1">
+              <Text className="text-gray-500 text-xs mt-1">
                 {isFinalized
                   ? 'Acompanhamento finalizado. Não é possível alterar.'
                   : 'Não é possível alterar pois o paciente já possui registros.'
@@ -469,17 +494,55 @@ export default function EditPatientScreen() {
           </View>
 
           {/* Hospital */}
-          <View className={`mb-8 ${isFinalized ? 'opacity-80' : ''}`}>
+          <View className={`mb-4 ${isFinalized ? 'opacity-80' : ''}`} style={!isFinalized ? { zIndex: 10 } : undefined}>
             <Text className={`font-medium mb-2 ${isFinalized ? 'text-gray-400' : 'text-gray-700'}`}>Hospital / Clínica</Text>
-            <TextInput
+            <AutocompleteInput
               testID="hospital-input"
               className={`rounded-xl px-4 ${isFinalized ? 'bg-gray-100 border border-gray-200 text-gray-400' : 'bg-white border border-gray-300 text-gray-800'}`}
               style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
               placeholder="Nome do hospital ou clínica"
               value={hospital}
-              onChangeText={!isFinalized ? setHospital : undefined}
-              editable={!isFinalized}
+              onChangeText={!isFinalized ? setHospital : () => {}}
+              disabled={isFinalized}
+              suggestions={hospitalSuggestions}
             />
+          </View>
+
+          {/* Contact Phone (Personal) */}
+          <View className={`mb-4 ${isFinalized ? 'opacity-80' : ''}`}>
+            <Text className={`font-medium mb-2 ${isFinalized ? 'text-gray-400' : 'text-gray-700'}`}>Contato Pessoal</Text>
+            <TextInput
+              testID="contact-phone-input"
+              className={`rounded-xl px-4 ${isFinalized ? 'bg-gray-100 border border-gray-200 text-gray-400' : 'bg-white border border-gray-300 text-gray-800'}`}
+              style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
+              placeholder="(DD) XXXXX-XXXX"
+              value={contactPhone}
+              onChangeText={!isFinalized ? (v) => setContactPhone(formatPhone(v)) : undefined}
+              editable={!isFinalized}
+              keyboardType="phone-pad"
+              maxLength={15}
+            />
+          </View>
+
+          {/* Contact Phone (Business) */}
+          <View className={`mb-8 ${isFinalized ? 'opacity-80' : ''}`}>
+            <Text className={`font-medium mb-2 ${isFinalized ? 'text-gray-400' : 'text-gray-700'}`}>Contato Empresarial</Text>
+            <TextInput
+              testID="contact-phone-business-input"
+              className={`rounded-xl px-4 ${isFinalized ? 'bg-gray-100 border border-gray-200 text-gray-400' : 'bg-white border border-gray-300 text-gray-800'}`}
+              style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
+              placeholder="(DD) XXXXX-XXXX"
+              value={contactPhoneBusiness}
+              onChangeText={!isFinalized ? (v) => setContactPhoneBusiness(formatPhone(v)) : undefined}
+              editable={!isFinalized}
+              keyboardType="phone-pad"
+              maxLength={15}
+            />
+            {!isFinalized && (
+              <Text className="text-gray-500 text-xs mt-1">
+                Preencha pelo menos um dos contatos acima.
+              </Text>
+            )}
           </View>
 
           {/* Submit */}

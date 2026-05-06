@@ -26,6 +26,8 @@ describe('DoctorContactSheet', () => {
     email: 'carlos@medico.com',
     phone: '85999001122',
     phonePersonal: '85988001122',
+    contactPhone: '85977001122',
+    contactPhoneBusiness: '85966001122',
   };
 
   beforeEach(() => {
@@ -48,7 +50,7 @@ describe('DoctorContactSheet', () => {
     expect(screen.getByText('Nenhum médico vinculado encontrado.')).toBeTruthy();
   });
 
-  it('deve renderizar dados do médico', () => {
+  it('deve renderizar dados do médico com contatos de cirurgia', () => {
     mockUseDoctorContact.mockReturnValue({
       data: doctorData,
       isLoading: false,
@@ -61,11 +63,14 @@ describe('DoctorContactSheet', () => {
     expect(screen.getByText('Contato')).toBeTruthy();
     expect(screen.getByText('Dr. Carlos Silva')).toBeTruthy();
     expect(screen.getByText('CRM/CE 12345')).toBeTruthy();
-    expect(screen.getByText('85999001122')).toBeTruthy();
-    expect(screen.getByText('85988001122')).toBeTruthy();
+    // Surgery-level contacts should be displayed
+    expect(screen.getByText('85977001122')).toBeTruthy();
+    expect(screen.getByText('85966001122')).toBeTruthy();
+    expect(screen.getByText('Contato Pessoal')).toBeTruthy();
+    expect(screen.getByText('Contato Empresarial')).toBeTruthy();
   });
 
-  it('não deve renderizar telefone pessoal quando não disponível', () => {
+  it('não deve renderizar contato empresarial quando não disponível', () => {
     mockUseDoctorContact.mockReturnValue({
       data: {
         name: 'Dr. Ana',
@@ -73,13 +78,16 @@ describe('DoctorContactSheet', () => {
         email: 'ana@medico.com',
         phone: '11999998888',
         phonePersonal: null,
+        contactPhone: '11977778888',
+        contactPhoneBusiness: null,
       },
       isLoading: false,
     });
 
     render(React.createElement(DoctorContactSheet, baseProps));
 
-    expect(screen.queryByText('Telefone Pessoal')).toBeNull();
+    expect(screen.queryByText('Contato Empresarial')).toBeNull();
+    expect(screen.getByText('Contato Pessoal')).toBeTruthy();
   });
 
   it('deve chamar onClose ao pressionar o botão fechar', () => {
@@ -102,8 +110,8 @@ describe('DoctorContactSheet', () => {
 
     expect(screen.queryByTestId('call-doctor-button')).toBeNull();
     expect(screen.queryByText('Ligar para o Médico')).toBeNull();
-    // Phone number should still be visible
-    expect(screen.getByText('85999001122')).toBeTruthy();
+    // Contact phones should still be visible for copying
+    expect(screen.getByText('85977001122')).toBeTruthy();
   });
 
   it('deve renderizar botão ligar quando paciente está em alerta crítico', () => {
@@ -124,8 +132,31 @@ describe('DoctorContactSheet', () => {
         name: 'Dr. Carlos',
         crm: 'CRM/CE 12345',
         email: 'carlos@medico.com',
-        phone: '(85) 99900-1122',
+        phone: '85999001122',
         phonePersonal: null,
+        contactPhone: '(85) 97700-1122',
+        contactPhoneBusiness: null,
+      },
+      isLoading: false,
+    });
+
+    render(React.createElement(DoctorContactSheet, { ...baseProps, isCriticalAlert: true }));
+
+    fireEvent.press(screen.getByTestId('call-doctor-button'));
+
+    expect(Linking.openURL).toHaveBeenCalledWith('tel:85977001122');
+  });
+
+  it('deve usar telefone do perfil do médico como fallback', () => {
+    mockUseDoctorContact.mockReturnValue({
+      data: {
+        name: 'Dr. Carlos',
+        crm: 'CRM/CE 12345',
+        email: 'carlos@medico.com',
+        phone: '85999001122',
+        phonePersonal: null,
+        contactPhone: null,
+        contactPhoneBusiness: null,
       },
       isLoading: false,
     });

@@ -94,4 +94,28 @@ describe('ConfirmPatientModal', () => {
     render(React.createElement(ConfirmPatientModal, baseProps));
     expect(screen.getByText('Confira os dados abaixo antes de confirmar.')).toBeTruthy();
   });
+
+  it('deve renderizar contato pessoal quando informado', () => {
+    const dataWithContactPhone = { ...sampleData, contactPhone: '(85) 97700-1122' };
+    render(React.createElement(ConfirmPatientModal, { ...baseProps, data: dataWithContactPhone }));
+    expect(screen.getByText('Contato Pessoal')).toBeTruthy();
+    expect(screen.getByText('(85) 97700-1122')).toBeTruthy();
+  });
+
+  it('deve renderizar contato empresarial quando informado', () => {
+    const dataWithBusinessPhone = { ...sampleData, contactPhoneBusiness: '(85) 96600-1122' };
+    render(React.createElement(ConfirmPatientModal, { ...baseProps, data: dataWithBusinessPhone }));
+    expect(screen.getByText('Contato Empresarial')).toBeTruthy();
+    expect(screen.getByText('(85) 96600-1122')).toBeTruthy();
+  });
+
+  it('não deve renderizar contato pessoal quando não informado', () => {
+    render(React.createElement(ConfirmPatientModal, baseProps));
+    expect(screen.queryByText('Contato Pessoal')).toBeNull();
+  });
+
+  it('não deve renderizar contato empresarial quando não informado', () => {
+    render(React.createElement(ConfirmPatientModal, baseProps));
+    expect(screen.queryByText('Contato Empresarial')).toBeNull();
+  });
 });

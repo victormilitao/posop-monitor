@@ -15,11 +15,13 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../components/ui/Button';
+import { AutocompleteInput } from '../../components/ui/AutocompleteInput';
 import { PickerModal, PickerOption } from '../../components/ui/SearchablePickerModal';
 import { ConfirmPatientModal, ConfirmPatientData } from '../../components/doctor/ConfirmPatientModal';
 import { AppColors } from '../../constants/colors';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { useHospitalSuggestions } from '../../hooks/useHospitalSuggestions';
 import { patientService, surgeryTypeService } from '../../services';
 
 interface SurgeryType {
@@ -34,6 +36,7 @@ export default function AddPatientScreen() {
   const { profile } = useAuth();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
+  const { data: hospitalSuggestions = [] } = useHospitalSuggestions(profile?.id);
 
   const [cpf, setCpf] = useState('');
   const [name, setName] = useState('');
@@ -44,6 +47,8 @@ export default function AddPatientScreen() {
   const [surgeryDate, setSurgeryDate] = useState('');
   const [followUpDays, setFollowUpDays] = useState('');
   const [hospital, setHospital] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [contactPhoneBusiness, setContactPhoneBusiness] = useState('');
   const [surgeryTypes, setSurgeryTypes] = useState<SurgeryType[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingTypes, setLoadingTypes] = useState(true);
@@ -144,6 +149,21 @@ export default function AddPatientScreen() {
       return;
     }
 
+    const cleanContactPhone: string = contactPhone.replace(/\D/g, '');
+    const cleanContactPhoneBusiness: string = contactPhoneBusiness.replace(/\D/g, '');
+    if (!cleanContactPhone && !cleanContactPhoneBusiness) {
+      showToast({ type: 'error', title: 'Erro', message: 'Preencha pelo menos um contato (pessoal ou empresarial).' });
+      return;
+    }
+    if (cleanContactPhone && cleanContactPhone.length < 10) {
+      showToast({ type: 'error', title: 'Erro', message: 'Contato pessoal deve ter DDD + número.' });
+      return;
+    }
+    if (cleanContactPhoneBusiness && cleanContactPhoneBusiness.length < 10) {
+      showToast({ type: 'error', title: 'Erro', message: 'Contato empresarial deve ter DDD + número.' });
+      return;
+    }
+
     // Parse date from DD/MM/YYYY to YYYY-MM-DD
     const dateDigits: string = surgeryDate.replace(/\D/g, '');
     if (!surgeryDate.trim() || dateDigits.length !== 8) {
@@ -187,6 +207,8 @@ export default function AddPatientScreen() {
       surgeryDate,
       followUpDays,
       hospital: hospital.trim(),
+      contactPhone: contactPhone.trim(),
+      contactPhoneBusiness: contactPhoneBusiness.trim(),
     });
     setShowConfirmModal(true);
   };
@@ -207,11 +229,14 @@ export default function AddPatientScreen() {
         doctorId: profile.id,
         followUpDays: validatedFollowUpDays,
         hospital: hospital.trim() || undefined,
+        contactPhone: contactPhone.replace(/\D/g, '') || undefined,
+        contactPhoneBusiness: contactPhoneBusiness.replace(/\D/g, '') || undefined,
       });
 
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['surgeries', 'doctor', profile.id] });
       queryClient.invalidateQueries({ queryKey: ['patients', 'doctor', profile.id] });
+      queryClient.invalidateQueries({ queryKey: ['hospitals', 'doctor', profile.id] });
 
       setShowConfirmModal(false);
       showToast({ type: 'success', title: 'Sucesso', message: 'Paciente cadastrado com sucesso!' });
@@ -388,7 +413,7 @@ export default function AddPatientScreen() {
               keyboardType="numeric"
               maxLength={3}
             />
-            <Text className="text-gray-400 text-xs mt-1">
+            <Text className="text-gray-500 text-xs mt-1">
               Preenchido automaticamente pelo procedimento. Altere se necessário.
             </Text>
           </View>
@@ -408,16 +433,50 @@ export default function AddPatientScreen() {
           </View>
 
           {/* Hospital */}
-          <View className="mb-8">
+          <View className="mb-4" style={{ zIndex: 10 }}>
             <Text className="text-gray-700 font-medium mb-2">Hospital / Clínica</Text>
-            <TextInput
+            <AutocompleteInput
               testID="hospital-input"
               className="bg-white border border-gray-300 rounded-xl px-4 text-gray-800"
               style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
               placeholder="Nome do hospital ou clínica"
               value={hospital}
               onChangeText={setHospital}
+              suggestions={hospitalSuggestions}
             />
+          </View>
+
+          {/* Contact Phone (Personal) */}
+          <View className="mb-4">
+            <Text className="text-gray-700 font-medium mb-2">Contato Pessoal</Text>
+            <TextInput
+              testID="contact-phone-input"
+              className="bg-white border border-gray-300 rounded-xl px-4 text-gray-800"
+              style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
+              placeholder="(DD) XXXXX-XXXX"
+              value={contactPhone}
+              onChangeText={(v) => setContactPhone(formatPhone(v))}
+              keyboardType="phone-pad"
+              maxLength={15}
+            />
+          </View>
+
+          {/* Contact Phone (Business) */}
+          <View className="mb-4">
+            <Text className="text-gray-700 font-medium mb-2">Contato Empresarial</Text>
+            <TextInput
+              testID="contact-phone-business-input"
+              className="bg-white border border-gray-300 rounded-xl px-4 text-gray-800"
+              style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
+              placeholder="(DD) XXXXX-XXXX"
+              value={contactPhoneBusiness}
+              onChangeText={(v) => setContactPhoneBusiness(formatPhone(v))}
+              keyboardType="phone-pad"
+              maxLength={15}
+            />
+            <Text className="text-gray-500 text-xs mt-1">
+              Preencha pelo menos um dos contatos acima.
+            </Text>
           </View>
 
           {/* Submit */}

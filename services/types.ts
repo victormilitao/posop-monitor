@@ -45,6 +45,8 @@ export interface UpdatePatientData {
     followUpDays?: number;
     surgeryTypeId?: string;
     hospital?: string;
+    contactPhone?: string;
+    contactPhoneBusiness?: string;
 }
 
 export interface DoctorContactInfo {
@@ -53,6 +55,9 @@ export interface DoctorContactInfo {
     email: string;
     phone: string;
     phonePersonal: string | null;
+    contactPhone: string | null;
+    contactPhoneBusiness: string | null;
+    hospital: string | null;
 }
 
 export interface IPatientService {
@@ -71,6 +76,8 @@ export interface IPatientService {
         doctorId: string;
         followUpDays?: number;
         hospital?: string;
+        contactPhone?: string;
+        contactPhoneBusiness?: string;
     }): Promise<{ patientId: string; surgeryId: string }>;
     updatePatient(data: UpdatePatientData): Promise<void>;
 }
@@ -86,9 +93,12 @@ export interface ISurgeryService {
         notes?: string;
         followUpDays?: number;
         hospital?: string;
+        contactPhone?: string;
+        contactPhoneBusiness?: string;
     }): Promise<Surgery>;
     finalizeSurgeriesPastRecovery(doctorId: string): Promise<number>;
     dismissPendingReturn(surgeryId: string): Promise<void>;
+    getDistinctHospitals(doctorId: string): Promise<string[]>;
 }
 
 export type Question = Database['public']['Tables']['questions']['Row'];
@@ -191,3 +201,18 @@ export interface IPhotoService {
     getPhotosCountByDate(patientId: string, date: string): Promise<number>;
 }
 
+export interface DoctorOrientation {
+    id: string;
+    surgery_id: string;
+    doctor_id: string;
+    content: string;
+    created_at: string;
+    updated_at: string | null;
+}
+
+export interface IOrientationService {
+    getOrientationsBySurgeryId(surgeryId: string): Promise<DoctorOrientation[]>;
+    addOrientation(surgeryId: string, doctorId: string, content: string): Promise<DoctorOrientation>;
+    updateOrientation(orientationId: string, content: string): Promise<DoctorOrientation>;
+    deleteOrientation(orientationId: string): Promise<void>;
+}
