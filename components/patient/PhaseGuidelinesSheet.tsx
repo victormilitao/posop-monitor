@@ -1,7 +1,9 @@
-import { X } from 'lucide-react-native';
+import { Stethoscope, X } from 'lucide-react-native';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Dimensions, Pressable, ScrollView, Text, View } from 'react-native';
+import { AppColors } from '../../constants/colors';
 import { usePhaseGuidelines } from '../../hooks/useGuidance';
+import { useOrientationsBySurgery } from '../../hooks/useOrientations';
 import { SurgeryTypePhaseGuideline } from '../../services/types';
 
 interface PhaseGuidelinesSheetProps {
@@ -9,6 +11,7 @@ interface PhaseGuidelinesSheetProps {
   onClose: () => void;
   currentDay?: number;
   surgeryTypeId?: string | null;
+  surgeryId?: string | null;
 }
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
@@ -45,12 +48,13 @@ function getActivePhase(
   return phases[phases.length - 1];
 }
 
-export function PhaseGuidelinesSheet({ visible, onClose, currentDay, surgeryTypeId }: PhaseGuidelinesSheetProps) {
+export function PhaseGuidelinesSheet({ visible, onClose, currentDay, surgeryTypeId, surgeryId }: PhaseGuidelinesSheetProps) {
   const [mounted, setMounted] = useState(false);
   const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
 
   const { data: phases = [], isLoading } = usePhaseGuidelines(surgeryTypeId);
+  const { data: orientations = [] } = useOrientationsBySurgery(surgeryId);
 
   const activePhase = useMemo(
     () => getActivePhase(phases, currentDay),
@@ -200,6 +204,45 @@ export function PhaseGuidelinesSheet({ visible, onClose, currentDay, surgeryType
                     </Text>
                   </View>
                 )}
+              </View>
+            )}
+
+            {/* Doctor Orientations */}
+            {orientations.length > 0 && (
+              <View testID="doctor-orientations-section" className="mt-6 mb-4">
+                {orientations.map((orientation) => (
+                  <View
+                    key={orientation.id}
+                    testID={`patient-orientation-${orientation.id}`}
+                    className="flex-row items-start p-4 rounded-xl mb-3"
+                    style={{
+                      backgroundColor: AppColors.info.light,
+                      borderWidth: 1,
+                      borderColor: '#dbeafe',
+                    }}
+                  >
+                    <View
+                      className="w-8 h-8 rounded-full items-center justify-center mr-3"
+                      style={{ backgroundColor: AppColors.primary[100] }}
+                    >
+                      <Stethoscope size={16} color={AppColors.primary[700]} />
+                    </View>
+                    <View className="flex-1">
+                      <Text
+                        className="text-xs font-semibold mb-1"
+                        style={{ color: AppColors.primary[700] }}
+                      >
+                        Orientação do seu médico
+                      </Text>
+                      <Text
+                        className="text-sm leading-relaxed"
+                        style={{ color: AppColors.gray[800] }}
+                      >
+                        {orientation.content}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
               </View>
             )}
           </View>

@@ -45,6 +45,8 @@ export interface UpdatePatientData {
     followUpDays?: number;
     surgeryTypeId?: string;
     hospital?: string;
+    contactPhone?: string;
+    contactPhoneBusiness?: string;
 }
 
 export interface DoctorContactInfo {
@@ -53,6 +55,9 @@ export interface DoctorContactInfo {
     email: string;
     phone: string;
     phonePersonal: string | null;
+    contactPhone: string | null;
+    contactPhoneBusiness: string | null;
+    hospital: string | null;
 }
 
 export interface IPatientService {
@@ -71,6 +76,8 @@ export interface IPatientService {
         doctorId: string;
         followUpDays?: number;
         hospital?: string;
+        contactPhone?: string;
+        contactPhoneBusiness?: string;
     }): Promise<{ patientId: string; surgeryId: string }>;
     updatePatient(data: UpdatePatientData): Promise<void>;
 }
@@ -86,9 +93,12 @@ export interface ISurgeryService {
         notes?: string;
         followUpDays?: number;
         hospital?: string;
+        contactPhone?: string;
+        contactPhoneBusiness?: string;
     }): Promise<Surgery>;
     finalizeSurgeriesPastRecovery(doctorId: string): Promise<number>;
     dismissPendingReturn(surgeryId: string): Promise<void>;
+    getDistinctHospitals(doctorId: string): Promise<string[]>;
 }
 
 export type Question = Database['public']['Tables']['questions']['Row'];
@@ -191,3 +201,55 @@ export interface IPhotoService {
     getPhotosCountByDate(patientId: string, date: string): Promise<number>;
 }
 
+export interface DoctorOrientation {
+    id: string;
+    surgery_id: string;
+    doctor_id: string;
+    content: string;
+    created_at: string;
+    updated_at: string | null;
+}
+
+export interface IOrientationService {
+    getOrientationsBySurgeryId(surgeryId: string): Promise<DoctorOrientation[]>;
+    addOrientation(surgeryId: string, doctorId: string, content: string): Promise<DoctorOrientation>;
+    updateOrientation(orientationId: string, content: string): Promise<DoctorOrientation>;
+    deleteOrientation(orientationId: string): Promise<void>;
+}
+
+export interface AppNotification {
+    id: string;
+    user_id: string;
+    type: string;
+    title: string;
+    body: string;
+    data: Record<string, unknown>;
+    is_read: boolean;
+    created_at: string;
+}
+
+export interface INotificationService {
+    getUnreadNotifications(userId: string): Promise<AppNotification[]>;
+    getNotifications(userId: string, limit?: number): Promise<AppNotification[]>;
+    markAsRead(notificationId: string): Promise<void>;
+    markAllAsRead(userId: string): Promise<void>;
+    getUnreadCount(userId: string): Promise<number>;
+    getUnreadCountByType(userId: string, type: string): Promise<number>;
+    markAsReadByType(userId: string, type: string): Promise<void>;
+}
+
+export interface DeviceToken {
+    id: string;
+    user_id: string;
+    push_token: string;
+    platform: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string | null;
+}
+
+export interface IDeviceTokenService {
+    upsertToken(userId: string, pushToken: string, platform: string): Promise<DeviceToken>;
+    deactivateToken(pushToken: string): Promise<void>;
+    getActiveTokensByUserId(userId: string): Promise<DeviceToken[]>;
+}

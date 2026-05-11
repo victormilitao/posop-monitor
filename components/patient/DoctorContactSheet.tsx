@@ -84,6 +84,9 @@ export function DoctorContactSheet({ visible, onClose, patientId, isCriticalAler
 
     if (!mounted) return null;
 
+    // Determine which phone to use for calling: prefer surgery-level contacts, fallback to doctor profile
+    const primaryCallPhone = doctor?.contactPhone || doctor?.contactPhoneBusiness || doctor?.phone;
+
     return (
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}>
             {/* Backdrop */}
@@ -175,26 +178,28 @@ export function DoctorContactSheet({ visible, onClose, patientId, isCriticalAler
                                     <Text className="text-lg font-bold mb-4" style={{ color: AppColors.gray[900] }}>
                                         Contato
                                     </Text>
-                                    <DataRow
-                                        label="Telefone"
-                                        value={doctor.phone}
-                                        onPress={() => handlePhonePress(doctor.phone)}
-                                    />
-                                    {doctor.phonePersonal && (
+                                    {doctor.contactPhone && (
                                         <DataRow
-                                            label="Telefone Pessoal"
-                                            value={doctor.phonePersonal}
-                                            onPress={() => handlePhonePress(doctor.phonePersonal!)}
+                                            label="Contato Pessoal"
+                                            value={doctor.contactPhone}
+                                            onPress={() => handlePhonePress(doctor.contactPhone!)}
+                                        />
+                                    )}
+                                    {doctor.contactPhoneBusiness && (
+                                        <DataRow
+                                            label="Contato Empresarial"
+                                            value={doctor.contactPhoneBusiness}
+                                            onPress={() => handlePhonePress(doctor.contactPhoneBusiness!)}
                                         />
                                     )}
                                 </View>
 
                                 {/* Call Button - only shown when patient has critical alert */}
-                                {isCriticalAlert && doctor.phone && (
+                                {isCriticalAlert && primaryCallPhone && (
                                     <Pressable
                                         className="flex-row items-center justify-center py-4 rounded-xl"
                                         style={{ backgroundColor: AppColors.primary[700] }}
-                                        onPress={() => handlePhonePress(doctor.phone)}
+                                        onPress={() => handlePhonePress(primaryCallPhone)}
                                         testID="call-doctor-button"
                                     >
                                         <Phone size={18} color={AppColors.white} />

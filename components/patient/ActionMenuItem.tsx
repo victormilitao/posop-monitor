@@ -1,5 +1,6 @@
 import { ChevronRight, LucideIcon } from 'lucide-react-native';
 import { Text, TouchableOpacity, View } from 'react-native';
+import { AppColors } from '../../constants/colors';
 
 interface ActionMenuItemProps {
     title: string;
@@ -9,6 +10,7 @@ interface ActionMenuItemProps {
     iconColor?: string;
     iconBgColor?: string;
     actionLabel?: string;
+    badge?: number;
 }
 
 export function ActionMenuItem({
@@ -18,7 +20,8 @@ export function ActionMenuItem({
     onPress,
     iconColor = "#2563eb",
     iconBgColor = "bg-blue-100",
-    actionLabel
+    actionLabel,
+    badge,
 }: ActionMenuItemProps) {
     return (
         <TouchableOpacity
@@ -27,6 +30,27 @@ export function ActionMenuItem({
         >
             <View className={`w-12 h-12 ${iconBgColor} rounded-lg items-center justify-center mr-4`}>
                 <Icon size={24} color={iconColor} />
+                {badge != null && badge > 0 && (
+                    <View
+                        testID="notification-badge"
+                        style={{
+                            position: 'absolute',
+                            top: -4,
+                            right: -4,
+                            backgroundColor: AppColors.error.DEFAULT,
+                            borderRadius: 10,
+                            minWidth: 20,
+                            height: 20,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            paddingHorizontal: 4,
+                        }}
+                    >
+                        <Text style={{ color: AppColors.white, fontSize: 11, fontWeight: '700' }}>
+                            {badge > 99 ? '99+' : badge}
+                        </Text>
+                    </View>
+                )}
             </View>
 
             <View className="flex-1">
@@ -44,3 +68,4 @@ export function ActionMenuItem({
         </TouchableOpacity>
     );
 }
+

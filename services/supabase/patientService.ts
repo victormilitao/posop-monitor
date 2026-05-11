@@ -115,10 +115,10 @@ export class SupabasePatientService implements IPatientService {
             return null;
         }
 
-        // Get doctor_id from the surgeries table
+        // Get doctor_id and contact phones from the surgeries table
         const { data: surgery, error: surgeryError } = await supabase
             .from('surgeries')
-            .select('doctor_id')
+            .select('doctor_id, contact_phone, contact_phone_business, hospital')
             .eq('id', patient.surgery_id)
             .single();
 
@@ -145,6 +145,9 @@ export class SupabasePatientService implements IPatientService {
             email: doctor.email || '',
             phone: doctor.phone || '',
             phonePersonal: doctor.phone_personal || null,
+            contactPhone: surgery.contact_phone || null,
+            contactPhoneBusiness: surgery.contact_phone_business || null,
+            hospital: surgery.hospital || null,
         };
     }
 
@@ -159,6 +162,8 @@ export class SupabasePatientService implements IPatientService {
         doctorId: string;
         followUpDays?: number;
         hospital?: string;
+        contactPhone?: string;
+        contactPhoneBusiness?: string;
     }): Promise<{ patientId: string; surgeryId: string }> {
         // Generate fake email for Supabase Auth (patient logs in via CPF, not email)
         const fakeEmail = `${data.cpf}@paciente.app`;
@@ -196,7 +201,9 @@ export class SupabasePatientService implements IPatientService {
                 status: 'active',
                 medical_status: 'stable',
                 follow_up_days: data.followUpDays ?? null,
-                hospital: data.hospital ?? null
+                hospital: data.hospital ?? null,
+                contact_phone: data.contactPhone ?? null,
+                contact_phone_business: data.contactPhoneBusiness ?? null
             })
             .select()
             .single();
@@ -238,12 +245,14 @@ export class SupabasePatientService implements IPatientService {
             }
         }
 
-        // Update surgery fields (surgery_date, follow_up_days, surgery_type_id, hospital)
+        // Update surgery fields (surgery_date, follow_up_days, surgery_type_id, hospital, contact phones)
         const surgeryUpdates: Record<string, string | number | null> = {};
         if (data.surgeryDate !== undefined) surgeryUpdates.surgery_date = data.surgeryDate;
         if (data.followUpDays !== undefined) surgeryUpdates.follow_up_days = data.followUpDays;
         if (data.surgeryTypeId !== undefined) surgeryUpdates.surgery_type_id = data.surgeryTypeId;
         if (data.hospital !== undefined) surgeryUpdates.hospital = data.hospital;
+        if (data.contactPhone !== undefined) surgeryUpdates.contact_phone = data.contactPhone || null;
+        if (data.contactPhoneBusiness !== undefined) surgeryUpdates.contact_phone_business = data.contactPhoneBusiness || null;
 
         if (Object.keys(surgeryUpdates).length > 0) {
             const { error: surgeryError } = await supabase

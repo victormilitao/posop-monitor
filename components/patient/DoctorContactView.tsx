@@ -9,6 +9,13 @@ interface DoctorContactViewProps {
     isCriticalAlert?: boolean;
 }
 
+function formatPhone(value: string): string {
+    const digits = value.replace(/\D/g, '');
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
 function DataRow({ label, value, onPress }: { label: string; value: string; onPress?: () => void }) {
     return (
         <TouchableOpacity
@@ -37,8 +44,9 @@ export function DoctorContactView({ patientId, isCriticalAlert }: DoctorContactV
     const { data: doctor, isLoading } = useDoctorContact(patientId);
 
     const handleCopyPhone = async (phoneNumber: string) => {
+        const formatted = formatPhone(phoneNumber);
         await Clipboard.setStringAsync(phoneNumber);
-        Alert.alert('Copiado!', `Telefone ${phoneNumber} copiado para a área de transferência.`);
+        Alert.alert('Copiado!', `Telefone ${formatted} copiado para a área de transferência.`);
     };
 
     const handleCallPhone = async (phoneNumber: string) => {
@@ -70,6 +78,9 @@ export function DoctorContactView({ patientId, isCriticalAlert }: DoctorContactV
         );
     }
 
+    // Determine which phone to use for calling: prefer surgery-level contacts, fallback to doctor profile
+    const primaryCallPhone = doctor.contactPhone || doctor.contactPhoneBusiness || doctor.phone;
+
     return (
         <ScrollView className="flex-1 p-4" showsVerticalScrollIndicator={false}>
             {/* Doctor Icon + Name */}
@@ -96,26 +107,31 @@ export function DoctorContactView({ patientId, isCriticalAlert }: DoctorContactV
             >
                 <DataRow label="Nome" value={doctor.name} />
                 <DataRow label="CRM" value={doctor.crm} />
-                <DataRow
-                    label="Telefone"
-                    value={doctor.phone}
-                    onPress={() => handleCopyPhone(doctor.phone)}
-                />
-                {doctor.phonePersonal && (
+                {doctor.hospital && (
+                    <DataRow label="Hospital" value={doctor.hospital} />
+                )}
+                {doctor.contactPhone && (
                     <DataRow
-                        label="Telefone Pessoal"
-                        value={doctor.phonePersonal}
-                        onPress={() => handleCopyPhone(doctor.phonePersonal!)}
+                        label="Contato Pessoal"
+                        value={formatPhone(doctor.contactPhone)}
+                        onPress={() => handleCopyPhone(doctor.contactPhone!)}
+                    />
+                )}
+                {doctor.contactPhoneBusiness && (
+                    <DataRow
+                        label="Contato Empresarial"
+                        value={formatPhone(doctor.contactPhoneBusiness)}
+                        onPress={() => handleCopyPhone(doctor.contactPhoneBusiness!)}
                     />
                 )}
             </View>
 
             {/* Call Button - only shown when patient has critical alert */}
-            {isCriticalAlert && doctor.phone && (
+            {isCriticalAlert && primaryCallPhone && (
                 <TouchableOpacity
                     className="flex-row items-center justify-center py-4 rounded-xl mb-6"
                     style={{ backgroundColor: AppColors.primary[700] }}
-                    onPress={() => handleCallPhone(doctor.phone)}
+                    onPress={() => handleCallPhone(primaryCallPhone)}
                     testID="call-doctor-button"
                 >
                     <Phone size={18} color={AppColors.white} />

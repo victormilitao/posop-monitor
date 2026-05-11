@@ -359,7 +359,7 @@ describe('SupabasePatientService', () => {
   describe('getDoctorByPatientId', () => {
     it('deve retornar dados do médico com sucesso', async () => {
       const mockPatient = { surgery_id: 's1' };
-      const mockSurgery = { doctor_id: 'd1' };
+      const mockSurgery = { doctor_id: 'd1', contact_phone: '85977001122', contact_phone_business: '85966001122', hospital: 'Hospital São Lucas' };
       const mockDoctor = {
         full_name: 'Dr. Carlos Silva',
         crm: 'CRM/CE 12345',
@@ -393,6 +393,9 @@ describe('SupabasePatientService', () => {
       expect(result?.email).toBe('carlos@medico.com');
       expect(result?.phone).toBe('85999001122');
       expect(result?.phonePersonal).toBe('85988001122');
+      expect(result?.contactPhone).toBe('85977001122');
+      expect(result?.contactPhoneBusiness).toBe('85966001122');
+      expect(result?.hospital).toBe('Hospital São Lucas');
     });
 
     it('deve retornar null quando paciente não tem surgery_id', async () => {
@@ -420,7 +423,7 @@ describe('SupabasePatientService', () => {
       patientBuilder.single.mockResolvedValue({ data: { surgery_id: 's1' }, error: null });
 
       const surgeryBuilder = createMockQueryBuilder();
-      surgeryBuilder.single.mockResolvedValue({ data: { doctor_id: null }, error: null });
+      surgeryBuilder.single.mockResolvedValue({ data: { doctor_id: null, contact_phone: null, contact_phone_business: null }, error: null });
 
       let callCount = 0;
       mockFrom.mockImplementation(() => {
@@ -459,7 +462,7 @@ describe('SupabasePatientService', () => {
 
     it('deve retornar phonePersonal como null quando não disponível', async () => {
       const mockPatient = { surgery_id: 's1' };
-      const mockSurgery = { doctor_id: 'd1' };
+      const mockSurgery = { doctor_id: 'd1', contact_phone: null, contact_phone_business: null, hospital: null };
       const mockDoctor = {
         full_name: 'Dr. Ana',
         crm: 'CRM/SP 99999',
@@ -488,6 +491,9 @@ describe('SupabasePatientService', () => {
       const result = await service.getDoctorByPatientId('p1');
 
       expect(result?.phonePersonal).toBeNull();
+      expect(result?.contactPhone).toBeNull();
+      expect(result?.contactPhoneBusiness).toBeNull();
+      expect(result?.hospital).toBeNull();
     });
   });
 });

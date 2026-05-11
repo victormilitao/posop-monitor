@@ -8,4 +8,6 @@ export { surgeryTypeService } from './supabase/surgeryTypeService';
 export { doctorService } from './supabase/doctorService';
 export { guidanceService } from './supabase/guidanceService';
 export { photoService } from './supabase/photoService';
-
+export { orientationService } from './supabase/orientationService';
+export { notificationService } from './supabase/notificationService';
+export { deviceTokenService } from './supabase/deviceTokenService';

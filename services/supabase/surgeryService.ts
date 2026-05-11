@@ -72,6 +72,9 @@ export class SupabaseSurgeryService implements ISurgeryService {
     surgeryDate: string;
     notes?: string;
     followUpDays?: number;
+    hospital?: string;
+    contactPhone?: string;
+    contactPhoneBusiness?: string;
   }): Promise<Surgery> {
     const { data: surgery, error } = await supabase
       .from('surgeries')
@@ -83,7 +86,10 @@ export class SupabaseSurgeryService implements ISurgeryService {
         notes: data.notes,
         status: 'active',
         medical_status: 'stable' as const,
-        follow_up_days: data.followUpDays ?? null
+        follow_up_days: data.followUpDays ?? null,
+        hospital: data.hospital ?? null,
+        contact_phone: data.contactPhone ?? null,
+        contact_phone_business: data.contactPhoneBusiness ?? null
       })
       .select()
       .single();
@@ -163,6 +169,32 @@ export class SupabaseSurgeryService implements ISurgeryService {
       console.error('Error dismissing pending return:', error);
       throw error;
     }
+  }
+
+  async getDistinctHospitals(doctorId: string): Promise<string[]> {
+    const { data, error } = await supabase
+      .from('surgeries')
+      .select('hospital')
+      .eq('doctor_id', doctorId)
+      .not('hospital', 'is', null)
+      .neq('hospital', '');
+
+    if (error) {
+      console.error('Error fetching distinct hospitals:', error);
+      throw error;
+    }
+
+    // Extract unique hospital names
+    const uniqueHospitals = [
+      ...new Set(
+        (data || [])
+          .map((s) => s.hospital)
+          .filter((h): h is string => !!h && h.trim().length > 0)
+          .map((h) => h.trim())
+      ),
+    ];
+
+    return uniqueHospitals.sort((a, b) => a.localeCompare(b));
   }
 }
 

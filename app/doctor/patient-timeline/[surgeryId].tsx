@@ -1,9 +1,10 @@
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowLeft, Calendar, ChevronRight, Clock, Image as ImageIcon, User } from 'lucide-react-native';
+import { ArrowLeft, Calendar, ChevronRight, Clock, Image as ImageIcon, MessageSquarePlus, User } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { DoctorOrientationInput } from '../../../components/doctor/DoctorOrientationInput';
 import { PatientDetailHeader } from '../../../components/doctor/PatientDetailHeader';
 import { PatientDetailMenuItem } from '../../../components/doctor/PatientDetailMenu';
 import { PatientGalleryView } from '../../../components/doctor/PatientGalleryView';
@@ -13,11 +14,12 @@ import { PatientTimelineView, TimelineDay } from '../../../components/doctor/Pat
 import { AppColors } from '../../../constants/colors';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
+import { useOrientationsBySurgery, useAddOrientation, useUpdateOrientation, useDeleteOrientation } from '../../../hooks/useOrientations';
 import { useDismissPendingReturn } from '../../../hooks/useSurgeries';
 import { patientService, reportService, surgeryService } from '../../../services';
 import { SurgeryWithDetails } from '../../../services/types';
 
-type TabType = 'menu' | 'profile' | 'timeline' | 'gallery';
+type TabType = 'menu' | 'profile' | 'timeline' | 'gallery' | 'orientations';
 
 export default function DoctorPatientDetailScreen() {
   const router = useRouter();
@@ -34,6 +36,10 @@ export default function DoctorPatientDetailScreen() {
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [isFinalized, setIsFinalized] = useState(false);
   const dismissPendingReturn = useDismissPendingReturn();
+  const { data: orientations = [], isLoading: isOrientationsLoading } = useOrientationsBySurgery(surgeryId as string);
+  const addOrientation = useAddOrientation();
+  const updateOrientation = useUpdateOrientation();
+  const deleteOrientation = useDeleteOrientation();
 
   useFocusEffect(
     React.useCallback(() => {
@@ -186,6 +192,47 @@ export default function DoctorPatientDetailScreen() {
     }
   };
 
+  const handleSendOrientation = async (content: string) => {
+    if (!session?.user.id || !surgeryId) return;
+    try {
+      await addOrientation.mutateAsync({
+        surgeryId: surgeryId as string,
+        doctorId: session.user.id,
+        content,
+      });
+      showToast({ type: 'success', title: 'Sucesso', message: 'Orientação enviada ao paciente.' });
+    } catch {
+      showToast({ type: 'error', title: 'Erro', message: 'Não foi possível enviar a orientação.' });
+    }
+  };
+
+  const handleEditOrientation = async (orientationId: string, content: string) => {
+    if (!surgeryId) return;
+    try {
+      await updateOrientation.mutateAsync({
+        orientationId,
+        surgeryId: surgeryId as string,
+        content,
+      });
+      showToast({ type: 'success', title: 'Sucesso', message: 'Orientação atualizada.' });
+    } catch {
+      showToast({ type: 'error', title: 'Erro', message: 'Não foi possível atualizar a orientação.' });
+    }
+  };
+
+  const handleDeleteOrientation = async (orientationId: string) => {
+    if (!surgeryId) return;
+    try {
+      await deleteOrientation.mutateAsync({
+        orientationId,
+        surgeryId: surgeryId as string,
+      });
+      showToast({ type: 'success', title: 'Sucesso', message: 'Orientação removida.' });
+    } catch {
+      showToast({ type: 'error', title: 'Erro', message: 'Não foi possível remover a orientação.' });
+    }
+  };
+
   const getHeaderTitle = () => {
     switch (activeTab) {
       case 'profile':
@@ -194,6 +241,8 @@ export default function DoctorPatientDetailScreen() {
         return 'Linha do Tempo';
       case 'gallery':
         return 'Galeria de Fotos';
+      case 'orientations':
+        return 'Orientações';
       default:
         return surgery?.patient.full_name || 'Detalhes do Paciente';
     }
@@ -297,6 +346,16 @@ export default function DoctorPatientDetailScreen() {
             iconBgColor={AppColors.info.light}
             onPress={() => setActiveTab('gallery')}
           />
+          <PatientDetailMenuItem
+            testID="menu-orientations"
+            title="Orientações ao Paciente"
+            subtitle="Envie orientações personalizadas"
+            icon={MessageSquarePlus}
+            iconColor={AppColors.warning.DEFAULT}
+            iconBgColor={AppColors.warning.light}
+            onPress={() => setActiveTab('orientations')}
+            badge={orientations.length > 0 ? orientations.length : undefined}
+          />
         </View>
       )}
 
@@ -324,6 +383,21 @@ export default function DoctorPatientDetailScreen() {
 
       {activeTab === 'gallery' && (
         <PatientGalleryView surgeryId={surgeryId as string} surgeryDate={surgery?.surgery_date} />
+      )}
+
+      {activeTab === 'orientations' && (
+        <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false}>
+          <DoctorOrientationInput
+            orientations={orientations}
+            isLoading={isOrientationsLoading}
+            isSending={addOrientation.isPending}
+            onSend={handleSendOrientation}
+            onEdit={handleEditOrientation}
+            onDelete={handleDeleteOrientation}
+            isEditing={updateOrientation.isPending}
+            isDeleting={deleteOrientation.isPending}
+          />
+        </ScrollView>
       )}
 
       {/* Pending Return Modal - accessible from menu screen */}

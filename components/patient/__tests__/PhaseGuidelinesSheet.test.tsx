@@ -39,6 +39,17 @@ const mockPhaseData = [
   },
 ];
 
+const mockOrientations = [
+  {
+    id: 'o1',
+    surgery_id: 's1',
+    doctor_id: 'd1',
+    content: 'Descanse mais no período da tarde.',
+    created_at: '2026-05-06T10:00:00Z',
+    updated_at: null,
+  },
+];
+
 jest.mock('../../../hooks/useGuidance', () => ({
   usePhaseGuidelines: jest.fn(() => ({
     data: mockPhaseData,
@@ -46,7 +57,15 @@ jest.mock('../../../hooks/useGuidance', () => ({
   })),
 }));
 
+jest.mock('../../../hooks/useOrientations', () => ({
+  useOrientationsBySurgery: jest.fn(() => ({
+    data: [],
+    isLoading: false,
+  })),
+}));
+
 const { usePhaseGuidelines } = require('../../../hooks/useGuidance');
+const { useOrientationsBySurgery } = require('../../../hooks/useOrientations');
 
 describe('PhaseGuidelinesSheet', () => {
   const defaultProps = {
@@ -54,12 +73,14 @@ describe('PhaseGuidelinesSheet', () => {
     onClose: jest.fn(),
     currentDay: 1,
     surgeryTypeId: 'st1',
+    surgeryId: 's1',
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
     usePhaseGuidelines.mockReturnValue({ data: mockPhaseData, isLoading: false });
+    useOrientationsBySurgery.mockReturnValue({ data: [], isLoading: false });
   });
 
   afterEach(() => {
@@ -86,14 +107,14 @@ describe('PhaseGuidelinesSheet', () => {
   });
 
   it('deve renderizar primeira fase quando currentDay undefined', () => {
-    render(React.createElement(PhaseGuidelinesSheet, { visible: true, onClose: jest.fn(), surgeryTypeId: 'st1' }));
+    render(React.createElement(PhaseGuidelinesSheet, { visible: true, onClose: jest.fn(), surgeryTypeId: 'st1', surgeryId: 's1' }));
     act(() => { jest.runAllTimers(); });
     expect(screen.getByText('Dias 0 a 3 – Adaptação Inicial')).toBeTruthy();
   });
 
   it('não deve renderizar quando visible false e não montado', () => {
     const { toJSON } = render(
-      React.createElement(PhaseGuidelinesSheet, { visible: false, onClose: jest.fn(), currentDay: 1, surgeryTypeId: 'st1' }),
+      React.createElement(PhaseGuidelinesSheet, { visible: false, onClose: jest.fn(), currentDay: 1, surgeryTypeId: 'st1', surgeryId: 's1' }),
     );
     act(() => { jest.runAllTimers(); });
     expect(toJSON()).toBeNull();
@@ -155,4 +176,41 @@ describe('PhaseGuidelinesSheet', () => {
     act(() => { jest.runAllTimers(); });
     expect(screen.getByText('Dias 8 a 14 – Consolidação')).toBeTruthy();
   });
+
+  // Doctor orientations tests
+  it('deve renderizar orientações do médico quando existem', () => {
+    useOrientationsBySurgery.mockReturnValue({ data: mockOrientations, isLoading: false });
+    render(React.createElement(PhaseGuidelinesSheet, { ...defaultProps }));
+    act(() => { jest.runAllTimers(); });
+    expect(screen.getByTestId('doctor-orientations-section')).toBeTruthy();
+    expect(screen.getByText('Descanse mais no período da tarde.')).toBeTruthy();
+    expect(screen.getByText('Orientação do seu médico')).toBeTruthy();
+  });
+
+  it('não deve renderizar seção de orientações quando lista está vazia', () => {
+    useOrientationsBySurgery.mockReturnValue({ data: [], isLoading: false });
+    render(React.createElement(PhaseGuidelinesSheet, { ...defaultProps }));
+    act(() => { jest.runAllTimers(); });
+    expect(screen.queryByTestId('doctor-orientations-section')).toBeNull();
+  });
+
+  it('deve renderizar múltiplas orientações do médico', () => {
+    const multipleOrientations = [
+      ...mockOrientations,
+      {
+        id: 'o2',
+        surgery_id: 's1',
+        doctor_id: 'd1',
+        content: 'Evite alimentos gordurosos.',
+        created_at: '2026-05-05T10:00:00Z',
+        updated_at: null,
+      },
+    ];
+    useOrientationsBySurgery.mockReturnValue({ data: multipleOrientations, isLoading: false });
+    render(React.createElement(PhaseGuidelinesSheet, { ...defaultProps }));
+    act(() => { jest.runAllTimers(); });
+    expect(screen.getByText('Descanse mais no período da tarde.')).toBeTruthy();
+    expect(screen.getByText('Evite alimentos gordurosos.')).toBeTruthy();
+  });
 });
+

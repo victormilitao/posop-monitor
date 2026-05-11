@@ -220,4 +220,76 @@ describe('SupabaseSurgeryService', () => {
       await expect(service.dismissPendingReturn('s1')).rejects.toEqual({ message: 'Update error' });
     });
   });
+
+  describe('getDistinctHospitals', () => {
+    it('deve retornar hospitais distintos ordenados', async () => {
+      const mockData = [
+        { hospital: 'Hospital São Lucas' },
+        { hospital: 'Clínica Santa Clara' },
+        { hospital: 'Hospital São Lucas' }, // duplicate
+        { hospital: 'Hospital Albert Einstein' },
+      ];
+
+      const builder = createMockQueryBuilder(mockData);
+      mockFrom.mockReturnValue(builder);
+
+      const result = await service.getDistinctHospitals('d1');
+
+      expect(mockFrom).toHaveBeenCalledWith('surgeries');
+      expect(builder.select).toHaveBeenCalledWith('hospital');
+      expect(builder.eq).toHaveBeenCalledWith('doctor_id', 'd1');
+      expect(builder.not).toHaveBeenCalledWith('hospital', 'is', null);
+      expect(builder.neq).toHaveBeenCalledWith('hospital', '');
+
+      // Should be deduplicated and sorted
+      expect(result).toEqual([
+        'Clínica Santa Clara',
+        'Hospital Albert Einstein',
+        'Hospital São Lucas',
+      ]);
+    });
+
+    it('deve retornar lista vazia quando não há hospitais', async () => {
+      const builder = createMockQueryBuilder([]);
+      mockFrom.mockReturnValue(builder);
+
+      const result = await service.getDistinctHospitals('d1');
+      expect(result).toEqual([]);
+    });
+
+    it('deve filtrar hospitais em branco e com espaços', async () => {
+      const mockData = [
+        { hospital: '  ' },
+        { hospital: 'Hospital A' },
+        { hospital: '' },
+        { hospital: null },
+      ];
+
+      const builder = createMockQueryBuilder(mockData);
+      mockFrom.mockReturnValue(builder);
+
+      const result = await service.getDistinctHospitals('d1');
+      expect(result).toEqual(['Hospital A']);
+    });
+
+    it('deve lançar erro quando supabase falha', async () => {
+      const builder = createMockQueryBuilder(null, { message: 'DB Error' });
+      mockFrom.mockReturnValue(builder);
+
+      await expect(service.getDistinctHospitals('d1')).rejects.toEqual({ message: 'DB Error' });
+    });
+
+    it('deve fazer trim nos nomes de hospitais', async () => {
+      const mockData = [
+        { hospital: '  Hospital A  ' },
+        { hospital: 'Hospital A' },
+      ];
+
+      const builder = createMockQueryBuilder(mockData);
+      mockFrom.mockReturnValue(builder);
+
+      const result = await service.getDistinctHospitals('d1');
+      expect(result).toEqual(['Hospital A']);
+    });
+  });
 });
