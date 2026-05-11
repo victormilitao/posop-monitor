@@ -216,3 +216,40 @@ export interface IOrientationService {
     updateOrientation(orientationId: string, content: string): Promise<DoctorOrientation>;
     deleteOrientation(orientationId: string): Promise<void>;
 }
+
+export interface AppNotification {
+    id: string;
+    user_id: string;
+    type: string;
+    title: string;
+    body: string;
+    data: Record<string, unknown>;
+    is_read: boolean;
+    created_at: string;
+}
+
+export interface INotificationService {
+    getUnreadNotifications(userId: string): Promise<AppNotification[]>;
+    getNotifications(userId: string, limit?: number): Promise<AppNotification[]>;
+    markAsRead(notificationId: string): Promise<void>;
+    markAllAsRead(userId: string): Promise<void>;
+    getUnreadCount(userId: string): Promise<number>;
+    getUnreadCountByType(userId: string, type: string): Promise<number>;
+    markAsReadByType(userId: string, type: string): Promise<void>;
+}
+
+export interface DeviceToken {
+    id: string;
+    user_id: string;
+    push_token: string;
+    platform: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string | null;
+}
+
+export interface IDeviceTokenService {
+    upsertToken(userId: string, pushToken: string, platform: string): Promise<DeviceToken>;
+    deactivateToken(pushToken: string): Promise<void>;
+    getActiveTokensByUserId(userId: string): Promise<DeviceToken[]>;
+}

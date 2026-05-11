@@ -1,6 +1,6 @@
 import { Redirect, Stack, useRouter } from 'expo-router';
 import { Calendar, FileText, Image, Info, LogOut, Stethoscope } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActionMenuItem } from '../../components/patient/ActionMenuItem';
@@ -12,6 +12,7 @@ import { Button } from '../../components/ui/Button';
 import { AppColors } from '../../constants/colors';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { useUnreadCountByType, useMarkNotificationsAsReadByType } from '../../hooks/useNotifications';
 import { usePatientDashboard } from '../../hooks/usePatientDashboard';
 import { reportService } from '../../services';
 
@@ -19,6 +20,21 @@ export default function PatientDashboard() {
     const router = useRouter();
     const { session, isLoading: isAuthLoading, isPatient, signOut, profile } = useAuth();
     const [isGuidelinesVisible, setIsGuidelinesVisible] = useState(false);
+
+    // Notification badge for orientations
+    const { data: orientationBadgeCount = 0 } = useUnreadCountByType(profile?.id, 'new_orientation');
+    const { data: updatedOrientationBadgeCount = 0 } = useUnreadCountByType(profile?.id, 'updated_orientation');
+    const totalOrientationBadge = orientationBadgeCount + updatedOrientationBadgeCount;
+    const markOrientationsRead = useMarkNotificationsAsReadByType();
+
+    const handleOpenGuidelines = useCallback(() => {
+        setIsGuidelinesVisible(true);
+        // Mark orientation notifications as read when opening the sheet
+        if (profile?.id && totalOrientationBadge > 0) {
+            markOrientationsRead.mutate({ userId: profile.id, type: 'new_orientation' });
+            markOrientationsRead.mutate({ userId: profile.id, type: 'updated_orientation' });
+        }
+    }, [profile?.id, totalOrientationBadge, markOrientationsRead]);
 
     const { showToast } = useToast();
     const insets = useSafeAreaInsets();
@@ -166,7 +182,8 @@ export default function PatientDashboard() {
                         icon={Info}
                         iconColor="#9333ea"
                         iconBgColor="bg-purple-100"
-                        onPress={() => setIsGuidelinesVisible(true)}
+                        badge={totalOrientationBadge}
+                        onPress={handleOpenGuidelines}
                     />
                     <ActionMenuItem
                         title="Contato Médico"
