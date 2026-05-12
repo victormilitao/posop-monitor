@@ -14,11 +14,11 @@ interface AddPatientModalProps {
 
 export function AddPatientModal({ visible, onClose, onSuccess }: AddPatientModalProps) {
   const { profile } = useAuth();
-  const { data: surgeryTypes, isLoading: isLoadingTypes } = useSurgeryTypes();
 
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [sex, setSex] = useState<'M' | 'F'>('M');
   const [surgeryTypeId, setSurgeryTypeId] = useState('');
   const [surgeryDate, setSurgeryDate] = useState(() => {
     const today = new Date();
@@ -32,9 +32,21 @@ export function AddPatientModal({ visible, onClose, onSuccess }: AddPatientModal
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const { data: surgeryTypes, isLoading: isLoadingTypes } = useSurgeryTypes(sex);
+
+  // Reset surgery type selection when sex changes and the selected type is no longer available
+  React.useEffect(() => {
+    if (surgeryTypeId && surgeryTypes) {
+      const stillAvailable = surgeryTypes.some(t => t.id === surgeryTypeId);
+      if (!stillAvailable) {
+        setSurgeryTypeId('');
+      }
+    }
+  }, [sex, surgeryTypes, surgeryTypeId]);
+
   const handleSubmit = async () => {
     if (!name || !email || !surgeryTypeId || !surgeryDate) {
-      setError('Por favor, preencha todos os campos obrigatórios (Nome, Email, Tipo de Cirurgia, Data).');
+      setError('Por favor, preencha todos os campos obrigatórios (Nome, Email, Sexo, Tipo de Cirurgia, Data).');
       return;
     }
 
@@ -76,7 +88,7 @@ export function AddPatientModal({ visible, onClose, onSuccess }: AddPatientModal
       await patientService.createPatient({
         name: name.trim(),
         cpf: email.trim(), // legacy: using email field as CPF placeholder
-        sex: 'M',
+        sex,
         age: '0',
         phone: '',
         surgeryTypeId,
@@ -98,6 +110,7 @@ export function AddPatientModal({ visible, onClose, onSuccess }: AddPatientModal
   const handleClose = () => {
     setName('');
     setEmail('');
+    setSex('M');
     setSurgeryTypeId('');
     setStep(1);
     setError(null);
@@ -156,6 +169,35 @@ export function AddPatientModal({ visible, onClose, onSuccess }: AddPatientModal
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
+              </View>
+
+              {/* Sex Selector */}
+              <View className="z-10">
+                <Text className="text-sm font-semibold text-gray-700 mb-1">Sexo:</Text>
+                <View className="flex-row gap-3">
+                  <TouchableOpacity
+                    testID="sex-male-button"
+                    className={`flex-1 py-3 rounded-lg border items-center ${
+                      sex === 'M' ? 'bg-blue-50 border-blue-500' : 'bg-gray-50 border-gray-200'
+                    }`}
+                    onPress={() => setSex('M')}
+                  >
+                    <Text className={`font-medium ${sex === 'M' ? 'text-blue-600' : 'text-gray-500'}`}>
+                      Masculino
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    testID="sex-female-button"
+                    className={`flex-1 py-3 rounded-lg border items-center ${
+                      sex === 'F' ? 'bg-pink-50 border-pink-500' : 'bg-gray-50 border-gray-200'
+                    }`}
+                    onPress={() => setSex('F')}
+                  >
+                    <Text className={`font-medium ${sex === 'F' ? 'text-pink-600' : 'text-gray-500'}`}>
+                      Feminino
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
 
               <View className={showTypePicker ? 'z-50 relative' : 'z-30 relative'}>

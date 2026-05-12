@@ -59,21 +59,27 @@ export default function AddPatientScreen() {
   const [validatedFollowUpDays, setValidatedFollowUpDays] = useState(0);
 
   useEffect(() => {
-    loadSurgeryTypes();
-  }, []);
+    loadSurgeryTypes(sex);
+  }, [sex]);
 
-  const loadSurgeryTypes = async () => {
+  const loadSurgeryTypes = async (patientSex: string) => {
+    setLoadingTypes(true);
     try {
-      const data = await surgeryTypeService.getActiveSurgeryTypes();
+      const data = await surgeryTypeService.getActiveSurgeryTypes(patientSex);
       const mapped: SurgeryType[] = (data || []).map((t) => ({
         id: t.id,
         name: t.name,
         expected_recovery_days: t.expected_recovery_days,
       }));
       setSurgeryTypes(mapped);
-      if (mapped.length > 0) {
+
+      // If current selection is no longer available, reset to first option
+      const currentStillAvailable = mapped.some((t) => t.id === surgeryTypeId);
+      if (!currentStillAvailable && mapped.length > 0) {
         setSurgeryTypeId(mapped[0].id);
         setFollowUpDays(String(mapped[0].expected_recovery_days ?? 14));
+      } else if (mapped.length === 0) {
+        setSurgeryTypeId('');
       }
     } catch (e) {
       console.error('Error loading surgery types:', e);

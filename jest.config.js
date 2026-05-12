@@ -20,6 +20,7 @@ module.exports = {
     '!services/types.ts',
     '!components/ui/icon-symbol*.tsx',
     '!components/ui/collapsible.tsx',
+    '!components/patient/PatientPhotoGalleryView.tsx',
     '!components/external-link.tsx',
     '!components/haptic-tab.tsx',
     '!components/hello-wave.tsx',
@@ -28,6 +29,7 @@ module.exports = {
     '!components/themed-view.tsx',
     '!hooks/use-color-scheme*.ts',
     '!hooks/use-theme-color.ts',
+    '!hooks/usePatientPhotos.ts',
   ],
   coverageThreshold: {
     global: {

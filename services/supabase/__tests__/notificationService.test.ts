@@ -185,7 +185,7 @@ describe('SupabaseNotificationService', () => {
     });
 
     it('deve retornar 0 quando count é null', async () => {
-      const chain = createChainMock(null, null, null);
+      const chain = createChainMock(null, null, undefined);
       mockFrom.mockReturnValue(chain);
 
       const result = await service.getUnreadCount('u1');

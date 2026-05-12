@@ -4,17 +4,22 @@ import { Database } from '../../types/supabase';
 type SurgeryType = Database['public']['Tables']['surgery_types']['Row'];
 
 export interface ISurgeryTypeService {
-  getActiveSurgeryTypes(): Promise<SurgeryType[]>;
+  getActiveSurgeryTypes(patientSex?: string): Promise<SurgeryType[]>;
   getSurgeryTypeById(id: string): Promise<SurgeryType | null>;
 }
 
 export class SupabaseSurgeryTypeService implements ISurgeryTypeService {
-  async getActiveSurgeryTypes(): Promise<SurgeryType[]> {
-    const { data, error } = await supabase
+  async getActiveSurgeryTypes(patientSex?: string): Promise<SurgeryType[]> {
+    let query = supabase
       .from('surgery_types')
       .select('*')
-      .eq('is_active', true)
-      .order('name');
+      .eq('is_active', true);
+
+    if (patientSex) {
+      query = query.or(`applicable_sex.eq.both,applicable_sex.eq.${patientSex}`);
+    }
+
+    const { data, error } = await query.order('name');
 
     if (error) {
       console.error('Error fetching surgery types:', error);
