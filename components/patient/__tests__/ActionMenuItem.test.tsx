@@ -12,7 +12,7 @@ describe('ActionMenuItem', () => {
   const baseProps = {
     title: 'Relatório Diário',
     subtitle: 'Responda suas perguntas',
-    icon: MockIcon,
+    icon: MockIcon as any,
     onPress: jest.fn(),
   };
 
