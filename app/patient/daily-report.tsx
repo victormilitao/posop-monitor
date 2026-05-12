@@ -2,8 +2,17 @@ import Slider from '@react-native-community/slider';
 import { Stack, useNavigation, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { PostReportFeedbackSheet } from '../../components/patient/PostReportFeedbackSheet';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -18,6 +27,7 @@ export default function DailyReportScreen() {
   const { session } = useAuth();
   const { showToast } = useToast();
   const insets = useSafeAreaInsets();
+  const scrollViewRef = useRef<ScrollView>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [questions, setQuestions] = useState<QuestionWithDetails[]>([]);
@@ -191,7 +201,16 @@ export default function DailyReportScreen() {
         </View>
       </View>
 
-      <ScrollView className="flex-1 p-4" showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1"
+      >
+      <ScrollView
+        ref={scrollViewRef}
+        className="flex-1 p-4"
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text className="text-gray-500 mb-6 text-base">
           Responda as perguntas abaixo sobre como você está se sentindo hoje.
         </Text>
@@ -279,6 +298,11 @@ export default function DailyReportScreen() {
                   value={answers[question.id] || ''}
                   onChangeText={(text) => handleAnswerChange(question.id, text)}
                   maxLength={(question.metadata as any)?.max_length ? Number((question.metadata as any).max_length) : 200}
+                  onFocus={() => {
+                    setTimeout(() => {
+                      scrollViewRef.current?.scrollToEnd({ animated: true });
+                    }, 300);
+                  }}
                 />
                 <Text className="text-right text-xs text-gray-400 mt-1">
                   {(answers[question.id] || '').length}/{(question.metadata as any)?.max_length || 200}
@@ -302,7 +326,8 @@ export default function DailyReportScreen() {
             <Text className="text-white font-bold text-lg">Enviar Respostas</Text>
           )}
         </TouchableOpacity>
-      </ScrollView >
+      </ScrollView>
+      </KeyboardAvoidingView>
 
       <PostReportFeedbackSheet
         visible={showFeedback}

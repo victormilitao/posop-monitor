@@ -15,6 +15,7 @@ interface DoctorOrientationInputProps {
   onDelete: (orientationId: string) => void;
   isEditing: boolean;
   isDeleting: boolean;
+  onInputFocus?: () => void;
 }
 
 export function DoctorOrientationInput({
@@ -26,6 +27,7 @@ export function DoctorOrientationInput({
   onDelete,
   isEditing,
   isDeleting,
+  onInputFocus,
 }: DoctorOrientationInputProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [text, setText] = useState('');
@@ -98,6 +100,7 @@ export function DoctorOrientationInput({
                       fontSize: 14,
                       lineHeight: 20,
                     }}
+                    onFocus={onInputFocus}
                   />
                   <View className="flex-row items-center justify-between mt-2">
                     <Text
@@ -230,6 +233,7 @@ export function DoctorOrientationInput({
               fontSize: 14,
               lineHeight: 20,
             }}
+            onFocus={onInputFocus}
           />
           <View className="flex-row items-center justify-between mt-2">
             <Text

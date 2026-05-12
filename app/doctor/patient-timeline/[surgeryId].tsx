@@ -1,8 +1,8 @@
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, Calendar, ChevronRight, Clock, Image as ImageIcon, MessageSquarePlus, User } from 'lucide-react-native';
-import React, { useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DoctorOrientationInput } from '../../../components/doctor/DoctorOrientationInput';
 import { PatientDetailHeader } from '../../../components/doctor/PatientDetailHeader';
@@ -27,6 +27,7 @@ export default function DoctorPatientDetailScreen() {
   const { session, isDoctor } = useAuth();
   const { showToast } = useToast();
   const insets = useSafeAreaInsets();
+  const orientationsScrollRef = useRef<ScrollView>(null);
 
   const [activeTab, setActiveTab] = useState<TabType>('menu');
   const [loading, setLoading] = useState(true);
@@ -386,18 +387,33 @@ export default function DoctorPatientDetailScreen() {
       )}
 
       {activeTab === 'orientations' && (
-        <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false}>
-          <DoctorOrientationInput
-            orientations={orientations}
-            isLoading={isOrientationsLoading}
-            isSending={addOrientation.isPending}
-            onSend={handleSendOrientation}
-            onEdit={handleEditOrientation}
-            onDelete={handleDeleteOrientation}
-            isEditing={updateOrientation.isPending}
-            isDeleting={deleteOrientation.isPending}
-          />
-        </ScrollView>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          className="flex-1"
+        >
+          <ScrollView
+            ref={orientationsScrollRef}
+            className="flex-1 px-6 pt-6"
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <DoctorOrientationInput
+              orientations={orientations}
+              isLoading={isOrientationsLoading}
+              isSending={addOrientation.isPending}
+              onSend={handleSendOrientation}
+              onEdit={handleEditOrientation}
+              onDelete={handleDeleteOrientation}
+              isEditing={updateOrientation.isPending}
+              isDeleting={deleteOrientation.isPending}
+              onInputFocus={() => {
+                setTimeout(() => {
+                  orientationsScrollRef.current?.scrollToEnd({ animated: true });
+                }, 300);
+              }}
+            />
+          </ScrollView>
+        </KeyboardAvoidingView>
       )}
 
       {/* Pending Return Modal - accessible from menu screen */}
