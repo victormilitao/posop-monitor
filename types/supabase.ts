@@ -368,6 +368,7 @@ export type Database = {
       }
       surgery_types: {
         Row: {
+          applicable_sex: 'M' | 'F' | 'both'
           created_at: string
           description: string | null
           expected_recovery_days: number | null
@@ -377,6 +378,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          applicable_sex?: 'M' | 'F' | 'both'
           created_at?: string
           description?: string | null
           expected_recovery_days?: number | null
@@ -386,6 +388,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          applicable_sex?: 'M' | 'F' | 'both'
           created_at?: string
           description?: string | null
           expected_recovery_days?: number | null

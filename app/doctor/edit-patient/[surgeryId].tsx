@@ -58,13 +58,12 @@ export default function EditPatientScreen() {
   const [isFinalized, setIsFinalized] = useState(false); // true when surgery is not active (completed/pending_return/cancelled)
 
   useEffect(() => {
-    loadSurgeryTypes();
     loadPatientData();
   }, []);
 
-  const loadSurgeryTypes = async () => {
+  const loadSurgeryTypes = async (patientSex?: string) => {
     try {
-      const data = await surgeryTypeService.getActiveSurgeryTypes();
+      const data = await surgeryTypeService.getActiveSurgeryTypes(patientSex);
       const mapped: SurgeryType[] = (data || []).map((t) => ({
         id: t.id,
         name: t.name,
@@ -89,9 +88,13 @@ export default function EditPatientScreen() {
 
       setPatientId(surgery.patient_id);
       setName(surgery.patient?.full_name || '');
-      setSex((surgery.patient?.sex as 'M' | 'F') || 'M');
+      const patientSex = (surgery.patient?.sex as 'M' | 'F') || 'M';
+      setSex(patientSex);
       setPhone(formatPhone((surgery.patient?.phone as string) || ''));
       setSurgeryTypeId(surgery.surgery_type_id);
+
+      // Load surgery types filtered by patient sex
+      loadSurgeryTypes(patientSex);
       setFollowUpDays(String((surgery as any).follow_up_days ?? surgery.surgery_type?.expected_recovery_days ?? 14));
       setHospital((surgery as any).hospital || '');
       setContactPhone(formatPhone((surgery as any).contact_phone || ''));

@@ -21,8 +21,8 @@ describe('SupabaseSurgeryTypeService', () => {
   describe('getActiveSurgeryTypes', () => {
     it('deve retornar tipos de cirurgia ativos', async () => {
       const mockTypes = [
-        { id: 'st1', name: 'Artroscopia', is_active: true },
-        { id: 'st2', name: 'Hernioplastia', is_active: true },
+        { id: 'st1', name: 'Artroscopia', is_active: true, applicable_sex: 'both' },
+        { id: 'st2', name: 'Hernioplastia', is_active: true, applicable_sex: 'both' },
       ];
 
       const builder = createMockQueryBuilder(mockTypes);
@@ -49,11 +49,53 @@ describe('SupabaseSurgeryTypeService', () => {
 
       await expect(service.getActiveSurgeryTypes()).rejects.toEqual({ message: 'Error' });
     });
+
+    it('deve filtrar por sexo quando patientSex é fornecido', async () => {
+      const mockTypes = [
+        { id: 'st1', name: 'Artroscopia', is_active: true, applicable_sex: 'both' },
+      ];
+
+      const builder = createMockQueryBuilder(mockTypes);
+      builder.or = jest.fn().mockReturnThis();
+      mockFrom.mockReturnValue(builder);
+
+      await service.getActiveSurgeryTypes('F');
+
+      expect(builder.or).toHaveBeenCalledWith('applicable_sex.eq.both,applicable_sex.eq.F');
+    });
+
+    it('não deve filtrar por sexo quando patientSex não é fornecido', async () => {
+      const mockTypes = [
+        { id: 'st1', name: 'Artroscopia', is_active: true, applicable_sex: 'both' },
+      ];
+
+      const builder = createMockQueryBuilder(mockTypes);
+      builder.or = jest.fn().mockReturnThis();
+      mockFrom.mockReturnValue(builder);
+
+      await service.getActiveSurgeryTypes();
+
+      expect(builder.or).not.toHaveBeenCalled();
+    });
+
+    it('deve filtrar por sexo masculino', async () => {
+      const mockTypes = [
+        { id: 'st1', name: 'Artroscopia', is_active: true, applicable_sex: 'both' },
+      ];
+
+      const builder = createMockQueryBuilder(mockTypes);
+      builder.or = jest.fn().mockReturnThis();
+      mockFrom.mockReturnValue(builder);
+
+      await service.getActiveSurgeryTypes('M');
+
+      expect(builder.or).toHaveBeenCalledWith('applicable_sex.eq.both,applicable_sex.eq.M');
+    });
   });
 
   describe('getSurgeryTypeById', () => {
     it('deve retornar tipo de cirurgia encontrado', async () => {
-      const mockType = { id: 'st1', name: 'Artroscopia' };
+      const mockType = { id: 'st1', name: 'Artroscopia', applicable_sex: 'both' };
 
       const builder = createMockQueryBuilder();
       builder.single.mockResolvedValue({ data: mockType, error: null });

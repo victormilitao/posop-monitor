@@ -5,11 +5,12 @@ import { Database } from '../types/supabase';
 type SurgeryType = Database['public']['Tables']['surgery_types']['Row'];
 
 export const useSurgeryTypes = (
+  patientSex?: string,
   options?: Omit<UseQueryOptions<SurgeryType[], Error>, 'queryKey' | 'queryFn'>
 ) => {
   return useQuery<SurgeryType[], Error>({
-    queryKey: ['surgery-types'],
-    queryFn: () => surgeryTypeService.getActiveSurgeryTypes(),
+    queryKey: ['surgery-types', patientSex ?? 'all'],
+    queryFn: () => surgeryTypeService.getActiveSurgeryTypes(patientSex),
     ...options
   });
 };

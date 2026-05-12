@@ -2,22 +2,32 @@ import React from 'react';
 import { render, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 const mockProfile = { id: 'doc-1', full_name: 'Dr. Silva', role: 'doctor' };
-const mockSurgeryTypes = [
-  { id: 'st1', name: 'Artroscopia', is_active: true },
-  { id: 'st2', name: 'Hernioplastia', is_active: true },
+const mockSurgeryTypesAll = [
+  { id: 'st1', name: 'Artroscopia', is_active: true, applicable_sex: 'both' },
+  { id: 'st2', name: 'Hernioplastia', is_active: true, applicable_sex: 'both' },
+  { id: 'st3', name: 'Histerectomia', is_active: true, applicable_sex: 'F' },
 ];
 
 const mockCreatePatient = jest.fn();
+
+let capturedPatientSex: string | undefined;
 
 jest.mock('../../../context/AuthContext', () => ({
   useAuth: () => ({ profile: mockProfile }),
 }));
 
 jest.mock('../../../hooks/useSurgeryTypes', () => ({
-  useSurgeryTypes: () => ({
-    data: mockSurgeryTypes,
-    isLoading: false,
-  }),
+  useSurgeryTypes: (patientSex?: string) => {
+    capturedPatientSex = patientSex;
+    // Simulate filtering
+    const filtered = mockSurgeryTypesAll.filter(
+      t => t.applicable_sex === 'both' || t.applicable_sex === patientSex
+    );
+    return {
+      data: filtered,
+      isLoading: false,
+    };
+  },
 }));
 
 jest.mock('../../../services', () => ({
@@ -37,6 +47,7 @@ describe('AddPatientModal', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    capturedPatientSex = undefined;
   });
 
   it('deve renderizar o modal quando visível', () => {
@@ -44,10 +55,11 @@ describe('AddPatientModal', () => {
     expect(screen.getByText('Adicionar Paciente')).toBeTruthy();
   });
 
-  it('deve mostrar campos do formulário', () => {
+  it('deve mostrar campos do formulário incluindo sexo', () => {
     render(React.createElement(AddPatientModal, defaultProps));
     expect(screen.getByText('Nome:')).toBeTruthy();
     expect(screen.getByText('E-mail corporativo/pessoal:')).toBeTruthy();
+    expect(screen.getByText('Sexo:')).toBeTruthy();
     expect(screen.getByText('Tipo de Cirurgia:')).toBeTruthy();
   });
 
@@ -70,6 +82,57 @@ describe('AddPatientModal', () => {
     expect(emailInput.props.value).toBe('joao@test.com');
   });
 
+  it('deve ter sexo masculino selecionado por padrão', () => {
+    render(React.createElement(AddPatientModal, defaultProps));
+    expect(capturedPatientSex).toBe('M');
+  });
+
+  it('deve filtrar tipos de cirurgia ao alterar sexo para feminino', () => {
+    render(React.createElement(AddPatientModal, defaultProps));
+
+    // Change to female
+    fireEvent.press(screen.getByTestId('sex-female-button'));
+
+    // Open surgery type dropdown
+    fireEvent.press(screen.getByText('Selecione a cirurgia...'));
+
+    // Should show Histerectomia (F only) and universal types
+    expect(screen.getByText('Artroscopia')).toBeTruthy();
+    expect(screen.getByText('Histerectomia')).toBeTruthy();
+  });
+
+  it('não deve mostrar Histerectomia para sexo masculino', () => {
+    render(React.createElement(AddPatientModal, defaultProps));
+
+    // Default is M - open surgery type dropdown
+    fireEvent.press(screen.getByText('Selecione a cirurgia...'));
+
+    // Should show universal types but NOT female-only
+    expect(screen.getByText('Artroscopia')).toBeTruthy();
+    expect(screen.getByText('Hernioplastia')).toBeTruthy();
+    expect(screen.queryByText('Histerectomia')).toBeNull();
+  });
+
+  it('deve limpar seleção de cirurgia ao mudar sexo se incompatível', () => {
+    render(React.createElement(AddPatientModal, defaultProps));
+
+    // Switch to female
+    fireEvent.press(screen.getByTestId('sex-female-button'));
+
+    // Select Histerectomia
+    fireEvent.press(screen.getByText('Selecione a cirurgia...'));
+    fireEvent.press(screen.getByText('Histerectomia'));
+
+    // Histerectomia should be displayed as selected
+    expect(screen.getByText('Histerectomia')).toBeTruthy();
+
+    // Switch back to male — Histerectomia is no longer available
+    fireEvent.press(screen.getByTestId('sex-male-button'));
+
+    // The selection should be cleared (shows placeholder)
+    expect(screen.getByText('Selecione a cirurgia...')).toBeTruthy();
+  });
+
   it('deve abrir dropdown de tipo de cirurgia e selecionar', () => {
     render(React.createElement(AddPatientModal, defaultProps));
 
@@ -89,11 +152,11 @@ describe('AddPatientModal', () => {
     fireEvent.press(screen.getByText('Adicionar'));
 
     await waitFor(() => {
-      expect(screen.getByText('Por favor, preencha todos os campos obrigatórios (Nome, Email, Tipo de Cirurgia, Data).')).toBeTruthy();
+      expect(screen.getByText('Por favor, preencha todos os campos obrigatórios (Nome, Email, Sexo, Tipo de Cirurgia, Data).')).toBeTruthy();
     });
   });
 
-  it('deve submeter com sucesso', async () => {
+  it('deve submeter com sucesso com sexo correto', async () => {
     mockCreatePatient.mockResolvedValue({ patientId: 'p-new', surgeryId: 's-new' });
 
     render(React.createElement(AddPatientModal, defaultProps));
@@ -107,8 +170,33 @@ describe('AddPatientModal', () => {
     fireEvent.press(screen.getByText('Adicionar'));
 
     await waitFor(() => {
-      expect(mockCreatePatient).toHaveBeenCalled();
+      expect(mockCreatePatient).toHaveBeenCalledWith(
+        expect.objectContaining({ sex: 'M' })
+      );
       expect(defaultProps.onSuccess).toHaveBeenCalled();
+    });
+  });
+
+  it('deve submeter com sexo feminino quando selecionado', async () => {
+    mockCreatePatient.mockResolvedValue({ patientId: 'p-new', surgeryId: 's-new' });
+
+    render(React.createElement(AddPatientModal, defaultProps));
+
+    fireEvent.changeText(screen.getByPlaceholderText('Nome completo do paciente...'), 'Maria');
+    fireEvent.changeText(screen.getByPlaceholderText('E-mail para login do paciente...'), 'maria@test.com');
+
+    // Select female
+    fireEvent.press(screen.getByTestId('sex-female-button'));
+
+    fireEvent.press(screen.getByText('Selecione a cirurgia...'));
+    fireEvent.press(screen.getByText('Histerectomia'));
+
+    fireEvent.press(screen.getByText('Adicionar'));
+
+    await waitFor(() => {
+      expect(mockCreatePatient).toHaveBeenCalledWith(
+        expect.objectContaining({ sex: 'F' })
+      );
     });
   });
 
