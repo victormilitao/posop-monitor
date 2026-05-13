@@ -16,6 +16,7 @@ interface DoctorOrientationInputProps {
   isEditing: boolean;
   isDeleting: boolean;
   onInputFocus?: () => void;
+  readOnly?: boolean;
 }
 
 export function DoctorOrientationInput({
@@ -28,6 +29,7 @@ export function DoctorOrientationInput({
   isEditing,
   isDeleting,
   onInputFocus,
+  readOnly = false,
 }: DoctorOrientationInputProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [text, setText] = useState('');
@@ -152,22 +154,26 @@ export function DoctorOrientationInput({
                   >
                     {orientation.content}
                   </Text>
-                  <TouchableOpacity
-                    testID={`edit-orientation-${orientation.id}`}
-                    onPress={() => handleStartEdit(orientation)}
-                    disabled={isDeleting || isEditing}
-                    className="ml-2 p-1"
-                  >
-                    <Pencil size={16} color={AppColors.primary[500]} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    testID={`delete-orientation-${orientation.id}`}
-                    onPress={() => onDelete(orientation.id)}
-                    disabled={isDeleting || isEditing}
-                    className="ml-1 p-1"
-                  >
-                    <Trash2 size={16} color={AppColors.error.DEFAULT} />
-                  </TouchableOpacity>
+                  {!readOnly && (
+                    <>
+                      <TouchableOpacity
+                        testID={`edit-orientation-${orientation.id}`}
+                        onPress={() => handleStartEdit(orientation)}
+                        disabled={isDeleting || isEditing}
+                        className="ml-2 p-1"
+                      >
+                        <Pencil size={16} color={AppColors.primary[500]} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        testID={`delete-orientation-${orientation.id}`}
+                        onPress={() => onDelete(orientation.id)}
+                        disabled={isDeleting || isEditing}
+                        className="ml-1 p-1"
+                      >
+                        <Trash2 size={16} color={AppColors.error.DEFAULT} />
+                      </TouchableOpacity>
+                    </>
+                  )}
                 </View>
               )}
             </View>
@@ -176,7 +182,7 @@ export function DoctorOrientationInput({
       )}
 
       {/* Toggle button */}
-      {!isExpanded && (
+      {!readOnly && !isExpanded && (
         <TouchableOpacity
           testID="add-orientation-button"
           className="flex-row items-center justify-center p-3 rounded-xl border border-dashed"
@@ -192,6 +198,15 @@ export function DoctorOrientationInput({
             Adicionar orientação ao paciente
           </Text>
         </TouchableOpacity>
+      )}
+
+      {/* Read-only notice */}
+      {readOnly && orientations.length === 0 && !isLoading && (
+        <View testID="readonly-empty-notice" className="items-center py-6">
+          <Text className="text-sm" style={{ color: AppColors.gray[400] }}>
+            Nenhuma orientação foi registrada
+          </Text>
+        </View>
       )}
 
       {/* Input area */}

@@ -1,5 +1,11 @@
 import { Database } from '../types/supabase';
 
+export interface PaginatedResult<T> {
+    data: T[];
+    totalCount: number;
+    hasMore: boolean;
+}
+
 type Patient = Database['public']['Tables']['patients']['Row'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type Surgery = Database['public']['Tables']['surgeries']['Row'];
@@ -84,6 +90,10 @@ export interface IPatientService {
 
 export interface ISurgeryService {
     getSurgeriesByDoctorId(doctorId: string): Promise<SurgeryWithDetails[]>;
+    getCompletedSurgeriesByDoctorId(
+        doctorId: string,
+        options?: { page?: number; pageSize?: number; searchName?: string }
+    ): Promise<PaginatedResult<SurgeryWithDetails>>;
     getSurgeryById(surgeryId: string): Promise<SurgeryWithDetails | null>;
     createSurgery(data: {
         doctorId: string;

@@ -1,7 +1,7 @@
-import { useMutation, UseMutationOptions, useQuery, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, UseMutationOptions, useQuery, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 import { surgeryService } from '../services';
-import { SurgeryWithDetails } from '../services/types';
+import { PaginatedResult, SurgeryWithDetails } from '../services/types';
 import { Database } from '../types/supabase';
 
 type Surgery = Database['public']['Tables']['surgeries']['Row'];
@@ -18,6 +18,27 @@ export const useSurgeriesByDoctor = (
     },
     enabled: !!doctorId,
     ...options
+  });
+};
+
+export const useCompletedSurgeriesByDoctor = (
+  doctorId: string | undefined,
+  searchName?: string,
+) => {
+  return useInfiniteQuery<PaginatedResult<SurgeryWithDetails>, Error>({
+    queryKey: ['surgeries', 'completed', 'doctor', doctorId, searchName],
+    queryFn: ({ pageParam = 0 }) => {
+      if (!doctorId) throw new Error('Doctor ID is required');
+      return surgeryService.getCompletedSurgeriesByDoctorId(doctorId, {
+        page: pageParam as number,
+        searchName,
+      });
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage.hasMore ? allPages.length : undefined;
+    },
+    enabled: !!doctorId,
   });
 };
 
@@ -91,6 +112,7 @@ export const useDismissPendingReturn = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['surgeries'] });
       queryClient.invalidateQueries({ queryKey: ['surgery'] });
+      queryClient.invalidateQueries({ queryKey: ['surgeries', 'completed'] });
     },
   });
 };

@@ -3,6 +3,7 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const mockGetSurgeriesByDoctorId = jest.fn();
+const mockGetCompletedSurgeriesByDoctorId = jest.fn();
 const mockGetSurgeryById = jest.fn();
 const mockCreateSurgery = jest.fn();
 const mockFinalizeSurgeriesPastRecovery = jest.fn();
@@ -11,6 +12,7 @@ const mockDismissPendingReturn = jest.fn();
 jest.mock('../../services', () => ({
   surgeryService: {
     getSurgeriesByDoctorId: (...args: any[]) => mockGetSurgeriesByDoctorId(...args),
+    getCompletedSurgeriesByDoctorId: (...args: any[]) => mockGetCompletedSurgeriesByDoctorId(...args),
     getSurgeryById: (...args: any[]) => mockGetSurgeryById(...args),
     createSurgery: (...args: any[]) => mockCreateSurgery(...args),
     finalizeSurgeriesPastRecovery: (...args: any[]) => mockFinalizeSurgeriesPastRecovery(...args),
@@ -18,7 +20,7 @@ jest.mock('../../services', () => ({
   },
 }));
 
-import { useSurgeriesByDoctor, useSurgery, useCreateSurgery, useAutoFinalizeSurgeries, useDismissPendingReturn } from '../useSurgeries';
+import { useSurgeriesByDoctor, useCompletedSurgeriesByDoctor, useSurgery, useCreateSurgery, useAutoFinalizeSurgeries, useDismissPendingReturn } from '../useSurgeries';
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -51,6 +53,70 @@ describe('useSurgeries hooks', () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
       expect(result.current.data).toEqual(mockSurgeries);
+    });
+  });
+
+  describe('useCompletedSurgeriesByDoctor', () => {
+    it('deve estar desabilitado sem doctorId', () => {
+      const { result } = renderHook(() => useCompletedSurgeriesByDoctor(undefined), {
+        wrapper: createWrapper(),
+      });
+      expect(result.current.fetchStatus).toBe('idle');
+    });
+
+    it('deve buscar cirurgias completadas com doctorId', async () => {
+      const mockPage = { data: [{ id: 's1' }], totalCount: 1, hasMore: false };
+      mockGetCompletedSurgeriesByDoctorId.mockResolvedValue(mockPage);
+
+      const { result } = renderHook(() => useCompletedSurgeriesByDoctor('d1'), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(mockGetCompletedSurgeriesByDoctorId).toHaveBeenCalledWith('d1', {
+        page: 0,
+        searchName: undefined,
+      });
+      expect(result.current.data?.pages[0].data).toEqual([{ id: 's1' }]);
+    });
+
+    it('deve incluir searchName na chamada ao service', async () => {
+      const mockPage = { data: [], totalCount: 0, hasMore: false };
+      mockGetCompletedSurgeriesByDoctorId.mockResolvedValue(mockPage);
+
+      const { result } = renderHook(() => useCompletedSurgeriesByDoctor('d1', 'Maria'), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(mockGetCompletedSurgeriesByDoctorId).toHaveBeenCalledWith('d1', {
+        page: 0,
+        searchName: 'Maria',
+      });
+    });
+
+    it('deve ter hasNextPage quando hasMore=true', async () => {
+      const mockPage = { data: [{ id: 's1' }], totalCount: 25, hasMore: true };
+      mockGetCompletedSurgeriesByDoctorId.mockResolvedValue(mockPage);
+
+      const { result } = renderHook(() => useCompletedSurgeriesByDoctor('d1'), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(result.current.hasNextPage).toBe(true);
+    });
+
+    it('não deve ter hasNextPage quando hasMore=false', async () => {
+      const mockPage = { data: [{ id: 's1' }], totalCount: 1, hasMore: false };
+      mockGetCompletedSurgeriesByDoctorId.mockResolvedValue(mockPage);
+
+      const { result } = renderHook(() => useCompletedSurgeriesByDoctor('d1'), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(result.current.hasNextPage).toBe(false);
     });
   });
 
