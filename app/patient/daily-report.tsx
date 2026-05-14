@@ -310,6 +310,123 @@ export default function DailyReportScreen() {
               </View>
             )}
 
+            {/* NUMERIC (stepper with +/- buttons) */}
+            {question.input_type === 'numeric' && (() => {
+              const meta = question.metadata as any;
+              const min = meta?.min ?? 0;
+              const max = meta?.max ?? 999;
+              const step = meta?.step ?? 10;
+              const unit = meta?.unit ?? '';
+              const allowAboveMax = meta?.allow_above_max ?? false;
+              const aboveMaxLabel = meta?.above_max_label ?? `Maior que ${max}${unit}`;
+              const aboveMaxValue = meta?.above_max_value ?? `>${max}`;
+              const currentValue = answers[question.id];
+              const isAboveMax = currentValue === aboveMaxValue;
+              const numericValue = isAboveMax ? max : (parseInt(currentValue, 10) || 0);
+
+              const handleNumericChange = (newValue: number) => {
+                const clamped = Math.min(Math.max(newValue, min), max);
+                // Round to nearest step
+                const rounded = Math.round(clamped / step) * step;
+                handleAnswerChange(question.id, rounded.toString());
+              };
+
+              const handleAboveMaxToggle = () => {
+                if (isAboveMax) {
+                  handleAnswerChange(question.id, max.toString());
+                } else {
+                  handleAnswerChange(question.id, aboveMaxValue);
+                }
+              };
+
+              return (
+                <View>
+                  {/* Stepper row */}
+                  <View className="flex-row items-center justify-center mb-3">
+                    {/* Minus button */}
+                    <TouchableOpacity
+                      onPress={() => handleNumericChange(numericValue - step)}
+                      disabled={isAboveMax || numericValue <= min}
+                      className={`w-12 h-12 rounded-full justify-center items-center border ${
+                        isAboveMax || numericValue <= min
+                          ? 'bg-gray-100 border-gray-200'
+                          : 'bg-primary-100 border-primary-700'
+                      }`}
+                    >
+                      <Text className={`text-2xl font-bold ${
+                        isAboveMax || numericValue <= min ? 'text-gray-300' : 'text-primary-700'
+                      }`}>−</Text>
+                    </TouchableOpacity>
+
+                    {/* Value display / input */}
+                    <View className="mx-4 items-center">
+                      {isAboveMax ? (
+                        <View className="bg-red-50 border border-red-300 rounded-lg px-6 py-3">
+                          <Text className="text-red-700 font-bold text-xl">{`>${max}`}</Text>
+                        </View>
+                      ) : (
+                        <TextInput
+                          className="bg-gray-50 border border-gray-200 rounded-lg px-6 py-3 text-gray-900 font-bold text-xl text-center min-w-[120px]"
+                          keyboardType="numeric"
+                          value={currentValue || '0'}
+                          onChangeText={(text) => {
+                            const parsed = parseInt(text, 10);
+                            if (!isNaN(parsed)) {
+                              handleNumericChange(parsed);
+                            } else if (text === '') {
+                              handleAnswerChange(question.id, '0');
+                            }
+                          }}
+                          onFocus={() => {
+                            setTimeout(() => {
+                              scrollViewRef.current?.scrollToEnd({ animated: true });
+                            }, 300);
+                          }}
+                        />
+                      )}
+                      {unit ? (
+                        <Text className="text-gray-500 text-sm mt-1">{unit}</Text>
+                      ) : null}
+                    </View>
+
+                    {/* Plus button */}
+                    <TouchableOpacity
+                      onPress={() => handleNumericChange(numericValue + step)}
+                      disabled={isAboveMax || numericValue >= max}
+                      className={`w-12 h-12 rounded-full justify-center items-center border ${
+                        isAboveMax || numericValue >= max
+                          ? 'bg-gray-100 border-gray-200'
+                          : 'bg-primary-100 border-primary-700'
+                      }`}
+                    >
+                      <Text className={`text-2xl font-bold ${
+                        isAboveMax || numericValue >= max ? 'text-gray-300' : 'text-primary-700'
+                      }`}>+</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Above max checkbox */}
+                  {allowAboveMax && (
+                    <TouchableOpacity
+                      onPress={handleAboveMaxToggle}
+                      className="flex-row items-center mt-2"
+                    >
+                      <View className={`w-5 h-5 rounded border mr-3 justify-center items-center ${
+                        isAboveMax ? 'bg-primary-700 border-primary-700' : 'border-gray-300'
+                      }`}>
+                        {isAboveMax && (
+                          <Text className="text-white text-xs font-bold">✓</Text>
+                        )}
+                      </View>
+                      <Text className={`text-sm ${isAboveMax ? 'text-primary-700 font-medium' : 'text-gray-600'}`}>
+                        {aboveMaxLabel}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              );
+            })()}
+
           </View>
         ))
         }
