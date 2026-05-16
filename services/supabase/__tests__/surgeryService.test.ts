@@ -292,4 +292,122 @@ describe('SupabaseSurgeryService', () => {
       expect(result).toEqual(['Hospital A']);
     });
   });
+
+  describe('getCompletedSurgeriesByDoctorId', () => {
+    it('deve retornar cirurgias completadas com paginação', async () => {
+      const mockData = [
+        {
+          id: 's1',
+          doctor_id: 'd1',
+          status: 'completed',
+          updated_at: '2026-04-01T00:00:00Z',
+          patient: { full_name: 'Maria Silva', email: 'm@t.com', phone: '11999', sex: 'F' },
+          doctor: { full_name: 'Dr. Silva' },
+          surgery_type: { name: 'Colecistectomia', description: 'desc', expected_recovery_days: 14 },
+          daily_reports: [{ date: '2026-03-20' }, { date: '2026-03-22' }],
+        },
+      ];
+
+      const builder = createMockQueryBuilder(mockData, null, 1);
+      mockFrom.mockReturnValue(builder);
+
+      const result = await service.getCompletedSurgeriesByDoctorId('d1');
+
+      expect(mockFrom).toHaveBeenCalledWith('surgeries');
+      expect(builder.eq).toHaveBeenCalledWith('doctor_id', 'd1');
+      expect(builder.eq).toHaveBeenCalledWith('status', 'completed');
+      expect(builder.order).toHaveBeenCalledWith('updated_at', { ascending: false });
+      expect(builder.range).toHaveBeenCalledWith(0, 19);
+      expect(result.data).toHaveLength(1);
+      expect(result.totalCount).toBe(1);
+      expect(result.hasMore).toBe(false);
+      expect(result.data[0].lastResponseDate).toBe('2026-03-22');
+    });
+
+    it('deve retornar hasMore=true quando há mais resultados', async () => {
+      const mockData = Array.from({ length: 20 }, (_, i) => ({
+        id: `s${i}`,
+        patient: { full_name: `Patient ${i}` },
+        doctor: { full_name: 'Dr.' },
+        surgery_type: { name: 'Test' },
+        daily_reports: [],
+      }));
+
+      const builder = createMockQueryBuilder(mockData, null, 25);
+      mockFrom.mockReturnValue(builder);
+
+      const result = await service.getCompletedSurgeriesByDoctorId('d1');
+
+      expect(result.hasMore).toBe(true);
+      expect(result.totalCount).toBe(25);
+      expect(result.data).toHaveLength(20);
+    });
+
+    it('deve respeitar page e pageSize customizados', async () => {
+      const builder = createMockQueryBuilder([], null, 0);
+      mockFrom.mockReturnValue(builder);
+
+      await service.getCompletedSurgeriesByDoctorId('d1', { page: 2, pageSize: 10 });
+
+      expect(builder.range).toHaveBeenCalledWith(20, 29);
+    });
+
+    it('deve aplicar filtro ilike quando searchName fornecido', async () => {
+      const builder = createMockQueryBuilder([], null, 0);
+      mockFrom.mockReturnValue(builder);
+
+      await service.getCompletedSurgeriesByDoctorId('d1', { searchName: 'Maria' });
+
+      expect(builder.ilike).toHaveBeenCalledWith('patient.full_name', '%Maria%');
+    });
+
+    it('não deve aplicar ilike quando searchName é vazio ou só espaços', async () => {
+      const builder = createMockQueryBuilder([], null, 0);
+      mockFrom.mockReturnValue(builder);
+
+      await service.getCompletedSurgeriesByDoctorId('d1', { searchName: '   ' });
+
+      expect(builder.ilike).not.toHaveBeenCalled();
+    });
+
+    it('deve retornar resultado vazio quando médico não tem prontuários', async () => {
+      const builder = createMockQueryBuilder([], null, 0);
+      mockFrom.mockReturnValue(builder);
+
+      const result = await service.getCompletedSurgeriesByDoctorId('d1');
+
+      expect(result).toEqual({ data: [], totalCount: 0, hasMore: false });
+    });
+
+    it('deve mapear lastResponseDate como null sem relatórios', async () => {
+      const mockData = [
+        {
+          id: 's1',
+          patient: { full_name: 'João' },
+          doctor: { full_name: 'Dr.' },
+          surgery_type: { name: 'Test' },
+          daily_reports: [],
+        },
+      ];
+
+      const builder = createMockQueryBuilder(mockData, null, 1);
+      mockFrom.mockReturnValue(builder);
+
+      const result = await service.getCompletedSurgeriesByDoctorId('d1');
+      expect(result.data[0].lastResponseDate).toBeNull();
+    });
+
+    it('deve lançar erro quando supabase falha', async () => {
+      const builder = createMockQueryBuilder(null, { message: 'DB Error' }, 0);
+      // Override range to return error
+      const errorPromise = Promise.resolve({ data: null, error: { message: 'DB Error' }, count: 0 });
+      builder.range.mockReturnValue({
+        then: errorPromise.then.bind(errorPromise),
+        catch: errorPromise.catch.bind(errorPromise),
+      });
+      mockFrom.mockReturnValue(builder);
+
+      await expect(service.getCompletedSurgeriesByDoctorId('d1')).rejects.toEqual({ message: 'DB Error' });
+    });
+  });
 });

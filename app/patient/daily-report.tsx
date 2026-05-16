@@ -310,6 +310,89 @@ export default function DailyReportScreen() {
               </View>
             )}
 
+            {/* NUMERIC (open number input) */}
+            {question.input_type === 'numeric' && (() => {
+              const meta = question.metadata as any;
+              const min = meta?.min ?? 0;
+              const max = meta?.max ?? 999;
+              const unit = meta?.unit ?? '';
+              const allowAboveMax = meta?.allow_above_max ?? false;
+              const aboveMaxLabel = meta?.above_max_label ?? `Maior que ${max}${unit}`;
+              const aboveMaxValue = meta?.above_max_value ?? `>${max}`;
+              const currentValue = answers[question.id];
+              const isAboveMax = currentValue === aboveMaxValue;
+
+              const handleAboveMaxToggle = () => {
+                if (isAboveMax) {
+                  handleAnswerChange(question.id, max.toString());
+                } else {
+                  handleAnswerChange(question.id, aboveMaxValue);
+                }
+              };
+
+              return (
+                <View>
+                  {/* Numeric input row */}
+                  <View className="items-center mb-3">
+                    {isAboveMax ? (
+                      <View className="bg-red-50 border border-red-300 rounded-lg px-6 py-3">
+                        <Text className="text-red-700 font-bold text-xl">{`>${max}`}</Text>
+                      </View>
+                    ) : (
+                      <TextInput
+                        className="bg-gray-50 border border-gray-200 rounded-lg px-6 py-3 text-gray-900 font-bold text-xl text-center min-w-[120px]"
+                        keyboardType="number-pad"
+                        maxLength={3}
+                        value={currentValue || '0'}
+                        onChangeText={(text) => {
+                          // Strip any non-digit characters
+                          const digitsOnly = text.replace(/[^0-9]/g, '');
+                          if (digitsOnly === '') {
+                            handleAnswerChange(question.id, '0');
+                            return;
+                          }
+                          const parsed = parseInt(digitsOnly, 10);
+                          if (parsed > max) {
+                            handleAnswerChange(question.id, max.toString());
+                          } else {
+                            handleAnswerChange(question.id, parsed.toString());
+                          }
+                        }}
+                        onFocus={() => {
+                          // Select all text on focus for easy replacement
+                          setTimeout(() => {
+                            scrollViewRef.current?.scrollToEnd({ animated: true });
+                          }, 300);
+                        }}
+                      />
+                    )}
+                    {unit ? (
+                      <Text className="text-gray-500 text-sm mt-1">{unit}</Text>
+                    ) : null}
+                  </View>
+
+                  {/* Above max checkbox */}
+                  {allowAboveMax && (
+                    <TouchableOpacity
+                      onPress={handleAboveMaxToggle}
+                      className="flex-row items-center mt-2"
+                    >
+                      <View className={`w-5 h-5 rounded border mr-3 justify-center items-center ${
+                        isAboveMax ? 'bg-primary-700 border-primary-700' : 'border-gray-300'
+                      }`}>
+                        {isAboveMax && (
+                          <Text className="text-white text-xs font-bold">✓</Text>
+                        )}
+                      </View>
+                      <Text className={`text-sm ${isAboveMax ? 'text-primary-700 font-medium' : 'text-gray-600'}`}>
+                        {aboveMaxLabel}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              );
+            })()}
+
           </View>
         ))
         }

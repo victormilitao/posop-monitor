@@ -1,10 +1,64 @@
 import { supabase } from '../../lib/supabase';
 import { Database } from '../../types/supabase';
-import { ISurgeryService, SurgeryWithDetails } from '../types';
+import { ISurgeryService, PaginatedResult, SurgeryWithDetails } from '../types';
 
 type Surgery = Database['public']['Tables']['surgeries']['Row'];
 
 export class SupabaseSurgeryService implements ISurgeryService {
+  async getCompletedSurgeriesByDoctorId(
+    doctorId: string,
+    options?: { page?: number; pageSize?: number; searchName?: string }
+  ): Promise<PaginatedResult<SurgeryWithDetails>> {
+    const page = options?.page ?? 0;
+    const pageSize = options?.pageSize ?? 20;
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+
+    let query = supabase
+      .from('surgeries')
+      .select(`
+        *,
+        patient:profiles!surgeries_patient_id_fkey(full_name, email, phone, sex),
+        doctor:profiles!surgeries_doctor_id_fkey(full_name),
+        surgery_type:surgery_types(name, description, expected_recovery_days),
+        daily_reports(date)
+      `, { count: 'exact' })
+      .eq('doctor_id', doctorId)
+      .eq('status', 'completed')
+      .order('updated_at', { ascending: false });
+
+    if (options?.searchName?.trim()) {
+      query = query.ilike(
+        'patient.full_name',
+        `%${options.searchName.trim()}%`
+      );
+    }
+
+    const { data, error, count } = await query.range(from, to);
+
+    if (error) {
+      console.error('Error fetching completed surgeries:', error);
+      throw error;
+    }
+
+    const totalCount = count ?? 0;
+    const mappedData = (data || []).map(s => {
+      const reports = (s as any).daily_reports as { date: string }[] | undefined;
+      let lastResponseDate: string | null = null;
+      if (reports && reports.length > 0) {
+        const sorted = [...reports].sort((a, b) => b.date.localeCompare(a.date));
+        lastResponseDate = sorted[0].date;
+      }
+      return { ...s, patient: s.patient as any, doctor: s.doctor as any, lastResponseDate };
+    });
+
+    return {
+      data: mappedData,
+      totalCount,
+      hasMore: from + mappedData.length < totalCount,
+    };
+  }
+
   async getSurgeriesByDoctorId(doctorId: string): Promise<SurgeryWithDetails[]> {
     const { data, error } = await supabase
       .from('surgeries')

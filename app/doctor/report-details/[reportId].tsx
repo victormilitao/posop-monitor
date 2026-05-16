@@ -48,6 +48,18 @@ function getAnswerLabel(question: QuestionWithDetails, answerValue: string | und
     return { label: answerValue, isAbnormal: false };
   }
 
+  if (question.input_type === 'numeric') {
+    const meta = question.metadata as any;
+    const unit = meta?.unit ?? '';
+    const aboveMaxValue = meta?.above_max_value ?? `>${meta?.max ?? 999}`;
+    const isAboveMax = answerValue === aboveMaxValue;
+    const abnormalMin = meta?.abnormal_min;
+    const numVal = parseInt(answerValue, 10);
+    const isAbnormal = isAboveMax || (!isNaN(numVal) && abnormalMin !== undefined && numVal >= abnormalMin);
+    const displayLabel = isAboveMax ? `${aboveMaxValue} ${unit}` : `${answerValue} ${unit}`;
+    return { label: displayLabel.trim(), isAbnormal };
+  }
+
   return { label: answerValue, isAbnormal: false };
 }
 

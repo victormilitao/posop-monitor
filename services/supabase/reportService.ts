@@ -64,6 +64,26 @@ export class SupabaseReportService implements IReportService {
             }
           }
         }
+      } else if (question.input_type === 'numeric') {
+        // Handle numeric values (e.g., drain volume)
+        const meta = question.metadata as any;
+        const abnormalMin = meta?.abnormal_min;
+        const aboveMaxValue = meta?.above_max_value;
+        const unit = meta?.unit ?? '';
+
+        if (aboveMaxValue && String(answerValue) === String(aboveMaxValue)) {
+          // Above max is always abnormal
+          isAbnormal = true;
+          symptoms.push(question.text);
+          alertMessages.push(`${question.text}: ${aboveMaxValue}${unit ? ' ' + unit : ''}`);
+        } else {
+          const numericVal = parseInt(answerValue, 10);
+          if (!isNaN(numericVal) && abnormalMin !== undefined && numericVal >= abnormalMin) {
+            isAbnormal = true;
+            symptoms.push(question.text);
+            alertMessages.push(`${question.text}: ${numericVal}${unit ? ' ' + unit : ''}`);
+          }
+        }
       }
 
       if (isAbnormal) {

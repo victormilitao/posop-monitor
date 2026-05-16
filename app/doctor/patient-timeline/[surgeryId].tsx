@@ -350,7 +350,7 @@ export default function DoctorPatientDetailScreen() {
           <PatientDetailMenuItem
             testID="menu-orientations"
             title="Orientações ao Paciente"
-            subtitle="Envie orientações personalizadas"
+            subtitle={isFinalized ? 'Visualize as orientações enviadas' : 'Envie orientações personalizadas'}
             icon={MessageSquarePlus}
             iconColor={AppColors.warning.DEFAULT}
             iconBgColor={AppColors.warning.light}
@@ -406,6 +406,7 @@ export default function DoctorPatientDetailScreen() {
               onDelete={handleDeleteOrientation}
               isEditing={updateOrientation.isPending}
               isDeleting={deleteOrientation.isPending}
+              readOnly={isFinalized}
               onInputFocus={() => {
                 setTimeout(() => {
                   orientationsScrollRef.current?.scrollToEnd({ animated: true });

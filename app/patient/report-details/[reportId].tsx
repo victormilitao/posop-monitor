@@ -284,6 +284,27 @@ export default function ReportHistoryScreen() {
               </Text>
             )}
 
+            {/* NUMERIC */}
+            {question.input_type === 'numeric' && (() => {
+              const meta = question.metadata as any;
+              const unit = meta?.unit ?? '';
+              const aboveMaxValue = meta?.above_max_value ?? `>${meta?.max ?? 999}`;
+              const answerVal = report.answers[question.id];
+              const isAboveMax = answerVal === aboveMaxValue;
+              const displayValue = isAboveMax ? aboveMaxValue : (answerVal ?? 'Sem resposta');
+              const abnormalMin = meta?.abnormal_min;
+              const numVal = parseInt(answerVal, 10);
+              const isAbnormal = isAboveMax || (!isNaN(numVal) && abnormalMin !== undefined && numVal >= abnormalMin);
+
+              return (
+                <View className={`py-3 px-4 rounded-lg border ${isAbnormal ? 'bg-red-50 border-red-300' : 'bg-teal-50 border-teal-500'}`}>
+                  <Text className={`font-bold text-lg text-center ${isAbnormal ? 'text-red-700' : 'text-teal-700'}`}>
+                    {displayValue}{unit ? ` ${unit}` : ''}
+                  </Text>
+                </View>
+              );
+            })()}
+
           </View>
         ))}
         <View className="h-10" />

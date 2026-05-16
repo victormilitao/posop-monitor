@@ -259,6 +259,127 @@ describe('SupabaseReportService', () => {
         id: 'q1', text: 'Dor', input_type: 'scale', metadata: {}, options: [], display_order: 1,
       } as any]);
     });
+
+    it('deve detectar numeric como normal quando abaixo do abnormal_min', async () => {
+      const numericQ: QuestionWithDetails[] = [
+        {
+          id: 'q1', text: 'Volume retirado do dreno', input_type: 'numeric',
+          metadata: { min: 0, max: 999, step: 10, unit: 'ml', abnormal_min: 500, category: 'warning', allow_above_max: true, above_max_value: '>999' },
+          options: [], display_order: 1,
+        } as any,
+      ];
+
+      const reportBuilder = createMockQueryBuilder(null, null);
+      const updateBuilder = createMockQueryBuilder(null, null);
+
+      let callCount = 0;
+      mockFrom.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return reportBuilder;
+        return updateBuilder;
+      });
+
+      const result = await service.submitDailyReport('p1', 's1', { q1: '350' }, numericQ);
+      expect(result).toBe('stable');
+    });
+
+    it('deve detectar numeric como anormal quando >= abnormal_min', async () => {
+      const numericQ: QuestionWithDetails[] = [
+        {
+          id: 'q1', text: 'Volume retirado do dreno', input_type: 'numeric',
+          metadata: { min: 0, max: 999, step: 10, unit: 'ml', abnormal_min: 500, category: 'warning', allow_above_max: true, above_max_value: '>999' },
+          options: [], display_order: 1,
+        } as any,
+      ];
+
+      const reportBuilder = createMockQueryBuilder(null, null);
+      const updateBuilder = createMockQueryBuilder(null, null);
+
+      let callCount = 0;
+      mockFrom.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return reportBuilder;
+        return updateBuilder;
+      });
+
+      const result = await service.submitDailyReport('p1', 's1', { q1: '500' }, numericQ);
+      // Only 1 abnormal symptom, so stable (needs 3+ for warning)
+      expect(result).toBe('stable');
+    });
+
+    it('deve detectar numeric acima do max como anormal', async () => {
+      const numericQ: QuestionWithDetails[] = [
+        {
+          id: 'q1', text: 'Volume retirado do dreno', input_type: 'numeric',
+          metadata: { min: 0, max: 999, step: 10, unit: 'ml', abnormal_min: 500, category: 'warning', allow_above_max: true, above_max_value: '>999' },
+          options: [], display_order: 1,
+        } as any,
+      ];
+
+      const reportBuilder = createMockQueryBuilder(null, null);
+      const updateBuilder = createMockQueryBuilder(null, null);
+
+      let callCount = 0;
+      mockFrom.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return reportBuilder;
+        return updateBuilder;
+      });
+
+      const result = await service.submitDailyReport('p1', 's1', { q1: '>999' }, numericQ);
+      // 1 non-critical symptom, so stable (needs 3+ for warning)
+      expect(result).toBe('stable');
+    });
+
+    it('deve gerar alerta warning quando numeric acima do limiar combinado com outros sintomas', async () => {
+      const questions: QuestionWithDetails[] = [
+        {
+          id: 'q1', text: 'Volume retirado do dreno', input_type: 'numeric',
+          metadata: { min: 0, max: 999, step: 10, unit: 'ml', abnormal_min: 500, category: 'warning', allow_above_max: true, above_max_value: '>999' },
+          options: [], display_order: 1,
+        } as any,
+        { id: 'q2', text: 'Sintoma A', input_type: 'boolean', metadata: {}, options: [{ value: 'yes', label: 'Sim', is_abnormal: 'true' }], display_order: 2 } as any,
+        { id: 'q3', text: 'Sintoma B', input_type: 'boolean', metadata: {}, options: [{ value: 'yes', label: 'Sim', is_abnormal: 'true' }], display_order: 3 } as any,
+      ];
+
+      const reportBuilder = createMockQueryBuilder(null, null);
+      const alertBuilder = createMockQueryBuilder(null, null);
+      const updateBuilder = createMockQueryBuilder(null, null);
+
+      let callCount = 0;
+      mockFrom.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return reportBuilder;
+        if (callCount === 2) return alertBuilder;
+        return updateBuilder;
+      });
+
+      const result = await service.submitDailyReport('p1', 's1', { q1: '>999', q2: 'yes', q3: 'yes' }, questions);
+      expect(result).toBe('warning');
+    });
+
+    it('deve tratar numeric sem abnormal_min como sempre normal', async () => {
+      const numericQ: QuestionWithDetails[] = [
+        {
+          id: 'q1', text: 'Medida X', input_type: 'numeric',
+          metadata: { min: 0, max: 100, step: 5, unit: 'cm' },
+          options: [], display_order: 1,
+        } as any,
+      ];
+
+      const reportBuilder = createMockQueryBuilder(null, null);
+      const updateBuilder = createMockQueryBuilder(null, null);
+
+      let callCount = 0;
+      mockFrom.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return reportBuilder;
+        return updateBuilder;
+      });
+
+      const result = await service.submitDailyReport('p1', 's1', { q1: '100' }, numericQ);
+      expect(result).toBe('stable');
+    });
   });
 
   describe('getPatientReports', () => {

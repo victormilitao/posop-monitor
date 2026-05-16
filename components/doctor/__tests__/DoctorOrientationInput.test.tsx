@@ -286,4 +286,51 @@ describe('DoctorOrientationInput', () => {
     fireEvent.press(screen.getByTestId('save-edit-o1'));
     expect(screen.queryByTestId('orientation-edit-o1')).toBeNull();
   });
+
+  // ---- readOnly tests ----
+
+  describe('readOnly mode', () => {
+    const orientationsData = [
+      {
+        id: 'o1',
+        surgery_id: 's1',
+        doctor_id: 'd1',
+        content: 'Repouso absoluto',
+        created_at: '2026-05-06T10:00:00Z',
+        updated_at: null,
+      },
+    ];
+
+    it('não deve renderizar botão de adicionar quando readOnly=true', () => {
+      render(React.createElement(DoctorOrientationInput, { ...defaultProps, readOnly: true }));
+      expect(screen.queryByTestId('add-orientation-button')).toBeNull();
+    });
+
+    it('deve renderizar orientações sem botões de editar/deletar quando readOnly=true', () => {
+      render(React.createElement(DoctorOrientationInput, {
+        ...defaultProps,
+        orientations: orientationsData,
+        readOnly: true,
+      }));
+      expect(screen.getByText('Repouso absoluto')).toBeTruthy();
+      expect(screen.queryByTestId('edit-orientation-o1')).toBeNull();
+      expect(screen.queryByTestId('delete-orientation-o1')).toBeNull();
+    });
+
+    it('deve exibir orientações existentes em modo somente leitura', () => {
+      render(React.createElement(DoctorOrientationInput, {
+        ...defaultProps,
+        orientations: orientationsData,
+        readOnly: true,
+      }));
+      expect(screen.getByText('Orientações enviadas')).toBeTruthy();
+      expect(screen.getByText('Repouso absoluto')).toBeTruthy();
+    });
+
+    it('deve exibir aviso quando readOnly e sem orientações', () => {
+      render(React.createElement(DoctorOrientationInput, { ...defaultProps, readOnly: true }));
+      expect(screen.getByTestId('readonly-empty-notice')).toBeTruthy();
+      expect(screen.getByText('Nenhuma orientação foi registrada')).toBeTruthy();
+    });
+  });
 });
