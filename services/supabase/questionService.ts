@@ -2,7 +2,7 @@ import { supabase } from '../../lib/supabase';
 import { IQuestionService, QuestionWithDetails } from '../types';
 
 export class SupabaseQuestionService implements IQuestionService {
-  async getQuestionsBySurgeryTypeId(surgeryTypeId: string): Promise<QuestionWithDetails[]> {
+  async getQuestionsBySurgeryTypeId(surgeryTypeId: string, surgeryId?: string): Promise<QuestionWithDetails[]> {
     const { data, error } = await supabase
       .from('surgery_questions')
       .select(`
@@ -24,6 +24,18 @@ export class SupabaseQuestionService implements IQuestionService {
 
     if (!data) return [];
 
+    // Check if surgery has drain (to filter drain-specific questions)
+    let hasDrain = false;
+    if (surgeryId) {
+      const { data: surgery } = await supabase
+        .from('surgeries')
+        .select('has_drain')
+        .eq('id', surgeryId)
+        .single();
+
+      hasDrain = surgery?.has_drain ?? false;
+    }
+
     // Map the result to match QuestionWithDetails structure
     // We combine the link table fields (display_order) with the question fields
     const questions = data.map((item: any) => {
@@ -32,6 +44,12 @@ export class SupabaseQuestionService implements IQuestionService {
       const questionData = item.question;
 
       if (!questionData) return null;
+
+      // Filter out drain-specific questions if surgery has no drain
+      const meta = questionData.metadata as any;
+      if (meta?.requires_drain === true && !hasDrain) {
+        return null;
+      }
 
       // Sort options by display_order if they exist
       if (questionData.options && Array.isArray(questionData.options)) {

@@ -64,7 +64,7 @@ export default function ReportHistoryScreen() {
       const dashboardData = await patientService.getPatientDashboardData(session.user.id);
       if (dashboardData?.currentSurgery?.surgery_type_id) {
         const typeId = dashboardData.currentSurgery.surgery_type_id;
-        const fetchedQuestions = await questionService.getQuestionsBySurgeryTypeId(typeId);
+        const fetchedQuestions = await questionService.getQuestionsBySurgeryTypeId(typeId, dashboardData.currentSurgery.id);
         setQuestions(fetchedQuestions);
       }
     } catch (error) {

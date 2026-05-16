@@ -57,6 +57,7 @@ export default function AddPatientScreen() {
   const [confirmData, setConfirmData] = useState<ConfirmPatientData | null>(null);
   const [validatedIsoDate, setValidatedIsoDate] = useState('');
   const [validatedFollowUpDays, setValidatedFollowUpDays] = useState(0);
+  const [hasDrain, setHasDrain] = useState(false);
 
   useEffect(() => {
     loadSurgeryTypes(sex);
@@ -98,11 +99,21 @@ export default function AddPatientScreen() {
     [surgeryTypes, surgeryTypeId]
   );
 
+  const showDrainToggle = useMemo(
+    () => selectedSurgeryName.toLowerCase().includes('colecistectomia'),
+    [selectedSurgeryName]
+  );
+
   const handleSurgeryTypeChange = (option: PickerOption) => {
     setSurgeryTypeId(option.id);
     const selectedType = surgeryTypes.find((t) => t.id === option.id);
     if (selectedType) {
       setFollowUpDays(String(selectedType.expected_recovery_days ?? 14));
+    }
+    // Reset drain when changing surgery type
+    const isColecistectomia = selectedType?.name.toLowerCase().includes('colecistectomia') ?? false;
+    if (!isColecistectomia) {
+      setHasDrain(false);
     }
   };
 
@@ -215,6 +226,7 @@ export default function AddPatientScreen() {
       hospital: hospital.trim(),
       contactPhone: contactPhone.trim(),
       contactPhoneBusiness: contactPhoneBusiness.trim(),
+      hasDrain: showDrainToggle ? hasDrain : undefined,
     });
     setShowConfirmModal(true);
   };
@@ -237,6 +249,7 @@ export default function AddPatientScreen() {
         hospital: hospital.trim() || undefined,
         contactPhone: contactPhone.replace(/\D/g, '') || undefined,
         contactPhoneBusiness: contactPhoneBusiness.replace(/\D/g, '') || undefined,
+        hasDrain: showDrainToggle ? hasDrain : false,
       });
 
       // Invalidate queries to refresh data
@@ -423,6 +436,41 @@ export default function AddPatientScreen() {
               Preenchido automaticamente pelo procedimento. Altere se necessário.
             </Text>
           </View>
+
+          {/* Drain Toggle - Only for Colecistectomia */}
+          {showDrainToggle && (
+            <View className="mb-4">
+              <Text className="text-gray-700 font-medium mb-2">Possui dreno?</Text>
+              <View className="flex-row gap-3">
+                <TouchableOpacity
+                  testID="drain-toggle-yes"
+                  className={`flex-1 py-3 rounded-xl border items-center ${hasDrain ? 'bg-primary-100 border-primary-700' : 'bg-white border-gray-300'
+                    }`}
+                  onPress={() => setHasDrain(true)}
+                >
+                  <Text
+                    className={`font-medium ${hasDrain ? 'text-primary-700' : 'text-gray-500'
+                      }`}
+                  >
+                    Sim
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  testID="drain-toggle-no"
+                  className={`flex-1 py-3 rounded-xl border items-center ${!hasDrain ? 'bg-primary-100 border-primary-700' : 'bg-white border-gray-300'
+                    }`}
+                  onPress={() => setHasDrain(false)}
+                >
+                  <Text
+                    className={`font-medium ${!hasDrain ? 'text-primary-700' : 'text-gray-500'
+                      }`}
+                  >
+                    Não
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
 
           {/* Surgery Date */}
           <View className="mb-4">

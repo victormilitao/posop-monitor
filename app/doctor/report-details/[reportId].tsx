@@ -97,7 +97,7 @@ export default function DoctorReportDetailsScreen() {
         const surgery = await surgeryService.getSurgeryById(reportData.surgery_id);
         if (surgery) {
           const typeId: string = surgery.surgery_type_id;
-          const fetchedQuestions = await questionService.getQuestionsBySurgeryTypeId(typeId);
+          const fetchedQuestions = await questionService.getQuestionsBySurgeryTypeId(typeId, surgery.id);
           setQuestions(fetchedQuestions);
         }
       }

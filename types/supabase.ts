@@ -255,6 +255,7 @@ export type Database = {
           contact_phone_business: string | null
           doctor_id: string
           follow_up_days: number | null
+          has_drain: boolean
           hospital: string | null
           id: string
           notes: string | null
@@ -271,6 +272,7 @@ export type Database = {
           contact_phone_business?: string | null
           doctor_id: string
           follow_up_days?: number | null
+          has_drain?: boolean
           hospital?: string | null
           id?: string
           medical_status: 'stable' | 'warning' | 'critical' | null
@@ -287,6 +289,7 @@ export type Database = {
           contact_phone_business?: string | null
           doctor_id?: string
           follow_up_days?: number | null
+          has_drain?: boolean
           hospital?: string | null
           id?: string
           medical_status?: 'stable' | 'warning' | 'critical' | null

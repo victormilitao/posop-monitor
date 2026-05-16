@@ -118,4 +118,23 @@ describe('ConfirmPatientModal', () => {
     render(React.createElement(ConfirmPatientModal, baseProps));
     expect(screen.queryByText('Contato Empresarial')).toBeNull();
   });
+
+  it('deve exibir "Possui dreno: Sim" quando hasDrain é true', () => {
+    const dataWithDrain = { ...sampleData, hasDrain: true };
+    render(React.createElement(ConfirmPatientModal, { ...baseProps, data: dataWithDrain }));
+    expect(screen.getByText('Possui dreno')).toBeTruthy();
+    expect(screen.getByText('Sim')).toBeTruthy();
+  });
+
+  it('deve exibir "Possui dreno: Não" quando hasDrain é false', () => {
+    const dataWithoutDrain = { ...sampleData, hasDrain: false };
+    render(React.createElement(ConfirmPatientModal, { ...baseProps, data: dataWithoutDrain }));
+    expect(screen.getByText('Possui dreno')).toBeTruthy();
+    expect(screen.getByText('Não')).toBeTruthy();
+  });
+
+  it('não deve exibir "Possui dreno" quando hasDrain é undefined', () => {
+    render(React.createElement(ConfirmPatientModal, baseProps));
+    expect(screen.queryByText('Possui dreno')).toBeNull();
+  });
 });

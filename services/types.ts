@@ -53,6 +53,7 @@ export interface UpdatePatientData {
     hospital?: string;
     contactPhone?: string;
     contactPhoneBusiness?: string;
+    hasDrain?: boolean;
 }
 
 export interface DoctorContactInfo {
@@ -84,6 +85,7 @@ export interface IPatientService {
         hospital?: string;
         contactPhone?: string;
         contactPhoneBusiness?: string;
+        hasDrain?: boolean;
     }): Promise<{ patientId: string; surgeryId: string }>;
     updatePatient(data: UpdatePatientData): Promise<void>;
 }
@@ -120,7 +122,7 @@ export interface QuestionWithDetails extends Question {
 }
 
 export interface IQuestionService {
-    getQuestionsBySurgeryTypeId(surgeryTypeId: string): Promise<QuestionWithDetails[]>;
+    getQuestionsBySurgeryTypeId(surgeryTypeId: string, surgeryId?: string): Promise<QuestionWithDetails[]>;
 }
 
 export interface IReportService {

@@ -60,7 +60,7 @@ export default function DailyReportScreen() {
         setCurrentSurgeryTypeId(typeId);
         setCurrentSurgeryId(dashboardData.currentSurgery.id);
 
-        const fetchedQuestions = await questionService.getQuestionsBySurgeryTypeId(typeId);
+        const fetchedQuestions = await questionService.getQuestionsBySurgeryTypeId(typeId, dashboardData.currentSurgery.id);
 
         // Check for existing report for today
         const reports = await reportService.getPatientReports(session.user.id);
@@ -215,7 +215,13 @@ export default function DailyReportScreen() {
           Responda as perguntas abaixo sobre como você está se sentindo hoje.
         </Text>
 
-        {questions.filter(shouldRenderQuestion).map((question) => (
+        {questions.filter(shouldRenderQuestion).sort((a, b) => {
+          const aIsRelatar = a.text.toLowerCase().includes('algo mais que gostaria de relatar');
+          const bIsRelatar = b.text.toLowerCase().includes('algo mais que gostaria de relatar');
+          if (aIsRelatar && !bIsRelatar) return 1;
+          if (!aIsRelatar && bIsRelatar) return -1;
+          return 0;
+        }).map((question) => (
           <View key={question.id} className="mb-6 p-5 rounded-xl border border-gray-200">
             <Text className="text-lg font-semibold text-gray-800 mb-4">{question.text}</Text>
 

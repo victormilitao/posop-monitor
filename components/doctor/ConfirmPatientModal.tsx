@@ -14,6 +14,7 @@ export interface ConfirmPatientData {
     hospital?: string;
     contactPhone?: string;
     contactPhoneBusiness?: string;
+    hasDrain?: boolean;
 }
 
 interface ConfirmPatientModalProps {
@@ -68,6 +69,7 @@ export function ConfirmPatientModal({ visible, data, onConfirm, onClose, isLoadi
                             <DataRow label="Procedimento" value={data.surgeryType} />
                             <DataRow label="Data" value={data.surgeryDate} />
                             <DataRow label="Acompanhamento" value={`${data.followUpDays} dias`} />
+                            {data.hasDrain !== undefined ? <DataRow label="Possui dreno" value={data.hasDrain ? 'Sim' : 'Não'} /> : null}
                             {data.hospital ? <DataRow label="Hospital" value={data.hospital} /> : null}
                             {data.contactPhone ? <DataRow label="Contato Pessoal" value={data.contactPhone} /> : null}
                             {data.contactPhoneBusiness ? <DataRow label="Contato Empresarial" value={data.contactPhoneBusiness} /> : null}

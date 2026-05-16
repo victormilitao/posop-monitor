@@ -56,6 +56,7 @@ export default function EditPatientScreen() {
   const [showSurgeryPicker, setShowSurgeryPicker] = useState(false);
   const [hasReports, setHasReports] = useState(true); // default true to keep fields locked until check
   const [isFinalized, setIsFinalized] = useState(false); // true when surgery is not active (completed/pending_return/cancelled)
+  const [hasDrain, setHasDrain] = useState(false);
 
   useEffect(() => {
     loadPatientData();
@@ -99,6 +100,7 @@ export default function EditPatientScreen() {
       setHospital((surgery as any).hospital || '');
       setContactPhone(formatPhone((surgery as any).contact_phone || ''));
       setContactPhoneBusiness(formatPhone((surgery as any).contact_phone_business || ''));
+      setHasDrain((surgery as any).has_drain ?? false);
 
       // Format surgery_date from YYYY-MM-DD to DD/MM/YYYY
       const dateParts = surgery.surgery_date.split('T')[0].split('-');
@@ -166,6 +168,11 @@ export default function EditPatientScreen() {
     [surgeryTypes, surgeryTypeId]
   );
 
+  const showDrainToggle = useMemo(
+    () => selectedSurgeryName.toLowerCase().includes('colecistectomia'),
+    [selectedSurgeryName]
+  );
+
   const handleSurgeryTypeChange = (option: PickerOption) => {
     setSurgeryTypeId(option.id);
     const selectedType = surgeryTypes.find((t) => t.id === option.id);
@@ -224,6 +231,7 @@ export default function EditPatientScreen() {
         hospital: hospital.trim(),
         contactPhone: contactPhone.replace(/\D/g, ''),
         contactPhoneBusiness: contactPhoneBusiness.replace(/\D/g, ''),
+        hasDrain: showDrainToggle ? hasDrain : undefined,
       };
 
       // Include surgery fields only when editing is allowed (no reports)
@@ -495,6 +503,51 @@ export default function EditPatientScreen() {
               </Text>
             )}
           </View>
+
+          {/* Drain Toggle - Only for Colecistectomia */}
+          {showDrainToggle && (
+            <View className={`mb-4 ${isFinalized ? 'opacity-80' : ''}`}>
+              <Text className={`font-medium mb-2 ${isFinalized ? 'text-gray-400' : 'text-gray-700'}`}>Possui dreno?</Text>
+              <View className="flex-row gap-3">
+                <TouchableOpacity
+                  testID="drain-toggle-yes"
+                  className={`flex-1 py-3 rounded-xl border items-center ${hasDrain
+                    ? (isFinalized ? 'bg-gray-400 border-gray-400' : 'bg-primary-100 border-primary-700')
+                    : (isFinalized ? 'bg-gray-100 border-gray-200' : 'bg-white border-gray-300')
+                    }`}
+                  onPress={!isFinalized ? () => setHasDrain(true) : undefined}
+                  disabled={isFinalized}
+                >
+                  <Text
+                    className={`font-medium ${hasDrain
+                      ? (isFinalized ? 'text-white' : 'text-primary-700')
+                      : (isFinalized ? 'text-gray-400' : 'text-gray-500')
+                      }`}
+                  >
+                    Sim
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  testID="drain-toggle-no"
+                  className={`flex-1 py-3 rounded-xl border items-center ${!hasDrain
+                    ? (isFinalized ? 'bg-gray-400 border-gray-400' : 'bg-primary-100 border-primary-700')
+                    : (isFinalized ? 'bg-gray-100 border-gray-200' : 'bg-white border-gray-300')
+                    }`}
+                  onPress={!isFinalized ? () => setHasDrain(false) : undefined}
+                  disabled={isFinalized}
+                >
+                  <Text
+                    className={`font-medium ${!hasDrain
+                      ? (isFinalized ? 'text-white' : 'text-primary-700')
+                      : (isFinalized ? 'text-gray-400' : 'text-gray-500')
+                      }`}
+                  >
+                    Não
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
 
           {/* Hospital */}
           <View className={`mb-4 ${isFinalized ? 'opacity-80' : ''}`} style={!isFinalized ? { zIndex: 10 } : undefined}>
