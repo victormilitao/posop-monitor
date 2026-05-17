@@ -42,41 +42,62 @@ describe('PostReportFeedbackSheet', () => {
     expect(screen.getByText('Relatório Enviado ✓')).toBeTruthy();
   });
 
-  it('deve renderizar todas as categorias quando resultStatus não é fornecido', () => {
-    render(React.createElement(PostReportFeedbackSheet, defaultProps));
-    act(() => { jest.runAllTimers(); });
-    expect(screen.getByText('Sinais de Alerta')).toBeTruthy();
-    expect(screen.getByText('Sinais de Atenção')).toBeTruthy();
-    expect(screen.getByText('Sinais de Normalidade')).toBeTruthy();
-  });
-
-  it('deve renderizar apenas sinais de alerta quando resultStatus é critical', () => {
+  it('deve renderizar sinais genéricos quando não há alertMessages', () => {
     render(React.createElement(PostReportFeedbackSheet, { ...defaultProps, resultStatus: 'critical' }));
     act(() => { jest.runAllTimers(); });
     expect(screen.getByText('Sinais de Alerta')).toBeTruthy();
     expect(screen.getByText('Febre alta')).toBeTruthy();
     expect(screen.getByText('Vômitos persistentes')).toBeTruthy();
-    expect(screen.queryByText('Sinais de Atenção')).toBeNull();
-    expect(screen.queryByText('Sinais de Normalidade')).toBeNull();
   });
 
-  it('deve renderizar apenas sinais de atenção quando resultStatus é warning', () => {
-    render(React.createElement(PostReportFeedbackSheet, { ...defaultProps, resultStatus: 'warning' }));
+  it('deve renderizar alertMessages reais quando fornecidos', () => {
+    const alertMessages = ['Febre: Sim', 'A ferida está vermelha: Sim', 'Sangramento: Sim'];
+    render(React.createElement(PostReportFeedbackSheet, {
+      ...defaultProps,
+      resultStatus: 'critical',
+      alertMessages,
+    }));
+    act(() => { jest.runAllTimers(); });
+    expect(screen.getByText('Sinais de Alerta')).toBeTruthy();
+    expect(screen.getByText('Febre: Sim')).toBeTruthy();
+    expect(screen.getByText('A ferida está vermelha: Sim')).toBeTruthy();
+    expect(screen.getByText('Sangramento: Sim')).toBeTruthy();
+    // Generic signs should NOT be shown
+    expect(screen.queryByText('Febre alta')).toBeNull();
+    expect(screen.queryByText('Vômitos persistentes')).toBeNull();
+  });
+
+  it('deve priorizar alertMessages sobre sinais genéricos quando resultStatus é warning', () => {
+    const alertMessages = ['Sintoma A: Sim', 'Sintoma B: Sim', 'Sintoma C: Sim'];
+    render(React.createElement(PostReportFeedbackSheet, {
+      ...defaultProps,
+      resultStatus: 'warning',
+      alertMessages,
+    }));
     act(() => { jest.runAllTimers(); });
     expect(screen.getByText('Sinais de Atenção')).toBeTruthy();
-    expect(screen.getByText('Dor moderada')).toBeTruthy();
-    expect(screen.queryByText('Sinais de Alerta')).toBeNull();
-    expect(screen.queryByText('Sinais de Normalidade')).toBeNull();
+    expect(screen.getByText('Sintoma A: Sim')).toBeTruthy();
+    // Generic signs should NOT be shown
+    expect(screen.queryByText('Dor moderada')).toBeNull();
   });
 
-  it('deve renderizar apenas sinais de normalidade quando resultStatus é stable', () => {
+  it('deve renderizar mensagem de normalidade quando stable sem alertMessages', () => {
     render(React.createElement(PostReportFeedbackSheet, { ...defaultProps, resultStatus: 'stable' }));
     act(() => { jest.runAllTimers(); });
     expect(screen.getByText('Sinais de Normalidade')).toBeTruthy();
-    expect(screen.getByText('Dor leve nos ombros')).toBeTruthy();
-    expect(screen.getByText('Náuseas leves')).toBeTruthy();
-    expect(screen.queryByText('Sinais de Alerta')).toBeNull();
-    expect(screen.queryByText('Sinais de Atenção')).toBeNull();
+    expect(screen.getByText('Suas respostas não indicaram sinais de alerta. Continue seguindo as orientações médicas.')).toBeTruthy();
+  });
+
+  it('deve não buscar sinais genéricos quando alertMessages são fornecidos', () => {
+    const alertMessages = ['Febre: Sim'];
+    render(React.createElement(PostReportFeedbackSheet, {
+      ...defaultProps,
+      resultStatus: 'critical',
+      alertMessages,
+    }));
+    act(() => { jest.runAllTimers(); });
+    // Should call useSignsBySurgeryType with null (to skip the fetch)
+    expect(useSignsBySurgeryType).toHaveBeenCalledWith(null);
   });
 
   it('deve mostrar subtítulo contextual para critical', () => {
@@ -112,14 +133,14 @@ describe('PostReportFeedbackSheet', () => {
     expect(toJSON()).toBeNull();
   });
 
-  it('deve mostrar loading quando isLoading true', () => {
+  it('deve mostrar loading quando isLoading true e sem alertMessages', () => {
     useSignsBySurgeryType.mockReturnValue({ data: [], isLoading: true });
-    render(React.createElement(PostReportFeedbackSheet, defaultProps));
+    render(React.createElement(PostReportFeedbackSheet, { ...defaultProps, resultStatus: 'critical' }));
     act(() => { jest.runAllTimers(); });
     expect(screen.getByText('Carregando orientações...')).toBeTruthy();
   });
 
-  it('não deve renderizar categoria sem sinais', () => {
+  it('não deve renderizar categoria sem sinais genéricos', () => {
     const onlyAlerts = [
       { id: '1', surgery_type_id: 'st1', category: 'alert', description: 'Febre', display_order: 1 },
     ];
@@ -129,5 +150,15 @@ describe('PostReportFeedbackSheet', () => {
     expect(screen.getByText('Sinais de Alerta')).toBeTruthy();
     expect(screen.queryByText('Sinais de Atenção')).toBeNull();
     expect(screen.queryByText('Sinais de Normalidade')).toBeNull();
+  });
+
+  it('deve renderizar alertMessages vazios como stable sem alertas', () => {
+    render(React.createElement(PostReportFeedbackSheet, {
+      ...defaultProps,
+      resultStatus: 'stable',
+      alertMessages: [],
+    }));
+    act(() => { jest.runAllTimers(); });
+    expect(screen.getByText('Sinais de Normalidade')).toBeTruthy();
   });
 });

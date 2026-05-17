@@ -10,6 +10,7 @@ interface PostReportFeedbackSheetProps {
   onClose: () => void;
   surgeryTypeId?: string | null;
   resultStatus?: 'critical' | 'warning' | 'stable';
+  alertMessages?: string[];
 }
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
@@ -31,7 +32,7 @@ const CATEGORIES: SignCategoryConfig[] = [
     key: 'alert',
     statusKey: 'critical',
     title: 'Sinais de Alerta',
-    bgColor: '#FEF2F2',
+    bgColor: AppColors.error.light,
     borderColor: '#FECACA',
     textColor: AppColors.error.dark,
     iconColor: AppColors.error.DEFAULT,
@@ -41,7 +42,7 @@ const CATEGORIES: SignCategoryConfig[] = [
     key: 'attention',
     statusKey: 'warning',
     title: 'Sinais de Atenção',
-    bgColor: '#FFFBEB',
+    bgColor: AppColors.warning.light,
     borderColor: '#FDE68A',
     textColor: AppColors.warning.dark,
     iconColor: AppColors.warning.DEFAULT,
@@ -51,7 +52,7 @@ const CATEGORIES: SignCategoryConfig[] = [
     key: 'normal',
     statusKey: 'stable',
     title: 'Sinais de Normalidade',
-    bgColor: '#ECFDF5',
+    bgColor: AppColors.success.light,
     borderColor: '#A7F3D0',
     textColor: AppColors.success.dark,
     iconColor: AppColors.success.DEFAULT,
@@ -59,12 +60,17 @@ const CATEGORIES: SignCategoryConfig[] = [
   },
 ];
 
-export function PostReportFeedbackSheet({ visible, onClose, surgeryTypeId, resultStatus }: PostReportFeedbackSheetProps) {
+export function PostReportFeedbackSheet({ visible, onClose, surgeryTypeId, resultStatus, alertMessages = [] }: PostReportFeedbackSheetProps) {
   const [mounted, setMounted] = useState(false);
   const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
 
-  const { data: signs = [], isLoading } = useSignsBySurgeryType(surgeryTypeId);
+  const hasRealAlerts = alertMessages.length > 0;
+
+  // Only fetch generic signs if there are no real alert messages
+  const { data: signs = [], isLoading } = useSignsBySurgeryType(
+    hasRealAlerts ? null : surgeryTypeId
+  );
 
   useEffect(() => {
     if (visible) {
@@ -99,14 +105,146 @@ export function PostReportFeedbackSheet({ visible, onClose, surgeryTypeId, resul
 
   if (!mounted) return null;
 
-  // Filter to show only the category matching the result status
+  // Determine category config based on the result status
   const activeCategory = CATEGORIES.find(cat => cat.statusKey === resultStatus);
-  const categoriesToShow = activeCategory ? [activeCategory] : CATEGORIES;
+  const stableCategory = CATEGORIES.find(cat => cat.statusKey === 'stable')!;
 
-  const signsByCategory = categoriesToShow.map(cat => ({
-    ...cat,
-    signs: signs.filter(s => s.category === cat.key),
-  }));
+  const renderRealAlerts = () => {
+    if (!hasRealAlerts) return null;
+
+    // Show the real alerts in the category matching the result
+    const category = activeCategory || CATEGORIES[0];
+    const IconComponent = category.icon;
+
+    return (
+      <View
+        style={{
+          backgroundColor: category.bgColor,
+          borderWidth: 1,
+          borderColor: category.borderColor,
+          borderRadius: 16,
+          padding: 16,
+          marginBottom: 16,
+        }}
+      >
+        <View className="flex-row items-center mb-3">
+          <IconComponent size={20} color={category.iconColor} />
+          <Text
+            style={{ color: category.textColor }}
+            className="font-bold text-base ml-2"
+          >
+            {category.title}
+          </Text>
+        </View>
+        {alertMessages.map((message, index) => (
+          <View key={index} className="flex-row items-start mb-2 ml-1">
+            <Text style={{ color: category.textColor }} className="mr-2 mt-0.5">•</Text>
+            <Text
+              style={{ color: category.textColor }}
+              className="flex-1 text-sm leading-5"
+            >
+              {message}
+            </Text>
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  const renderGenericSigns = () => {
+    if (hasRealAlerts) return null;
+
+    const categoriesToShow = activeCategory ? [activeCategory] : CATEGORIES;
+    const signsByCategory = categoriesToShow.map(cat => ({
+      ...cat,
+      signs: signs.filter(s => s.category === cat.key),
+    }));
+
+    if (isLoading) {
+      return (
+        <View className="py-12 items-center">
+          <ActivityIndicator size="large" color={AppColors.primary[700]} />
+          <Text className="text-gray-500 mt-4">Carregando orientações...</Text>
+        </View>
+      );
+    }
+
+    return signsByCategory.map((category) => {
+      if (category.signs.length === 0) return null;
+      const IconComponent = category.icon;
+      return (
+        <View
+          key={category.key}
+          style={{
+            backgroundColor: category.bgColor,
+            borderWidth: 1,
+            borderColor: category.borderColor,
+            borderRadius: 16,
+            padding: 16,
+            marginBottom: 16,
+          }}
+        >
+          {/* Category Header */}
+          <View className="flex-row items-center mb-3">
+            <IconComponent size={20} color={category.iconColor} />
+            <Text
+              style={{ color: category.textColor }}
+              className="font-bold text-base ml-2"
+            >
+              {category.title}
+            </Text>
+          </View>
+
+          {/* Signs List */}
+          {category.signs.map((sign) => (
+            <View key={sign.id} className="flex-row items-start mb-2 ml-1">
+              <Text style={{ color: category.textColor }} className="mr-2 mt-0.5">•</Text>
+              <Text
+                style={{ color: category.textColor }}
+                className="flex-1 text-sm leading-5"
+              >
+                {sign.description}
+              </Text>
+            </View>
+          ))}
+        </View>
+      );
+    });
+  };
+
+  const renderStableMessage = () => {
+    if (resultStatus !== 'stable') return null;
+
+    const IconComponent = stableCategory.icon;
+    return (
+      <View
+        style={{
+          backgroundColor: stableCategory.bgColor,
+          borderWidth: 1,
+          borderColor: stableCategory.borderColor,
+          borderRadius: 16,
+          padding: 16,
+          marginBottom: 16,
+        }}
+      >
+        <View className="flex-row items-center mb-3">
+          <IconComponent size={20} color={stableCategory.iconColor} />
+          <Text
+            style={{ color: stableCategory.textColor }}
+            className="font-bold text-base ml-2"
+          >
+            {stableCategory.title}
+          </Text>
+        </View>
+        <Text
+          style={{ color: stableCategory.textColor }}
+          className="text-sm leading-5 ml-1"
+        >
+          Suas respostas não indicaram sinais de alerta. Continue seguindo as orientações médicas.
+        </Text>
+      </View>
+    );
+  };
 
   return (
     <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}>
@@ -166,53 +304,8 @@ export function PostReportFeedbackSheet({ visible, onClose, surgeryTypeId, resul
         {/* Content */}
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="px-6 pb-8">
-            {isLoading ? (
-              <View className="py-12 items-center">
-                <ActivityIndicator size="large" color={AppColors.primary[700]} />
-                <Text className="text-gray-500 mt-4">Carregando orientações...</Text>
-              </View>
-            ) : (
-              signsByCategory.map((category) => {
-                if (category.signs.length === 0) return null;
-                const IconComponent = category.icon;
-                return (
-                  <View
-                    key={category.key}
-                    style={{
-                      backgroundColor: category.bgColor,
-                      borderWidth: 1,
-                      borderColor: category.borderColor,
-                      borderRadius: 16,
-                      padding: 16,
-                      marginBottom: 16,
-                    }}
-                  >
-                    {/* Category Header */}
-                    <View className="flex-row items-center mb-3">
-                      <IconComponent size={20} color={category.iconColor} />
-                      <Text
-                        style={{ color: category.textColor }}
-                        className="font-bold text-base ml-2"
-                      >
-                        {category.title}
-                      </Text>
-                    </View>
-
-                    {/* Signs List */}
-                    {category.signs.map((sign) => (
-                      <View key={sign.id} className="flex-row items-start mb-2 ml-1">
-                        <Text style={{ color: category.textColor }} className="mr-2 mt-0.5">•</Text>
-                        <Text
-                          style={{ color: category.textColor }}
-                          className="flex-1 text-sm leading-5"
-                        >
-                          {sign.description}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                );
-              })
+            {hasRealAlerts ? renderRealAlerts() : (
+              resultStatus === 'stable' ? renderStableMessage() : renderGenericSigns()
             )}
 
             {/* Close Button */}

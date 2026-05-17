@@ -36,6 +36,7 @@ export default function DailyReportScreen() {
   const [currentSurgeryId, setCurrentSurgeryId] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [reportStatus, setReportStatus] = useState<'critical' | 'warning' | 'stable'>('stable');
+  const [reportAlertMessages, setReportAlertMessages] = useState<string[]>([]);
 
   useEffect(() => {
     loadData();
@@ -162,8 +163,9 @@ export default function DailyReportScreen() {
 
     try {
       setSubmitting(true);
-      const status = await reportService.submitDailyReport(session.user.id, currentSurgeryId, answers, questions);
-      setReportStatus(status);
+      const result = await reportService.submitDailyReport(session.user.id, currentSurgeryId, answers, questions);
+      setReportStatus(result.status);
+      setReportAlertMessages(result.alertMessages);
       showToast({ type: 'success', title: 'Sucesso', message: 'Relatório enviado com sucesso!' });
       setShowFeedback(true);
     } catch (error) {
@@ -426,6 +428,7 @@ export default function DailyReportScreen() {
         }}
         surgeryTypeId={currentSurgeryTypeId}
         resultStatus={reportStatus}
+        alertMessages={reportAlertMessages}
       />
     </View >
   );

@@ -1,6 +1,6 @@
 
 import { supabase } from '../../lib/supabase';
-import { DailyReport, IReportService, QuestionWithDetails } from '../types';
+import { DailyReport, IReportService, QuestionWithDetails, ReportSubmissionResult } from '../types';
 
 export class SupabaseReportService implements IReportService {
   async submitDailyReport(
@@ -8,7 +8,7 @@ export class SupabaseReportService implements IReportService {
     surgeryId: string,
     answers: Record<string, any>,
     questions: QuestionWithDetails[]
-  ): Promise<'critical' | 'warning' | 'stable'> {
+  ): Promise<ReportSubmissionResult> {
     let criticalCount = 0;
     let nonCriticalCount = 0;
     let painLevel = 0;
@@ -162,7 +162,7 @@ export class SupabaseReportService implements IReportService {
       console.error('Error updating surgery status:', updateSurgeryError);
     }
 
-    return newStatus;
+    return { status: newStatus, alertMessages };
   }
 
   async getPatientReports(patientId: string): Promise<DailyReport[]> {

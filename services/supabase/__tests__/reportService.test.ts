@@ -59,7 +59,7 @@ describe('SupabaseReportService', () => {
       const result = await service.submitDailyReport('p1', 's1', { q1: '3', q2: 'no' }, baseQuestions);
 
       expect(mockFrom).toHaveBeenCalledWith('daily_reports');
-      expect(result).toBe('stable');
+      expect(result.status).toBe('stable');
     });
 
     it('deve criar alerta critical quando 3+ sinais críticos', async () => {
@@ -85,7 +85,7 @@ describe('SupabaseReportService', () => {
       const result = await service.submitDailyReport('p1', 's1', { q1: '8', q2: 'yes', q3: 'yes', q4: 'yes' }, criticalQuestions);
 
       expect(mockFrom).toHaveBeenCalledWith('alerts');
-      expect(result).toBe('critical');
+      expect(result.status).toBe('critical');
     });
 
     it('deve criar alerta warning quando 3-4 sinais não-críticos', async () => {
@@ -111,7 +111,7 @@ describe('SupabaseReportService', () => {
 
       expect(mockFrom).toHaveBeenCalledWith('alerts');
       expect(mockFrom).toHaveBeenCalledWith('surgeries');
-      expect(result).toBe('warning');
+      expect(result.status).toBe('warning');
     });
 
     it('deve tratar multiselect com opções anormais', async () => {
@@ -280,7 +280,7 @@ describe('SupabaseReportService', () => {
       });
 
       const result = await service.submitDailyReport('p1', 's1', { q1: '350' }, numericQ);
-      expect(result).toBe('stable');
+      expect(result.status).toBe('stable');
     });
 
     it('deve detectar numeric como anormal quando >= abnormal_min', async () => {
@@ -304,7 +304,7 @@ describe('SupabaseReportService', () => {
 
       const result = await service.submitDailyReport('p1', 's1', { q1: '500' }, numericQ);
       // Only 1 abnormal symptom, so stable (needs 3+ for warning)
-      expect(result).toBe('stable');
+      expect(result.status).toBe('stable');
     });
 
     it('deve detectar numeric acima do max como anormal', async () => {
@@ -328,7 +328,7 @@ describe('SupabaseReportService', () => {
 
       const result = await service.submitDailyReport('p1', 's1', { q1: '>999' }, numericQ);
       // 1 non-critical symptom, so stable (needs 3+ for warning)
-      expect(result).toBe('stable');
+      expect(result.status).toBe('stable');
     });
 
     it('deve gerar alerta warning quando numeric acima do limiar combinado com outros sintomas', async () => {
@@ -355,7 +355,7 @@ describe('SupabaseReportService', () => {
       });
 
       const result = await service.submitDailyReport('p1', 's1', { q1: '>999', q2: 'yes', q3: 'yes' }, questions);
-      expect(result).toBe('warning');
+      expect(result.status).toBe('warning');
     });
 
     it('deve tratar numeric sem abnormal_min como sempre normal', async () => {
@@ -378,7 +378,7 @@ describe('SupabaseReportService', () => {
       });
 
       const result = await service.submitDailyReport('p1', 's1', { q1: '100' }, numericQ);
-      expect(result).toBe('stable');
+      expect(result.status).toBe('stable');
     });
   });
 

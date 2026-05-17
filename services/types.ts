@@ -125,13 +125,18 @@ export interface IQuestionService {
     getQuestionsBySurgeryTypeId(surgeryTypeId: string, surgeryId?: string): Promise<QuestionWithDetails[]>;
 }
 
+export interface ReportSubmissionResult {
+    status: 'critical' | 'warning' | 'stable';
+    alertMessages: string[];
+}
+
 export interface IReportService {
     submitDailyReport(
         patientId: string,
         surgeryId: string,
         answers: Record<string, any>,
         questions: QuestionWithDetails[]
-    ): Promise<'critical' | 'warning' | 'stable'>;
+    ): Promise<ReportSubmissionResult>;
     getPatientReports(patientId: string): Promise<DailyReport[]>;
     getReportsBySurgeryId(surgeryId: string): Promise<DailyReport[]>;
     getReportById(reportId: string): Promise<DailyReport | null>;
