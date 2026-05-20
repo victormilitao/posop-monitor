@@ -18,6 +18,10 @@ export default function PhotoGalleryScreen() {
     const patientId = profile?.id;
     const surgeryId = dashboardData?.currentSurgery?.id;
     const surgeryDate = dashboardData?.currentSurgery?.surgery_date;
+    const followUpDays = (dashboardData?.currentSurgery as any)?.follow_up_days
+        ?? dashboardData?.currentSurgery?.surgery_type?.expected_recovery_days
+        ?? dashboardData?.totalRecoveryDays
+        ?? 14;
 
     return (
         <View className="flex-1 bg-white">
@@ -44,6 +48,7 @@ export default function PhotoGalleryScreen() {
                 patientId={patientId}
                 surgeryId={surgeryId}
                 surgeryDate={surgeryDate}
+                followUpDays={followUpDays}
             />
         </View>
     );

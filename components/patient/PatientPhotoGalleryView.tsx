@@ -10,6 +10,7 @@ interface PatientPhotoGalleryViewProps {
     patientId: string | undefined;
     surgeryId: string | undefined;
     surgeryDate?: string;
+    followUpDays?: number;
 }
 
 /**
@@ -17,7 +18,7 @@ interface PatientPhotoGalleryViewProps {
  * Permite adicionar fotos a qualquer dia pós-operatório (passado ou atual),
  * substituir fotos existentes e deletar fotos de qualquer dia.
  */
-export function PatientPhotoGalleryView({ patientId, surgeryId, surgeryDate }: PatientPhotoGalleryViewProps) {
+export function PatientPhotoGalleryView({ patientId, surgeryId, surgeryDate, followUpDays }: PatientPhotoGalleryViewProps) {
     const { showToast } = useToast();
     const { data: photos = [], isLoading } = usePatientPhotos(surgeryId);
     const uploadPhoto = useUploadPhoto();
@@ -268,6 +269,7 @@ export function PatientPhotoGalleryView({ patientId, surgeryId, surgeryDate }: P
             onReplacePhoto={handleReplacePhoto}
             isUploading={uploadPhoto.isPending || replacePhoto.isPending}
             surgeryDate={surgeryDate}
+            followUpDays={followUpDays}
         />
     );
 }

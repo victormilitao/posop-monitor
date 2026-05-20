@@ -37,6 +37,7 @@ interface PhotoGalleryGridProps {
     onReplacePhoto?: (photo: PatientPhoto) => void;
     isUploading?: boolean;
     surgeryDate?: string;
+    followUpDays?: number;
 }
 
 interface PhotoSection {
@@ -66,6 +67,7 @@ export function PhotoGalleryGrid({
     onReplacePhoto,
     isUploading = false,
     surgeryDate,
+    followUpDays,
 }: PhotoGalleryGridProps) {
     const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
 
@@ -100,7 +102,7 @@ export function PhotoGalleryGrid({
                 });
         }
 
-        // Paciente: gerar todos os dias de cirurgia+1 até hoje
+        // Paciente: gerar todos os dias de cirurgia+1 até min(hoje, surgeryDate + followUpDays)
         const surgeryDateClean = surgeryDate.split('T')[0];
         const [sYear, sMonth, sDay] = surgeryDateClean.split('-').map(Number);
         const sDate = new Date(sYear, sMonth - 1, sDay);
@@ -108,11 +110,21 @@ export function PhotoGalleryGrid({
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
+        // Limitar ao dia final do acompanhamento
+        let endDate = today;
+        if (followUpDays && followUpDays > 0) {
+            const followUpEndDate = new Date(sDate);
+            followUpEndDate.setDate(followUpEndDate.getDate() + followUpDays);
+            if (followUpEndDate < today) {
+                endDate = followUpEndDate;
+            }
+        }
+
         const allSections: PhotoSection[] = [];
         const currentDate = new Date(sDate);
         currentDate.setDate(currentDate.getDate() + 1); // Dia 1 = dia seguinte à cirurgia
 
-        while (currentDate <= today) {
+        while (currentDate <= endDate) {
             const dateStr = formatDateToISO(currentDate);
             const dayNumber = computePostOpDay(dateStr, surgeryDate);
             const datePhotos = photosByDate.get(dateStr) ?? [];
@@ -126,7 +138,7 @@ export function PhotoGalleryGrid({
         }
 
         return allSections;
-    }, [photosByDate, surgeryDate, canAddPhotos]);
+    }, [photosByDate, surgeryDate, canAddPhotos, followUpDays]);
 
     // Flat list of all photos in display order for swipe navigation
     const allPhotosFlat = useMemo(() => {
