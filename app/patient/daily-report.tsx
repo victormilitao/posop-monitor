@@ -1,4 +1,6 @@
 import Slider from '@react-native-community/slider';
+import { LinearGradient } from 'expo-linear-gradient';
+import { AppColors } from '../../constants/colors';
 import { Stack, useNavigation, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft } from 'lucide-react-native';
@@ -178,14 +180,14 @@ export default function DailyReportScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-white">
+      <View className="flex-1 justify-center items-center bg-gray-100">
         <ActivityIndicator size="large" color="#1B3A5C" />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-gray-100">
       <StatusBar style="light" />
       <Stack.Screen options={{ headerShown: false }} />
 
@@ -224,7 +226,7 @@ export default function DailyReportScreen() {
           if (!aIsRelatar && bIsRelatar) return -1;
           return 0;
         }).map((question) => (
-          <View key={question.id} className="mb-6 p-5 rounded-xl border border-gray-200">
+          <View key={question.id} className="mb-6 p-5 rounded-xl border border-gray-200 bg-white">
             <Text className="text-lg font-semibold text-gray-800 mb-4">{question.text}</Text>
 
             {/* Input Types */}
@@ -237,17 +239,31 @@ export default function DailyReportScreen() {
                   <Text className="text-gray-900 font-bold text-lg">{answers[question.id] || 0}</Text>
                   <Text className="text-gray-500">Intensa (10)</Text>
                 </View>
-                <Slider
-                  style={{ width: '100%', height: 40 }}
-                  minimumValue={0}
-                  maximumValue={10}
-                  step={1}
-                  value={answers[question.id] ? parseInt(answers[question.id]) : 0}
-                  onValueChange={(val) => handleAnswerChange(question.id, val.toString())}
-                  minimumTrackTintColor="#1B3A5C"
-                  maximumTrackTintColor="#d1d5db"
-                  thumbTintColor="#1B3A5C"
-                />
+                <View style={{ justifyContent: 'center', height: 40 }}>
+                  <LinearGradient
+                    colors={[
+                      AppColors.success.DEFAULT,
+                      '#84CC16',
+                      AppColors.warning.DEFAULT,
+                      '#F97316',
+                      AppColors.error.DEFAULT,
+                    ]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{ height: 8, borderRadius: 4, position: 'absolute', left: 0, right: 0 }}
+                  />
+                  <Slider
+                    style={{ width: '100%', height: 40 }}
+                    minimumValue={0}
+                    maximumValue={10}
+                    step={1}
+                    value={answers[question.id] ? parseInt(answers[question.id]) : 0}
+                    onValueChange={(val) => handleAnswerChange(question.id, val.toString())}
+                    minimumTrackTintColor="transparent"
+                    maximumTrackTintColor="transparent"
+                    thumbTintColor={AppColors.primary[700]}
+                  />
+                </View>
               </View>
             )}
 
