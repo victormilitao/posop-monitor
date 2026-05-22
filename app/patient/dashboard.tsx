@@ -62,6 +62,16 @@ export default function PatientDashboard() {
             return;
         }
 
+        // Block access after follow-up period has ended
+        const followUpTotal = (dashboardData?.currentSurgery as any)?.follow_up_days
+            ?? (dashboardData?.currentSurgery as any)?.surgery_type?.expected_recovery_days
+            ?? dashboardData?.totalRecoveryDays
+            ?? 14;
+        if (currentDayOfSurgery > followUpTotal) {
+            showToast({ type: 'info', title: 'Acompanhamento finalizado', message: 'O período de acompanhamento já foi encerrado.' });
+            return;
+        }
+
         try {
             // Check if report for today already exists
             const reports = await reportService.getPatientReports(session.user.id);

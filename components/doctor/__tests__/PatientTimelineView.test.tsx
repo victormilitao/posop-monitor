@@ -144,4 +144,43 @@ describe('PatientTimelineView', () => {
     fireEvent.press(screen.getByText('Dia 1'));
     expect(mockPush).not.toHaveBeenCalled();
   });
+
+  it('deve mostrar indicador de mensagem quando hasMessage é true', () => {
+    const timelineWithMessage: TimelineDay[] = [
+      {
+        day: 1,
+        date: new Date(2026, 3, 16),
+        status: 'completed',
+        reportId: 'report-1',
+        hasMessage: true,
+      },
+    ];
+    render(React.createElement(PatientTimelineView, {
+      ...baseProps,
+      timeline: timelineWithMessage,
+    }));
+    expect(screen.getByTestId('message-indicator-1')).toBeTruthy();
+  });
+
+  it('não deve mostrar indicador de mensagem quando hasMessage é false', () => {
+    const timelineWithoutMessage: TimelineDay[] = [
+      {
+        day: 1,
+        date: new Date(2026, 3, 16),
+        status: 'completed',
+        reportId: 'report-1',
+        hasMessage: false,
+      },
+    ];
+    render(React.createElement(PatientTimelineView, {
+      ...baseProps,
+      timeline: timelineWithoutMessage,
+    }));
+    expect(screen.queryByTestId('message-indicator-1')).toBeNull();
+  });
+
+  it('não deve mostrar indicador de mensagem quando hasMessage é undefined', () => {
+    render(React.createElement(PatientTimelineView, baseProps));
+    expect(screen.queryByTestId('message-indicator-1')).toBeNull();
+  });
 });

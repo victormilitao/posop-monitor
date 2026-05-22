@@ -59,6 +59,21 @@ export default function DailyReportScreen() {
       const dashboardData = await patientService.getPatientDashboardData(session.user.id);
 
       if (dashboardData?.currentSurgery?.surgery_type_id) {
+        // Block access after follow-up period has ended
+        const followUpTotal = (dashboardData.currentSurgery as any).follow_up_days
+          ?? dashboardData.currentSurgery.surgery_type?.expected_recovery_days
+          ?? 14;
+        const dateParts = dashboardData.currentSurgery.surgery_date.split('T')[0].split('-');
+        const surgeryDate = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
+        const todayNorm = new Date();
+        todayNorm.setHours(0, 0, 0, 0);
+        const daysSinceSurgery = Math.floor((todayNorm.getTime() - surgeryDate.getTime()) / (1000 * 60 * 60 * 24));
+        if (daysSinceSurgery > followUpTotal) {
+          showToast({ type: 'info', title: 'Acompanhamento finalizado', message: 'O período de acompanhamento já foi encerrado.' });
+          setTimeout(() => router.back(), 1500);
+          return;
+        }
+
         const typeId = dashboardData.currentSurgery.surgery_type_id;
         setCurrentSurgeryTypeId(typeId);
         setCurrentSurgeryId(dashboardData.currentSurgery.id);

@@ -2,13 +2,14 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowLeft, CheckCircle, ChevronRight } from 'lucide-react-native';
+import { ArrowLeft, CheckCircle, ChevronRight, MessageCircle } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AppColors } from '../../constants/colors';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { patientService, reportService } from '../../services';
+import { patientService, questionService, reportService } from '../../services';
 
 interface TimelineDay {
   day: number;
@@ -16,6 +17,7 @@ interface TimelineDay {
   status: 'pending' | 'completed' | 'missed' | 'future';
   reportId?: string;
   alertSeverity?: 'critical' | 'warning';
+  hasMessage?: boolean;
 }
 
 export default function TimelineScreen() {
@@ -42,6 +44,22 @@ export default function TimelineScreen() {
       const reports = await reportService.getPatientReports(session.user.id);
 
       if (dashboardData?.currentSurgery) {
+        // Load questions to detect text messages
+        const surgeryTypeId = dashboardData.currentSurgery.surgery_type_id;
+        const questions = await questionService.getQuestionsBySurgeryTypeId(surgeryTypeId, dashboardData.currentSurgery.id);
+        const textQuestionIds = questions
+          .filter(q => q.input_type === 'text')
+          .map(q => q.id);
+
+        // Compute has_message for each report
+        for (const report of reports) {
+          if (textQuestionIds.length > 0 && report.answers) {
+            report.has_message = textQuestionIds.some(qId => {
+              const val = report.answers[qId];
+              return typeof val === 'string' && val.trim().length > 0;
+            });
+          }
+        }
         // Parse surgery date safely as Local YYYY-MM-DD
         const [sYear, sMonth, sDay] = dashboardData.currentSurgery.surgery_date.split('-').map(Number);
         // Note: Month in Date constructor is 0-indexed
@@ -111,7 +129,8 @@ export default function TimelineScreen() {
             date: currentDayDate,
             status,
             reportId: reportForDay?.id,
-            alertSeverity: severity
+            alertSeverity: severity,
+            hasMessage: reportForDay?.has_message,
           });
         }
         setTimeline(days);
@@ -203,6 +222,20 @@ export default function TimelineScreen() {
                 <Text className="text-gray-500 text-sm">
                   {format(item.date, "d 'de' MMMM", { locale: ptBR })}
                 </Text>
+                {item.hasMessage && (
+                  <View
+                    testID={`message-indicator-${item.day}`}
+                    className="flex-row items-center mt-0.5"
+                  >
+                    <MessageCircle size={12} color={AppColors.info.DEFAULT} />
+                    <Text
+                      className="text-xs ml-1"
+                      style={{ color: AppColors.info.DEFAULT }}
+                    >
+                      Enviou mensagem
+                    </Text>
+                  </View>
+                )}
               </View>
             </View>
 

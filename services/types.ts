@@ -151,6 +151,7 @@ export interface DailyReport {
     surgery_id?: string;
     created_at: string;
     alerts?: { severity: 'critical' | 'warning', message: string }[];
+    has_message?: boolean;
 }
 
 export interface IDoctorService {

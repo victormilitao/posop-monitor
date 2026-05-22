@@ -16,7 +16,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import { useOrientationsBySurgery, useAddOrientation, useUpdateOrientation, useDeleteOrientation } from '../../../hooks/useOrientations';
 import { useDismissPendingReturn } from '../../../hooks/useSurgeries';
-import { patientService, reportService, surgeryService } from '../../../services';
+import { patientService, questionService, reportService, surgeryService } from '../../../services';
 import { SurgeryWithDetails } from '../../../services/types';
 
 type TabType = 'menu' | 'profile' | 'timeline' | 'gallery' | 'orientations';
@@ -110,6 +110,23 @@ export default function DoctorPatientDetailScreen() {
       // Build timeline
       const reports = await reportService.getReportsBySurgeryId(surgeryId as string);
 
+      // Load questions to detect text messages
+      const surgeryTypeId = surgeryData.surgery_type_id;
+      const questions = await questionService.getQuestionsBySurgeryTypeId(surgeryTypeId, surgeryId as string);
+      const textQuestionIds = questions
+        .filter(q => q.input_type === 'text')
+        .map(q => q.id);
+
+      // Compute has_message for each report
+      for (const report of reports) {
+        if (textQuestionIds.length > 0 && report.answers) {
+          report.has_message = textQuestionIds.some(qId => {
+            const val = report.answers[qId];
+            return typeof val === 'string' && val.trim().length > 0;
+          });
+        }
+      }
+
       const [sYear, sMonth, sDay] = surgeryData.surgery_date.split('-').map(Number);
       const sDate = new Date(sYear, sMonth - 1, sDay);
 
@@ -160,7 +177,8 @@ export default function DoctorPatientDetailScreen() {
           date: currentDayDate,
           status,
           reportId: reportForDay?.id,
-          alertSeverity: severity
+          alertSeverity: severity,
+          hasMessage: reportForDay?.has_message,
         });
       }
       setTimeline(days);

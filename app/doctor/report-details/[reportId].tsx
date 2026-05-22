@@ -250,20 +250,33 @@ export default function DoctorReportDetailsScreen() {
           <View className="bg-white rounded-xl border border-gray-100 overflow-hidden mb-4">
             {visibleQuestions.map((question, index) => {
               const answer = getAnswerLabel(question, report.answers[question.id]);
+              const isTextType = question.input_type === 'text';
               return (
                 <View
                   key={question.id}
-                  className={`flex-row items-center justify-between px-4 py-3 ${index < visibleQuestions.length - 1 ? 'border-b border-gray-100' : ''
-                    }`}
+                  className={`px-4 py-3 ${index < visibleQuestions.length - 1 ? 'border-b border-gray-100' : ''}`}
                 >
-                  <Text className="text-gray-700 text-sm flex-1 mr-3" numberOfLines={2}>
-                    {question.text}
-                  </Text>
-                  <View className={`px-3 py-1 rounded-full ${answer.isAbnormal ? 'bg-red-100' : 'bg-gray-100'}`}>
-                    <Text className={`text-sm font-medium ${answer.isAbnormal ? 'text-red-700' : 'text-gray-700'}`}>
-                      {answer.label}
-                    </Text>
-                  </View>
+                  {isTextType ? (
+                    <View>
+                      <Text className="text-gray-700 text-sm font-medium mb-1">
+                        {question.text}
+                      </Text>
+                      <Text className="text-gray-600 text-sm" style={{ fontStyle: 'italic' }}>
+                        {answer.label}
+                      </Text>
+                    </View>
+                  ) : (
+                    <View className="flex-row items-center justify-between">
+                      <Text className="text-gray-700 text-sm flex-1 mr-3" numberOfLines={2}>
+                        {question.text}
+                      </Text>
+                      <View className={`px-3 py-1 rounded-full ${answer.isAbnormal ? 'bg-red-100' : 'bg-gray-100'}`}>
+                        <Text className={`text-sm font-medium ${answer.isAbnormal ? 'text-red-700' : 'text-gray-700'}`}>
+                          {answer.label}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
                 </View>
               );
             })}

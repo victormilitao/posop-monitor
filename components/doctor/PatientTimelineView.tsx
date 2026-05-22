@@ -1,7 +1,7 @@
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useRouter } from 'expo-router';
-import { CheckCircle, ChevronRight } from 'lucide-react-native';
+import { CheckCircle, ChevronRight, MessageCircle } from 'lucide-react-native';
 import React from 'react';
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { AppColors } from '../../constants/colors';
@@ -12,6 +12,7 @@ export interface TimelineDay {
     status: 'pending' | 'completed' | 'missed' | 'future';
     reportId?: string;
     alertSeverity?: 'critical' | 'warning';
+    hasMessage?: boolean;
 }
 
 interface PatientTimelineViewProps {
@@ -57,28 +58,29 @@ export function PatientTimelineView({
                         disabled={item.status !== 'completed'}
                         onPress={() => handleDayPress(item)}
                         className={`mb-4 p-4 rounded-xl border flex-row items-center justify-between ${item.status === 'future' ? 'bg-gray-50 border-gray-100 opacity-60' :
-                            item.status === 'pending' ? 'bg-white border-blue-200' :
-                                item.status === 'missed' ? 'bg-gray-100 border-gray-200' :
-                                    item.alertSeverity === 'critical' ? 'bg-red-50 border-red-200' :
-                                        item.alertSeverity === 'warning' ? 'bg-yellow-50 border-yellow-200' :
-                                            'bg-green-50 border-green-200'
+                            item.status === 'missed' ? 'bg-gray-100 border-gray-200' :
+                                item.alertSeverity === 'critical' ? 'bg-red-50 border-red-200' :
+                                    item.alertSeverity === 'warning' ? 'bg-yellow-50 border-yellow-200' :
+                                        item.status === 'completed' ? 'bg-green-50 border-green-200' :
+                                            'bg-white'
                             }`}
+                        style={item.status === 'pending' ? { borderColor: AppColors.info.DEFAULT + '40' } : undefined}
                     >
                         <View className="flex-row items-center flex-1">
-                            <View className={`w-10 h-10 rounded-full justify-center items-center mr-4 ${item.status === 'pending' ? 'bg-blue-50' :
-                                item.status === 'future' ? 'bg-gray-200' :
-                                    item.status === 'missed' ? 'bg-gray-300' :
-                                        item.alertSeverity === 'critical' ? 'bg-red-100' :
-                                            item.alertSeverity === 'warning' ? 'bg-yellow-100' :
-                                                'bg-green-100'
-                                }`}>
-                                <Text className={`font-bold ${item.status === 'pending' ? 'text-blue-500' :
-                                    item.status === 'future' ? 'text-gray-500' :
-                                        item.status === 'missed' ? 'text-gray-500' :
-                                            item.alertSeverity === 'critical' ? 'text-red-700' :
-                                                item.alertSeverity === 'warning' ? 'text-yellow-700' :
-                                                    'text-green-700'
-                                    }`}>{item.day}</Text>
+                            <View className={`w-10 h-10 rounded-full justify-center items-center mr-4 ${item.status === 'future' ? 'bg-gray-200' :
+                                item.status === 'missed' ? 'bg-gray-300' :
+                                    item.alertSeverity === 'critical' ? 'bg-red-100' :
+                                        item.alertSeverity === 'warning' ? 'bg-yellow-100' :
+                                            item.status === 'completed' ? 'bg-green-100' : ''
+                                }`}
+                                style={item.status === 'pending' ? { backgroundColor: AppColors.info.light } : undefined}>
+                                <Text className={`font-bold ${item.status === 'future' ? 'text-gray-500' :
+                                    item.status === 'missed' ? 'text-gray-500' :
+                                        item.alertSeverity === 'critical' ? 'text-red-700' :
+                                            item.alertSeverity === 'warning' ? 'text-yellow-700' :
+                                                item.status === 'completed' ? 'text-green-700' : ''
+                                    }`}
+                                    style={item.status === 'pending' ? { color: AppColors.info.DEFAULT } : undefined}>{item.day}</Text>
                             </View>
 
                             <View>
@@ -88,6 +90,20 @@ export function PatientTimelineView({
                                 <Text className="text-sm" style={{ color: AppColors.gray[500] }}>
                                     {format(item.date, "d 'de' MMMM", { locale: ptBR })}
                                 </Text>
+                                {item.hasMessage && (
+                                    <View
+                                        testID={`message-indicator-${item.day}`}
+                                        className="flex-row items-center mt-0.5"
+                                    >
+                                        <MessageCircle size={12} color={AppColors.info.DEFAULT} />
+                                        <Text
+                                            className="text-xs ml-1"
+                                            style={{ color: AppColors.info.DEFAULT }}
+                                        >
+                                            Enviou mensagem
+                                        </Text>
+                                    </View>
+                                )}
                             </View>
                         </View>
 
@@ -115,7 +131,7 @@ export function PatientTimelineView({
                                 <Text className="text-xs" style={{ color: AppColors.gray[400] }}>Não respondido</Text>
                             )}
                             {item.status === 'pending' && (
-                                <Text className="text-blue-500 font-medium text-xs">Aguardando resposta</Text>
+                                <Text className="font-medium text-xs" style={{ color: AppColors.info.DEFAULT }}>Aguardando resposta</Text>
                             )}
                             {item.status === 'future' && (
                                 <Text className="text-xs" style={{ color: AppColors.gray[300] }}>Futuro</Text>
