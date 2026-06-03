@@ -269,14 +269,14 @@ export default function DoctorPatientDetailScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
+      <View className="flex-1 justify-center items-center bg-background">
         <ActivityIndicator size="large" color={AppColors.primary[700]} />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-background">
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style="light" />
 

@@ -112,7 +112,7 @@ export default function PatientDashboard() {
     const totalDays = (dashboardData?.currentSurgery as any)?.follow_up_days ?? (dashboardData?.currentSurgery as any)?.surgery_type?.expected_recovery_days ?? dashboardData?.totalRecoveryDays ?? 14;
 
     return (
-        <View className="flex-1 bg-gray-50">
+        <View className="flex-1 bg-background">
             <Stack.Screen options={{ headerShown: false }} />
             <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
                 {/* Header Section */}

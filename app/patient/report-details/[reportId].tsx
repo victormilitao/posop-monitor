@@ -110,7 +110,7 @@ export default function ReportHistoryScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
+      <View className="flex-1 justify-center items-center bg-background">
         <ActivityIndicator size="large" color="#00BFA5" />
       </View>
     );
@@ -122,7 +122,7 @@ export default function ReportHistoryScreen() {
   const hasWarningAlert = report.alerts?.some(a => a.severity === 'warning');
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style="dark" />
 

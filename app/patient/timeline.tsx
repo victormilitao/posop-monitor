@@ -153,14 +153,14 @@ export default function TimelineScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
+      <View className="flex-1 justify-center items-center bg-background">
         <ActivityIndicator size="large" color="#00BFA5" />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-background">
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style="light" />
 

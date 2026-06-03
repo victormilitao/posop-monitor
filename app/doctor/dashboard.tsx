@@ -163,7 +163,7 @@ export default function DoctorDashboard() {
   if (!session || !isDoctor) return <Redirect href="/" />;
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-background">
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Header */}

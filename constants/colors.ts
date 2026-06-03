@@ -51,4 +51,5 @@ export const AppColors = {
     DEFAULT: '#3B82F6',
     dark: '#1E40AF',
   },
+  background: '#E6E8ED', // matches gray.100
 } as const;

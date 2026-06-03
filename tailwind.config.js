@@ -18,6 +18,7 @@ module.exports = {
           800: '#142D47',
           900: '#0D1F33',
         },
+        background: '#E6E8ED',
       },
     },
   },

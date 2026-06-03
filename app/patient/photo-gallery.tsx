@@ -24,7 +24,7 @@ export default function PhotoGalleryScreen() {
         ?? 14;
 
     return (
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-background">
             <Stack.Screen options={{ headerShown: false }} />
             <StatusBar style="light" />
 

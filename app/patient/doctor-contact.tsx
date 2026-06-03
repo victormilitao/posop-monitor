@@ -17,7 +17,7 @@ export default function DoctorContactScreen() {
     const isCriticalAlert = dashboardData?.currentSurgery?.medical_status === 'critical';
 
     return (
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-background">
             <Stack.Screen options={{ headerShown: false }} />
             <StatusBar style="light" />
 

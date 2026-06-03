@@ -136,7 +136,7 @@ export default function DoctorReportDetailsScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
+      <View className="flex-1 justify-center items-center bg-background">
         <ActivityIndicator size="large" color="#1B3A5C" />
       </View>
     );
@@ -149,7 +149,7 @@ export default function DoctorReportDetailsScreen() {
   const visibleQuestions: QuestionWithDetails[] = questions.filter(shouldRenderQuestion);
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-background">
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style="light" />
 
