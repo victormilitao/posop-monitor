@@ -90,7 +90,7 @@ export class SupabasePatientService implements IPatientService {
 
                 const today = new Date();
                 today.setHours(0, 0, 0, 0); // Normalize today to midnight for accurate diff
-                daysSinceSurgery = Math.floor((today.getTime() - surgeryDate.getTime()) / (1000 * 60 * 60 * 24));
+                daysSinceSurgery = Math.round((today.getTime() - surgeryDate.getTime()) / (1000 * 60 * 60 * 24));
             }
         }
 
