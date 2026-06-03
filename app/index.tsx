@@ -8,6 +8,7 @@ import { Button } from '../components/ui/Button';
 import { AppColors } from '../constants/colors';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
+import * as SecureStore from 'expo-secure-store';
 
 
 
@@ -37,14 +38,27 @@ export default function LoginScreen() {
 
   // Auto-redirect if logged in
   useEffect(() => {
-    if (isRegisteringRef.current) return;
-    if (!isAuthLoading && session && profile) {
-      if (profile.role === 'doctor') {
-        router.replace('/doctor/dashboard' as Href);
-      } else {
-        router.replace('/patient/dashboard');
+    const checkAuthAndTerms = async () => {
+      if (isRegisteringRef.current) return;
+      if (!isAuthLoading && session && profile) {
+        if (profile.role === 'doctor') {
+          router.replace('/doctor/dashboard' as Href);
+        } else {
+          try {
+            const hasAccepted = await SecureStore.getItemAsync(`terms_accepted_${profile.id}`);
+            if (hasAccepted === 'true') {
+              router.replace('/patient/dashboard');
+            } else {
+              router.replace('/patient/terms' as Href);
+            }
+          } catch (e) {
+            router.replace('/patient/terms' as Href);
+          }
+        }
       }
-    }
+    };
+    
+    checkAuthAndTerms();
   }, [session, profile, isAuthLoading]);
 
   const formatPhone = (value: string): string => {
