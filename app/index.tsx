@@ -63,23 +63,27 @@ export default function LoginScreen() {
   };
 
   const formatCRM = (value: string): string => {
-    // Remove everything except digits, letters, and slash
     const clean = value.replace(/[^0-9a-zA-Z/]/g, '');
-    // Extract digits part (first 6 digits)
-    const digits = clean.replace(/[^0-9]/g, '').slice(0, 6);
-    // Extract letters part (after the slash or after 6 digits)
     const slashIndex = clean.indexOf('/');
+    
+    let digits = '';
     let letters = '';
+
     if (slashIndex !== -1) {
+      digits = clean.slice(0, slashIndex).replace(/[^0-9]/g, '').slice(0, 6);
       letters = clean.slice(slashIndex + 1).replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase();
-    } else if (digits.length === 6) {
-      // If user typed 6 digits and then letters without slash
-      letters = clean.slice(6).replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase();
+    } else {
+      const firstLetterIndex = clean.search(/[a-zA-Z]/);
+      if (firstLetterIndex !== -1) {
+        digits = clean.slice(0, firstLetterIndex).replace(/[^0-9]/g, '').slice(0, 6);
+        letters = clean.slice(firstLetterIndex).replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase();
+      } else {
+        digits = clean.replace(/[^0-9]/g, '').slice(0, 6);
+      }
     }
-    if (digits.length < 6) return digits;
+    
     if (letters.length > 0) return `${digits}/${letters}`;
-    // Auto-add slash after 6 digits if user is still typing
-    if (digits.length === 6 && clean.includes('/')) return `${digits}/`;
+    if (clean.includes('/')) return `${digits}/`;
     return digits;
   };
 
@@ -163,9 +167,9 @@ export default function LoginScreen() {
       showToast({ type: 'warning', title: 'Atenção', message: 'Preencha todos os campos obrigatórios.' });
       return;
     }
-    const crmRegex = /^\d{6}\/[A-Z]{2}$/;
+    const crmRegex = /^\d{4,6}\/[A-Z]{2}$/;
     if (!crmRegex.test(docCrm)) {
-      showToast({ type: 'warning', title: 'Atenção', message: 'CRM inválido. Use o formato 123456/UF (6 dígitos + sigla do estado).' });
+      showToast({ type: 'warning', title: 'Atenção', message: 'CRM inválido. Use o formato de 4 a 6 dígitos + sigla do estado.' });
       return;
     }
     setIsLoading(true);
