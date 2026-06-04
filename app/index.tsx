@@ -45,8 +45,10 @@ export default function LoginScreen() {
           router.replace('/doctor/dashboard' as Href);
         } else {
           try {
-            const hasAccepted = await SecureStore.getItemAsync(`terms_accepted_${profile.id}`);
-            if (hasAccepted === 'true') {
+            const hasAcceptedMeta = session.user.user_metadata?.terms_accepted;
+            const hasAcceptedStore = await SecureStore.getItemAsync(`terms_accepted_${profile.id}`);
+            
+            if (hasAcceptedMeta || hasAcceptedStore === 'true') {
               router.replace('/patient/dashboard');
             } else {
               router.replace('/patient/terms' as Href);

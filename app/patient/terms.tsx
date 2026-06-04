@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../components/ui/Button';
 import { AppColors } from '../../constants/colors';
 import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
 
 export default function PatientTermsScreen() {
     const [accepted, setAccepted] = useState(false);
@@ -20,6 +21,11 @@ export default function PatientTermsScreen() {
         setIsSubmitting(true);
         try {
             await SecureStore.setItemAsync(`terms_accepted_${profile.id}`, 'true');
+            
+            await supabase.auth.updateUser({
+                data: { terms_accepted: true }
+            });
+
             router.replace('/patient/dashboard');
         } catch (error) {
             console.error('Error saving terms acceptance:', error);
