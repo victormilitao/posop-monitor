@@ -11,3 +11,4 @@ export { photoService } from './supabase/photoService';
 export { orientationService } from './supabase/orientationService';
 export { notificationService } from './supabase/notificationService';
 export { deviceTokenService } from './supabase/deviceTokenService';
+export { termsService } from './supabase/termsService';

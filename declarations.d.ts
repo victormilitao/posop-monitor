@@ -4,3 +4,8 @@ declare module "*.svg" {
   const content: React.FC<SvgProps>;
   export default content;
 }
+
+declare module "*.pdf" {
+  const value: number;
+  export default value;
+}

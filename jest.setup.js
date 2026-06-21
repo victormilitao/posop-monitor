@@ -109,9 +109,42 @@ jest.mock('expo-image-manipulator', () => ({
 // Mock react-native-url-polyfill
 jest.mock('react-native-url-polyfill/auto', () => {});
 
+// Mock expo-sharing
+jest.mock('expo-sharing', () => ({
+  isAvailableAsync: jest.fn(() => Promise.resolve(true)),
+  shareAsync: jest.fn(() => Promise.resolve()),
+}));
+
+// Mock expo-file-system
+jest.mock('expo-file-system', () => ({
+  cacheDirectory: 'file:///cache/',
+  copyAsync: jest.fn(() => Promise.resolve()),
+  documentDirectory: 'file:///documents/',
+}));
+
+// Mock expo-asset
+jest.mock('expo-asset', () => ({
+  Asset: {
+    fromModule: jest.fn(() => ({
+      downloadAsync: jest.fn(() => Promise.resolve()),
+      localUri: 'file:///local/test.pdf',
+    })),
+  },
+}));
+
+// Mock react-native-webview
+jest.mock('react-native-webview', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    WebView: (props) => React.createElement(View, { ...props, testID: props.testID || 'webview' }),
+  };
+});
+
 // Suppress expected console.error
 const originalConsoleError = console.error;
 console.error = (...args) => {
   if (typeof args[0] === 'string' && args[0].includes('Warning:')) return;
   originalConsoleError.call(console, ...args);
 };
+

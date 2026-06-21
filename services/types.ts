@@ -271,3 +271,8 @@ export interface IDeviceTokenService {
     deactivateToken(pushToken: string): Promise<void>;
     getActiveTokensByUserId(userId: string): Promise<DeviceToken[]>;
 }
+
+export interface ITermsService {
+    hasAcceptedTerms(userId: string): Promise<boolean>;
+    acceptTerms(userId: string): Promise<void>;
+}
