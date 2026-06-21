@@ -42,7 +42,18 @@ export default function LoginScreen() {
       if (isRegisteringRef.current) return;
       if (!isAuthLoading && session && profile) {
         if (profile.role === 'doctor') {
-          router.replace('/doctor/dashboard' as Href);
+          try {
+            const hasAcceptedMeta = session.user.user_metadata?.terms_accepted;
+            const hasAcceptedStore = await SecureStore.getItemAsync(`terms_accepted_${profile.id}`);
+            
+            if (hasAcceptedMeta || hasAcceptedStore === 'true') {
+              router.replace('/doctor/dashboard' as Href);
+            } else {
+              router.replace('/doctor/terms' as Href);
+            }
+          } catch (e) {
+            router.replace('/doctor/terms' as Href);
+          }
         } else {
           try {
             const hasAcceptedMeta = session.user.user_metadata?.terms_accepted;
