@@ -8,9 +8,7 @@ import { Button } from '../components/ui/Button';
 import { AppColors } from '../constants/colors';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import * as SecureStore from 'expo-secure-store';
-
-
+import { termsService } from '../services';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -41,30 +39,26 @@ export default function LoginScreen() {
     const checkAuthAndTerms = async () => {
       if (isRegisteringRef.current) return;
       if (!isAuthLoading && session && profile) {
-        if (profile.role === 'doctor') {
-          try {
-            const hasAcceptedMeta = session.user.user_metadata?.terms_accepted;
-            const hasAcceptedStore = await SecureStore.getItemAsync(`terms_accepted_${profile.id}`);
-            
-            if (hasAcceptedMeta || hasAcceptedStore === 'true') {
+        try {
+          const hasAccepted = await termsService.hasAcceptedTerms(profile.id);
+          
+          if (profile.role === 'doctor') {
+            if (hasAccepted) {
               router.replace('/doctor/dashboard' as Href);
             } else {
               router.replace('/doctor/terms' as Href);
             }
-          } catch (e) {
-            router.replace('/doctor/terms' as Href);
-          }
-        } else {
-          try {
-            const hasAcceptedMeta = session.user.user_metadata?.terms_accepted;
-            const hasAcceptedStore = await SecureStore.getItemAsync(`terms_accepted_${profile.id}`);
-            
-            if (hasAcceptedMeta || hasAcceptedStore === 'true') {
+          } else {
+            if (hasAccepted) {
               router.replace('/patient/dashboard');
             } else {
               router.replace('/patient/terms' as Href);
             }
-          } catch (e) {
+          }
+        } catch (e) {
+          if (profile.role === 'doctor') {
+            router.replace('/doctor/terms' as Href);
+          } else {
             router.replace('/patient/terms' as Href);
           }
         }
