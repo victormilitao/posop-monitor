@@ -162,6 +162,7 @@ describe('AddPatientModal', () => {
     render(React.createElement(AddPatientModal, defaultProps));
 
     fireEvent.changeText(screen.getByPlaceholderText('Nome completo do paciente...'), 'João Silva');
+    fireEvent.changeText(screen.getByPlaceholderText('Pelo menos 12 caracteres'), 'Individual-Test-2026!');
     fireEvent.changeText(screen.getByPlaceholderText('E-mail para login do paciente...'), 'joao@test.com');
 
     fireEvent.press(screen.getByText('Selecione a cirurgia...'));
@@ -183,6 +184,7 @@ describe('AddPatientModal', () => {
     render(React.createElement(AddPatientModal, defaultProps));
 
     fireEvent.changeText(screen.getByPlaceholderText('Nome completo do paciente...'), 'Maria');
+    fireEvent.changeText(screen.getByPlaceholderText('Pelo menos 12 caracteres'), 'Individual-Test-2026!');
     fireEvent.changeText(screen.getByPlaceholderText('E-mail para login do paciente...'), 'maria@test.com');
 
     // Select female
@@ -204,6 +206,7 @@ describe('AddPatientModal', () => {
     render(React.createElement(AddPatientModal, defaultProps));
 
     fireEvent.changeText(screen.getByPlaceholderText('Nome completo do paciente...'), 'João');
+    fireEvent.changeText(screen.getByPlaceholderText('Pelo menos 12 caracteres'), 'Individual-Test-2026!');
     fireEvent.changeText(screen.getByPlaceholderText('E-mail para login do paciente...'), 'j@t.com');
     fireEvent.press(screen.getByText('Selecione a cirurgia...'));
     fireEvent.press(screen.getByText('Artroscopia'));
@@ -221,6 +224,7 @@ describe('AddPatientModal', () => {
     render(React.createElement(AddPatientModal, defaultProps));
 
     fireEvent.changeText(screen.getByPlaceholderText('Nome completo do paciente...'), 'João');
+    fireEvent.changeText(screen.getByPlaceholderText('Pelo menos 12 caracteres'), 'Individual-Test-2026!');
     fireEvent.changeText(screen.getByPlaceholderText('E-mail para login do paciente...'), 'j@t.com');
     fireEvent.press(screen.getByText('Selecione a cirurgia...'));
     fireEvent.press(screen.getByText('Artroscopia'));
@@ -240,6 +244,7 @@ describe('AddPatientModal', () => {
     render(React.createElement(AddPatientModal, defaultProps));
 
     fireEvent.changeText(screen.getByPlaceholderText('Nome completo do paciente...'), 'João');
+    fireEvent.changeText(screen.getByPlaceholderText('Pelo menos 12 caracteres'), 'Individual-Test-2026!');
     fireEvent.changeText(screen.getByPlaceholderText('E-mail para login do paciente...'), 'j@t.com');
     fireEvent.press(screen.getByText('Selecione a cirurgia...'));
     fireEvent.press(screen.getByText('Artroscopia'));

@@ -152,6 +152,7 @@ export class SupabasePatientService implements IPatientService {
     }
 
     async createPatient(data: {
+        password: string;
         name: string;
         cpf: string;
         sex: string;
@@ -166,6 +167,9 @@ export class SupabasePatientService implements IPatientService {
         contactPhoneBusiness?: string;
         hasDrain?: boolean;
     }): Promise<{ patientId: string; surgeryId: string }> {
+        if (!data.password || data.password.length < 12) {
+            throw new Error('Defina uma senha individual com pelo menos 12 caracteres.');
+        }
         // Generate fake email for Supabase Auth (patient logs in via CPF, not email)
         const fakeEmail = `${data.cpf}@paciente.app`;
 
@@ -173,7 +177,7 @@ export class SupabasePatientService implements IPatientService {
         // The RPC also sets cpf, sex, and phone on the profile (bypasses RLS via SECURITY DEFINER)
         const { data: newPatientId, error: authError } = await (supabase as any).rpc('create_patient_bypass', {
             patient_email: fakeEmail,
-            patient_password: 'Password123!', // Paciente vai usar acesso via OTP depois
+            patient_password: data.password,
             patient_name: data.name,
             patient_cpf: data.cpf,
             patient_sex: data.sex,

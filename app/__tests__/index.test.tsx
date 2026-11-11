@@ -3,6 +3,7 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import LoginScreen from '../index';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { supabase } from '../../lib/supabase';
 
 // Mock dependencies
 jest.mock('expo-router', () => ({
@@ -103,5 +104,23 @@ describe('LoginScreen - Doctor Registration CRM tests', () => {
         message: expect.stringContaining('CRM inválido. Use o formato de 4 a 6 dígitos + sigla do estado.'),
       }));
     });
+  });
+});
+
+
+describe('Login do paciente', () => {
+  it('envia a senha informada pelo paciente, sem senha fixa', async () => {
+    (useAuth as jest.Mock).mockReturnValue({ session: null, profile: null, isLoading: false });
+    (useToast as jest.Mock).mockReturnValue({ showToast: jest.fn() });
+    (supabase.from as jest.Mock).mockReturnValue({ select: () => ({ eq: () => ({ single: async () => ({ data: { email: 'teste@example.com' }, error: null }) }) }) });
+    (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValue({ error: null });
+    const { getByText, getByPlaceholderText } = render(<LoginScreen />);
+    fireEvent.press(getByText('Sou Paciente'));
+    fireEvent.changeText(getByPlaceholderText('(00) 00000-0000'), '11999999999');
+    fireEvent.changeText(getByPlaceholderText('Senha do paciente'), 'Senha-individual-2026');
+    fireEvent.press(getByText('Entrar'));
+    await waitFor(() => expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
+      email: 'teste@example.com', password: 'Senha-individual-2026',
+    }));
   });
 });

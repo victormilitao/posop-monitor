@@ -11,7 +11,10 @@
     "lint": "expo lint",
     "deploy:preview": "eas update --branch preview --message",
     "test": "jest",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "build:ios": "eas build --platform ios --profile production",
+    "submit:ios": "eas submit --platform ios --profile production",
+    "eas-build-post-install": "node scripts/validate-build-env.cjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

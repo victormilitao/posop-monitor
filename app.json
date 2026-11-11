@@ -2,7 +2,7 @@
   "expo": {
     "name": "PosOp Monitor",
     "slug": "medical-surgey",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "posopmonitor",
@@ -10,9 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.posop-monitor",
+      "bundleIdentifier": "com.victormilitao.posopmonitor",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDevelopmentRegion": "pt_BR"
       }
     },
     "android": {
@@ -43,7 +44,16 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O PosOp Monitor acessa suas fotos para você enviar imagens do acompanhamento pós-operatório ao seu médico.",
+          "cameraPermission": "O PosOp Monitor usa a câmera para registrar fotos do acompanhamento pós-operatório.",
+          "microphonePermission": false
+        }
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

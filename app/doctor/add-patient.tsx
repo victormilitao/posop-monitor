@@ -40,6 +40,7 @@ export default function AddPatientScreen() {
 
   const [cpf, setCpf] = useState('');
   const [name, setName] = useState('');
+  const [patientPassword, setPatientPassword] = useState('');
   const [sex, setSex] = useState<'M' | 'F'>('M');
   const [age, setAge] = useState('');
   const [phone, setPhone] = useState('');
@@ -140,6 +141,10 @@ export default function AddPatientScreen() {
   };
 
   const handleValidateAndConfirm = () => {
+    if (patientPassword.length < 12) {
+      showToast({ type: 'error', title: 'Erro', message: 'Defina uma senha individual com pelo menos 12 caracteres.' });
+      return;
+    }
     const cleanCpf: string = cpf.replace(/\D/g, '');
     if (!cleanCpf || cleanCpf.length !== 11) {
       showToast({ type: 'error', title: 'Erro', message: 'CPF inválido. Deve ter 11 dígitos.' });
@@ -237,6 +242,7 @@ export default function AddPatientScreen() {
     setLoading(true);
     try {
       await patientService.createPatient({
+        password: patientPassword,
         name: name.trim(),
         cpf: cpf.replace(/\D/g, ''),
         sex,
@@ -380,7 +386,22 @@ export default function AddPatientScreen() {
             />
           </View>
 
-          {/* Surgery Type */}
+          <View className="mb-4">
+            <Text className="text-gray-700 font-medium mb-2">Senha individual do paciente *</Text>
+            <TextInput
+              className="bg-white border border-gray-300 rounded-xl px-4 text-gray-800"
+              style={{ fontSize: 16, height: 48 }}
+              placeholder="Pelo menos 12 caracteres"
+              value={patientPassword}
+              onChangeText={setPatientPassword}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <Text className="text-gray-500 mt-1">Combine uma senha exclusiva com o paciente para o acesso ao aplicativo.</Text>
+          </View>
+
+                    {/* Surgery Type */}
           <View className="mb-4">
             <Text className="text-gray-700 font-medium mb-2">Procedimento *</Text>
             {loadingTypes ? (

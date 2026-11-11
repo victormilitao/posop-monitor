@@ -17,6 +17,7 @@ export function AddPatientModal({ visible, onClose, onSuccess }: AddPatientModal
 
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
+  const [patientPassword, setPatientPassword] = useState('');
   const [email, setEmail] = useState('');
   const [sex, setSex] = useState<'M' | 'F'>('M');
   const [surgeryTypeId, setSurgeryTypeId] = useState('');
@@ -47,6 +48,11 @@ export function AddPatientModal({ visible, onClose, onSuccess }: AddPatientModal
   const handleSubmit = async () => {
     if (!name || !email || !surgeryTypeId || !surgeryDate) {
       setError('Por favor, preencha todos os campos obrigatórios (Nome, Email, Sexo, Tipo de Cirurgia, Data).');
+      return;
+    }
+
+    if (patientPassword.length < 12) {
+      setError('Defina uma senha individual com pelo menos 12 caracteres.');
       return;
     }
 
@@ -86,6 +92,7 @@ export function AddPatientModal({ visible, onClose, onSuccess }: AddPatientModal
 
     try {
       await patientService.createPatient({
+        password: patientPassword,
         name: name.trim(),
         cpf: email.trim(), // legacy: using email field as CPF placeholder
         sex,
@@ -109,6 +116,7 @@ export function AddPatientModal({ visible, onClose, onSuccess }: AddPatientModal
 
   const handleClose = () => {
     setName('');
+    setPatientPassword('');
     setEmail('');
     setSex('M');
     setSurgeryTypeId('');
@@ -171,7 +179,22 @@ export function AddPatientModal({ visible, onClose, onSuccess }: AddPatientModal
                 />
               </View>
 
-              {/* Sex Selector */}
+              <View className="mb-4">
+                <Text className="text-gray-700 font-medium mb-2">Senha individual do paciente *</Text>
+                <TextInput
+                  className="bg-white border border-gray-300 rounded-xl px-4 text-gray-800"
+                  style={{ fontSize: 16, height: 48 }}
+                  placeholder="Pelo menos 12 caracteres"
+                  value={patientPassword}
+                  onChangeText={setPatientPassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                <Text className="text-gray-500 mt-1">Combine uma senha exclusiva com o paciente para o acesso ao aplicativo.</Text>
+              </View>
+
+                            {/* Sex Selector */}
               <View className="z-10">
                 <Text className="text-sm font-semibold text-gray-700 mb-1">Sexo:</Text>
                 <View className="flex-row gap-3">

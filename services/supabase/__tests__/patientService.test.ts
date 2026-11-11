@@ -149,6 +149,11 @@ describe('SupabasePatientService', () => {
   });
 
   describe('createPatient', () => {
+    it('recusa senha curta antes de chamar o backend', async () => {
+      await expect(service.createPatient({ password: 'curta' } as any)).rejects.toThrow('pelo menos 12 caracteres');
+      expect(mockRpc).not.toHaveBeenCalled();
+    });
+
     it('deve criar paciente com sucesso', async () => {
       mockRpc.mockResolvedValue({ data: 'new-patient-id', error: null });
 
@@ -168,6 +173,7 @@ describe('SupabasePatientService', () => {
       });
 
       const result = await service.createPatient({
+        password: 'Individual-Test-2026!',
         name: 'João',
         cpf: '12345678901',
         sex: 'M',
@@ -179,6 +185,7 @@ describe('SupabasePatientService', () => {
         hospital: 'Hospital São Lucas',
       });
 
+      expect(mockRpc).toHaveBeenCalledWith('create_patient_bypass', expect.objectContaining({ patient_password: 'Individual-Test-2026!' }));
       expect(result.patientId).toBe('new-patient-id');
       expect(result.surgeryId).toBe('surgery-1');
       expect(mockFrom).toHaveBeenCalledWith('surgeries');
@@ -194,6 +201,7 @@ describe('SupabasePatientService', () => {
       });
 
       await expect(service.createPatient({
+        password: 'Individual-Test-2026!',
         name: 'João',
         cpf: '12345678901',
         sex: 'M',
@@ -209,6 +217,7 @@ describe('SupabasePatientService', () => {
       mockRpc.mockResolvedValue({ data: null, error: null });
 
       await expect(service.createPatient({
+        password: 'Individual-Test-2026!',
         name: 'João',
         cpf: '12345678901',
         sex: 'M',
@@ -227,6 +236,7 @@ describe('SupabasePatientService', () => {
       });
 
       await expect(service.createPatient({
+        password: 'Individual-Test-2026!',
         name: 'Maria',
         cpf: '98765432100',
         sex: 'F',

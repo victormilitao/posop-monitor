@@ -18,6 +18,7 @@ export default function LoginScreen() {
 
   // Form states
   const [patientPhone, setPatientPhone] = useState('');
+  const [patientPassword, setPatientPassword] = useState('');
   const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
 
@@ -110,8 +111,8 @@ export default function LoginScreen() {
 
   const handlePatientLogin = async () => {
     const cleanPhone: string = patientPhone.replace(/\D/g, '');
-    if (!cleanPhone || cleanPhone.length < 10) {
-      showToast({ type: 'warning', title: 'Atenção', message: 'Número de telefone inválido.' });
+    if (!cleanPhone || cleanPhone.length < 10 || !patientPassword) {
+      showToast({ type: 'warning', title: 'Atenção', message: 'Informe seu telefone com DDD e sua senha.' });
       return;
     }
     setIsLoading(true);
@@ -130,13 +131,13 @@ export default function LoginScreen() {
       }
 
       // Sign in with the email associated with the phone
-      const { error: devLoginError } = await supabase.auth.signInWithPassword({
+      const { error: patientLoginError } = await supabase.auth.signInWithPassword({
         email: profileData.email,
-        password: 'Password123!'
+        password: patientPassword
       });
 
-      if (devLoginError) {
-        showToast({ type: 'error', title: 'Erro', message: devLoginError.message });
+      if (patientLoginError) {
+        showToast({ type: 'error', title: 'Erro', message: patientLoginError.message });
       }
     } catch (error) {
       showToast({ type: 'error', title: 'Erro', message: 'Ocorreu um erro inesperado.' });
@@ -272,7 +273,7 @@ export default function LoginScreen() {
         <View className="mb-8">
           <Text style={{ color: AppColors.white, fontSize: 24, fontWeight: 'bold' }}>Acesso Paciente</Text>
           <Text style={{ color: `${AppColors.white}99`, marginTop: 8 }}>
-            Digite seu telefone com DDD para acessar.
+            Digite seu telefone com DDD e sua senha para acessar.
           </Text>
         </View>
 
@@ -291,11 +292,27 @@ export default function LoginScreen() {
             />
           </View>
 
+          <View style={[styles.inputContainer, { marginTop: 12 }]}>
+            <Lock size={20} color={AppColors.gray[400]} />
+            <TextInput
+              className="flex-1 ml-3"
+              style={{ color: AppColors.white, fontSize: 16 }}
+              placeholder="Senha do paciente"
+              placeholderTextColor={AppColors.gray[400]}
+              value={patientPassword}
+              onChangeText={setPatientPassword}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+              textContentType="password"
+            />
+          </View>
+
           <Button
             title="Entrar"
             onPress={handlePatientLogin}
             isLoading={isLoading}
-            disabled={patientPhone.replace(/\D/g, '').length < 10}
+            disabled={patientPhone.replace(/\D/g, '').length < 10 || !patientPassword}
             variant="light"
             className="mt-4"
           />
