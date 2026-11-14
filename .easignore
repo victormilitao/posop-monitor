@@ -60,3 +60,6 @@ coverage/
 .env.*
 !.env.example
 coverage/
+
+# Generated isolated local Supabase workspace
+.supabase-local/

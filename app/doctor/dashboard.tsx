@@ -172,7 +172,9 @@ export default function DoctorDashboard() {
         style={{ paddingTop: insets.top + 12 }}
       >
         <View className="flex-row justify-between items-center">
-          <Text className="text-2xl font-bold text-white">{profile?.full_name || ''}</Text>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Editar meu perfil" onPress={() => router.push('/doctor/profile')} className="flex-1 mr-3 py-2">
+            <Text className="text-2xl font-bold text-white">{profile?.display_name?.trim() || profile?.full_name || ''}</Text>
+          </TouchableOpacity>
           <Button
             title="Sair"
             variant="ghost"
@@ -186,15 +188,20 @@ export default function DoctorDashboard() {
 
       {/* Tab Selector */}
       <View
-        className="flex-row mx-5 mt-4 mb-2 rounded-xl p-1"
+        className="flex-row gap-2 mx-5 mt-4 mb-2 rounded-xl p-1"
         style={{ backgroundColor: AppColors.gray[200] }}
       >
         <TouchableOpacity
           testID="tab-patients"
           className="flex-1 flex-row items-center justify-center py-2.5"
           style={{
-            backgroundColor: activeTab === 'patients' ? AppColors.primary[700] : 'transparent',
+            backgroundColor: activeTab === 'patients' ? AppColors.primary[700] : AppColors.white,
             borderRadius: 10,
+            shadowColor: AppColors.black,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.12,
+            shadowRadius: 3,
+            elevation: 3,
           }}
           onPress={() => setActiveTab('patients')}
         >
@@ -214,8 +221,13 @@ export default function DoctorDashboard() {
           testID="tab-records"
           className="flex-1 flex-row items-center justify-center py-2.5"
           style={{
-            backgroundColor: activeTab === 'records' ? AppColors.primary[700] : 'transparent',
+            backgroundColor: activeTab === 'records' ? AppColors.primary[700] : AppColors.white,
             borderRadius: 10,
+            shadowColor: AppColors.black,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.12,
+            shadowRadius: 3,
+            elevation: 3,
           }}
           onPress={() => setActiveTab('records')}
         >

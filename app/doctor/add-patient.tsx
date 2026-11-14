@@ -15,14 +15,16 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../components/ui/Button';
-import { AutocompleteInput } from '../../components/ui/AutocompleteInput';
 import { PickerModal, PickerOption } from '../../components/ui/SearchablePickerModal';
 import { ConfirmPatientModal, ConfirmPatientData } from '../../components/doctor/ConfirmPatientModal';
 import { AppColors } from '../../constants/colors';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { useHospitalSuggestions } from '../../hooks/useHospitalSuggestions';
 import { patientService, surgeryTypeService } from '../../services';
+
+const HOSPITAL_OPTIONS: PickerOption[] = [
+  { id: 'huc', label: 'HUC / Hosp. Universitário do Ceará' },
+];
 
 interface SurgeryType {
   id: string;
@@ -36,18 +38,17 @@ export default function AddPatientScreen() {
   const { profile } = useAuth();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
-  const { data: hospitalSuggestions = [] } = useHospitalSuggestions(profile?.id);
 
   const [cpf, setCpf] = useState('');
   const [name, setName] = useState('');
-  const [patientPassword, setPatientPassword] = useState('');
   const [sex, setSex] = useState<'M' | 'F'>('M');
   const [age, setAge] = useState('');
   const [phone, setPhone] = useState('');
   const [surgeryTypeId, setSurgeryTypeId] = useState('');
   const [surgeryDate, setSurgeryDate] = useState('');
   const [followUpDays, setFollowUpDays] = useState('');
-  const [hospital, setHospital] = useState('');
+  const [hospital, setHospital] = useState(HOSPITAL_OPTIONS[0].label);
+  const [showHospitalPicker, setShowHospitalPicker] = useState(false);
   const [contactPhone, setContactPhone] = useState('');
   const [contactPhoneBusiness, setContactPhoneBusiness] = useState('');
   const [surgeryTypes, setSurgeryTypes] = useState<SurgeryType[]>([]);
@@ -141,10 +142,6 @@ export default function AddPatientScreen() {
   };
 
   const handleValidateAndConfirm = () => {
-    if (patientPassword.length < 12) {
-      showToast({ type: 'error', title: 'Erro', message: 'Defina uma senha individual com pelo menos 12 caracteres.' });
-      return;
-    }
     const cleanCpf: string = cpf.replace(/\D/g, '');
     if (!cleanCpf || cleanCpf.length !== 11) {
       showToast({ type: 'error', title: 'Erro', message: 'CPF inválido. Deve ter 11 dígitos.' });
@@ -242,7 +239,6 @@ export default function AddPatientScreen() {
     setLoading(true);
     try {
       await patientService.createPatient({
-        password: patientPassword,
         name: name.trim(),
         cpf: cpf.replace(/\D/g, ''),
         sex,
@@ -386,22 +382,7 @@ export default function AddPatientScreen() {
             />
           </View>
 
-          <View className="mb-4">
-            <Text className="text-gray-700 font-medium mb-2">Senha individual do paciente *</Text>
-            <TextInput
-              className="bg-white border border-gray-300 rounded-xl px-4 text-gray-800"
-              style={{ fontSize: 16, height: 48 }}
-              placeholder="Pelo menos 12 caracteres"
-              value={patientPassword}
-              onChangeText={setPatientPassword}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            <Text className="text-gray-500 mt-1">Combine uma senha exclusiva com o paciente para o acesso ao aplicativo.</Text>
-          </View>
-
-                    {/* Surgery Type */}
+          {/* Surgery Type */}
           <View className="mb-4">
             <Text className="text-gray-700 font-medium mb-2">Procedimento *</Text>
             {loadingTypes ? (
@@ -508,18 +489,32 @@ export default function AddPatientScreen() {
           </View>
 
           {/* Hospital */}
-          <View className="mb-4" style={{ zIndex: 10 }}>
+          <View className="mb-4">
             <Text className="text-gray-700 font-medium mb-2">Hospital / Clínica</Text>
-            <AutocompleteInput
-              testID="hospital-input"
-              className="bg-white border border-gray-300 rounded-xl px-4 text-gray-800"
-              style={{ fontSize: 16, height: 48, textAlignVertical: 'center' }}
-              placeholder="Nome do hospital ou clínica"
-              value={hospital}
-              onChangeText={setHospital}
-              suggestions={hospitalSuggestions}
-            />
+            <TouchableOpacity
+              testID="hospital-selector"
+              accessibilityRole="button"
+              accessibilityLabel={`Hospital / Clínica: ${hospital}`}
+              className="flex-row items-center justify-between rounded-xl border border-primary-700 bg-primary-50 px-4 py-3"
+              style={{ minHeight: 48 }}
+              onPress={() => setShowHospitalPicker(true)}
+              activeOpacity={0.7}
+            >
+              <Text className="flex-1 text-base font-medium text-primary-700">
+                {hospital}
+              </Text>
+              <ChevronDown size={20} color={AppColors.gray[400]} />
+            </TouchableOpacity>
           </View>
+
+          <PickerModal
+            visible={showHospitalPicker}
+            onClose={() => setShowHospitalPicker(false)}
+            onSelect={(option) => setHospital(option.label)}
+            options={HOSPITAL_OPTIONS}
+            selectedId={HOSPITAL_OPTIONS.find((option) => option.label === hospital)?.id}
+            title="Selecionar Hospital / Clínica"
+          />
 
           {/* Contact Phone (Personal) */}
           <View className="mb-4">

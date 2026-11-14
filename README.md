@@ -71,6 +71,8 @@ O identificador deve ser exatamente o mesmo do `app.json`. O número do build é
 
 ### Ambiente e comandos
 
+O ícone em `assets/images/icon.png` é quadrado (1024 × 1024), sem canal alfa, com o logo original sobre `AppColors.primary[900]`. Para regenerá-lo após mudar o logo ou a paleta, execute `npm run generate:icon`. A fonte transparente permanece em `assets/images/logo.png`. Alterações no ícone exigem um novo build nativo para aparecer no TestFlight.
+
 1. Execute `npx eas login` usando a conta com acesso ao projeto Expo `victormilitao/medical-surgey` (ID `f7963815-e620-41e4-86b3-27a3efecab8c`).
 2. No painel do projeto Expo, em Environment variables, cadastre no ambiente **production** as variáveis `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_ANON_KEY`, usando a URL HTTPS e a chave pública anon/publishable do backend de produção, também utilizado pelo TestFlight. Nunca use a chave service_role ou secret no aplicativo. Os valores públicos entram no bundle; a proteção dos dados depende das políticas do backend.
 3. Execute `npx eas-cli@latest build --platform ios --profile production`. Selecione sua equipe Apple Developer e permita ao EAS gerar as credenciais de assinatura quando solicitado.
@@ -91,16 +93,48 @@ O que testar:
 
 > Testar cadastro e acesso de médico e paciente, aceite dos termos, cadastro de acompanhamento, preenchimento de relatos, envio de fotos pela câmera e biblioteca, consulta da evolução e encerramento da sessão. Informar modelo do aparelho, versão do iOS e passos para reproduzir qualquer problema. Usar somente dados fictícios nesta etapa.
 
-Você ainda precisa informar: nome, telefone e e-mail do responsável pela revisão, e-mail de feedback e contas demonstrativas funcionais de médico e paciente. O médico entra com CPF e senha; o paciente, com telefone com DDD e senha individual. Não salve essas senhas no repositório. Testes externos passam pela revisão beta da Apple.
+Você ainda precisa informar: nome, telefone e e-mail do responsável pela revisão, e-mail de feedback e contas demonstrativas funcionais de médico e paciente. O médico entra com CPF e senha; o paciente, somente com telefone com DDD. Não salve essas senhas no repositório. Testes externos passam pela revisão beta da Apple.
 
 ### Mudança no acesso do paciente
 
-A senha fixa compartilhada foi removida do login e da criação de pacientes. Novos cadastros exigem uma senha individual de pelo menos 12 caracteres. Combine essa senha com o participante por um canal apropriado. Antes de convidar testadores, atribua senhas individuais às contas de demonstração existentes pelo administrador do Supabase; atualizar o aplicativo **não altera** as senhas já gravadas no servidor. Não reutilize as antigas credenciais compartilhadas.
+A exigência de senha individual foi temporariamente desabilitada a pedido do responsável. O cadastro não solicita senha e o paciente entra somente com telefone com DDD; internamente, o aplicativo utiliza a credencial fixa do fluxo anterior. Não há verificação por SMS. Atualizar o aplicativo **não altera** as senhas já gravadas no servidor: contas que receberam senhas individuais precisam ser ajustadas pelo administrador do Supabase para serem compatíveis com esse fluxo.
 
-A função remota `create_patient_bypass` já é utilizada pelo projeto e deve aceitar `patient_password`; sua implementação não está nas migrations deste repositório. Validar em ambiente de teste a criação do paciente e o login com a senha escolhida. A autorização dessa RPC e as políticas de acesso a perfis e fotos precisam ser verificadas no backend antes de usar dados reais. Esta preparação não representa uma auditoria de segurança do backend.
+A função remota `create_patient_bypass` já é utilizada pelo projeto e deve aceitar `patient_password`; sua implementação não está nas migrations deste repositório. Validar em ambiente de teste a criação do paciente e o login somente com telefone. A autorização dessa RPC e as políticas de acesso a perfis e fotos precisam ser verificadas no backend antes de usar dados reais. Esta preparação não representa uma auditoria de segurança do backend.
 
 ### Verificação em aparelhos
 
 Antes de distribuir para participantes externos, testar no iPhone e no iPad: login dos dois perfis, criação de paciente, persistência da sessão, termos, relatos, câmera/fotos (inclusive permissão negada), visualização pelo médico e logout. Bundle JavaScript e testes automatizados não substituem um build nativo assinado e execução em aparelho.
 
 Referências: [env no EAS](https://docs.expo.dev/eas/environment-variables/), [SDK 26 e Expo 54](https://expo.dev/blog/app-store-connect-minimum-sdk-26), [envio iOS](https://docs.expo.dev/submit/ios/).
+
+## Banco local e distribuição
+
+O desenvolvimento local usa um Supabase separado, executado no Docker. Não há fallback para o banco remoto.
+
+```bash
+# Com Docker Desktop aberto e Supabase CLI instalado:
+npm run db:start
+npm start -- --clear
+```
+
+`db:start` inicia os serviços, aplica as migrations locais pendentes e gera `.env.local` com a URL e a chave pública **locais**. É seguro executá-lo novamente; ele não apaga os dados. `npm run db:status` mostra os serviços e `npm run db:stop` os encerra preservando os volumes. Reinicie o Metro após trocar de ambiente.
+
+O iOS Simulator e o navegador usam `127.0.0.1:55321`. O emulador Android usa automaticamente `10.0.2.2:55321`. Para um aparelho físico via Metro/Expo Go, ajuste a URL no `.env.local` para o IP de rede privada do Mac; continua sendo o banco local. Expo Go conectado ao Metro é desenvolvimento local, não publicação.
+
+A estrutura inicial, sem registros de usuários ou pacientes, está em `supabase/local/schema.sql`: snapshot do esquema público remoto em 14/11/2026, incluindo as migrations até `20260516160000`. O script monta um workspace isolado em `.supabase-local/` e acrescenta as migrations posteriores de `supabase/migrations/`. Use os comandos `db:*` do projeto, não `supabase start` na raiz, pois o histórico antigo não contém a criação das tabelas iniciais. Novas migrations devem ter timestamp posterior ao snapshot. Não rode reset para atualizar o banco.
+
+Os perfis EAS `development`, `preview` e `production` usam explicitamente o ambiente **production** do EAS, que contém as credenciais remotas já cadastradas. As publicações também buscam as variáveis do EAS e ignoram os arquivos `.env` locais:
+
+```bash
+npm run deploy:preview -- "Descrição da atualização"
+npm run deploy:production -- "Descrição da atualização"
+npm run build:ios
+```
+
+O seletor `EXPO_PUBLIC_BACKEND_TARGET` é `local` no desenvolvimento e `remote` na distribuição. A configuração bloqueia URL remota no modo local e URL local/HTTP no modo remoto. Não use `eas update` sem `--environment production`: utilize os scripts acima. TestFlight e produção continuam usando o remoto; nenhuma migration é enviada ao remoto pelos comandos `db:*`.
+
+Referência: [variáveis do EAS e isolamento dos arquivos locais em updates](https://docs.expo.dev/eas/environment-variables/usage/).
+
+Para criar uma conta fictícia de médico somente no banco local: `npm run db:seed`. Entre com CPF `00000000000` e senha `PosopLocal123!`. As contas e os dados remotos não são copiados. O seed não sobrescreve uma conta de teste já existente.
+
+O PostgreSQL local está fixado em `15.14.1.003`, imagem disponível neste Mac; o remoto usa PostgreSQL 17. O esquema foi importado sem dados e deve ser validado novamente no remoto antes de distribuir mudanças que dependam de recursos exclusivos do PostgreSQL 17.

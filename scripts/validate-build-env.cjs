@@ -1,3 +1,5 @@
+const { validateBackendEnv } = require('./validate-backend-env.cjs');
+validateBackendEnv({ ...process.env, EXPO_PUBLIC_BACKEND_TARGET: 'remote' });
 const required = ['EXPO_PUBLIC_SUPABASE_URL', 'EXPO_PUBLIC_SUPABASE_ANON_KEY'];
 for (const name of required) {
   if (!process.env[name]?.trim()) throw new Error(`Configure ${name} no ambiente production do EAS.`);

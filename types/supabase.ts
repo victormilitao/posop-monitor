@@ -147,6 +147,9 @@ export type Database = {
           id: string
           phone: string | null
           phone_personal: string | null
+          display_name: string | null
+          specialty: string | null
+          rqe: string | null
           crm: string | null
           role: string | null
           sex: string | null
@@ -160,6 +163,9 @@ export type Database = {
           id: string
           phone?: string | null
           phone_personal?: string | null
+          display_name?: string | null
+          specialty?: string | null
+          rqe?: string | null
           crm?: string | null
           role?: string | null
           sex?: string | null
@@ -173,6 +179,9 @@ export type Database = {
           id?: string
           phone?: string | null
           phone_personal?: string | null
+          display_name?: string | null
+          specialty?: string | null
+          rqe?: string | null
           crm?: string | null
           role?: string | null
           sex?: string | null

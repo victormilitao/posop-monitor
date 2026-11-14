@@ -22,6 +22,7 @@ export default function RootLayout() {
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="doctor/profile" options={{ headerShown: false, presentation: 'transparentModal', animation: 'none', gestureEnabled: false }} />
             <Stack.Screen name="doctor/dashboard" options={{ headerShown: false }} />
             <Stack.Screen name="doctor/add-patient" options={{ headerShown: false }} />
             <Stack.Screen name="doctor/patient-timeline/[surgeryId]" options={{ headerShown: false }} />

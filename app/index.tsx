@@ -1,3 +1,4 @@
+import { CrmFields, isValidCrm } from '../components/ui/CrmFields';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Href, Stack, useRouter } from 'expo-router';
 import { FileText, Lock, Stethoscope, User } from 'lucide-react-native';
@@ -8,6 +9,7 @@ import { Button } from '../components/ui/Button';
 import { AppColors } from '../constants/colors';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
+import { formatPhone } from '../lib/formatPhone';
 import { termsService } from '../services';
 
 export default function LoginScreen() {
@@ -18,7 +20,6 @@ export default function LoginScreen() {
 
   // Form states
   const [patientPhone, setPatientPhone] = useState('');
-  const [patientPassword, setPatientPassword] = useState('');
   const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
 
@@ -69,13 +70,6 @@ export default function LoginScreen() {
     checkAuthAndTerms();
   }, [session, profile, isAuthLoading]);
 
-  const formatPhone = (value: string): string => {
-    const digits = value.replace(/\D/g, '').slice(0, 11);
-    if (digits.length <= 2) return digits.length > 0 ? `(${digits}` : '';
-    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-  };
-
   const formatCPF = (value: string): string => {
     const digits = value.replace(/\D/g, '').slice(0, 11);
     if (digits.length <= 3) return digits;
@@ -84,35 +78,10 @@ export default function LoginScreen() {
     return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
   };
 
-  const formatCRM = (value: string): string => {
-    const clean = value.replace(/[^0-9a-zA-Z/]/g, '');
-    const slashIndex = clean.indexOf('/');
-    
-    let digits = '';
-    let letters = '';
-
-    if (slashIndex !== -1) {
-      digits = clean.slice(0, slashIndex).replace(/[^0-9]/g, '').slice(0, 6);
-      letters = clean.slice(slashIndex + 1).replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase();
-    } else {
-      const firstLetterIndex = clean.search(/[a-zA-Z]/);
-      if (firstLetterIndex !== -1) {
-        digits = clean.slice(0, firstLetterIndex).replace(/[^0-9]/g, '').slice(0, 6);
-        letters = clean.slice(firstLetterIndex).replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase();
-      } else {
-        digits = clean.replace(/[^0-9]/g, '').slice(0, 6);
-      }
-    }
-    
-    if (letters.length > 0) return `${digits}/${letters}`;
-    if (clean.includes('/')) return `${digits}/`;
-    return digits;
-  };
-
   const handlePatientLogin = async () => {
     const cleanPhone: string = patientPhone.replace(/\D/g, '');
-    if (!cleanPhone || cleanPhone.length < 10 || !patientPassword) {
-      showToast({ type: 'warning', title: 'Atenção', message: 'Informe seu telefone com DDD e sua senha.' });
+    if (!cleanPhone || cleanPhone.length < 10) {
+      showToast({ type: 'warning', title: 'Atenção', message: 'Número de telefone inválido.' });
       return;
     }
     setIsLoading(true);
@@ -133,7 +102,7 @@ export default function LoginScreen() {
       // Sign in with the email associated with the phone
       const { error: patientLoginError } = await supabase.auth.signInWithPassword({
         email: profileData.email,
-        password: patientPassword
+        password: 'Password123!'
       });
 
       if (patientLoginError) {
@@ -189,9 +158,8 @@ export default function LoginScreen() {
       showToast({ type: 'warning', title: 'Atenção', message: 'Preencha todos os campos obrigatórios.' });
       return;
     }
-    const crmRegex = /^\d{4,6}\/[A-Z]{2}$/;
-    if (!crmRegex.test(docCrm)) {
-      showToast({ type: 'warning', title: 'Atenção', message: 'CRM inválido. Use o formato de 4 a 6 dígitos + sigla do estado.' });
+    if (!isValidCrm(docCrm)) {
+      showToast({ type: 'warning', title: 'Atenção', message: 'Informe um CRM de 4 a 6 dígitos e selecione uma UF válida.' });
       return;
     }
     setIsLoading(true);
@@ -273,7 +241,7 @@ export default function LoginScreen() {
         <View className="mb-8">
           <Text style={{ color: AppColors.white, fontSize: 24, fontWeight: 'bold' }}>Acesso Paciente</Text>
           <Text style={{ color: `${AppColors.white}99`, marginTop: 8 }}>
-            Digite seu telefone com DDD e sua senha para acessar.
+            Digite seu telefone com DDD para acessar.
           </Text>
         </View>
 
@@ -292,27 +260,11 @@ export default function LoginScreen() {
             />
           </View>
 
-          <View style={[styles.inputContainer, { marginTop: 12 }]}>
-            <Lock size={20} color={AppColors.gray[400]} />
-            <TextInput
-              className="flex-1 ml-3"
-              style={{ color: AppColors.white, fontSize: 16 }}
-              placeholder="Senha do paciente"
-              placeholderTextColor={AppColors.gray[400]}
-              value={patientPassword}
-              onChangeText={setPatientPassword}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-              textContentType="password"
-            />
-          </View>
-
           <Button
             title="Entrar"
             onPress={handlePatientLogin}
             isLoading={isLoading}
-            disabled={patientPhone.replace(/\D/g, '').length < 10 || !patientPassword}
+            disabled={patientPhone.replace(/\D/g, '').length < 10}
             variant="light"
             className="mt-4"
           />
@@ -437,19 +389,7 @@ export default function LoginScreen() {
             />
           </View>
 
-          <View style={[styles.inputContainer, { marginBottom: 12 }]}>
-            <FileText size={20} color={AppColors.gray[400]} />
-            <TextInput
-              className="flex-1 ml-3"
-              style={{ color: AppColors.white, fontSize: 16, paddingVertical: 0, height: '100%', textAlignVertical: 'center' }}
-              placeholder="123456/UF *"
-              placeholderTextColor={AppColors.gray[400]}
-              value={docCrm}
-              onChangeText={(v) => setDocCrm(formatCRM(v))}
-              autoCapitalize="characters"
-              maxLength={9}
-            />
-          </View>
+          <CrmFields value={docCrm} onChange={setDocCrm} dark disabled={isLoading} />
 
           <View style={[styles.inputContainer, { marginBottom: 12 }]}>
             <FileText size={20} color={AppColors.gray[400]} />

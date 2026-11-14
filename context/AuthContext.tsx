@@ -14,6 +14,7 @@ interface AuthContextType {
     isDoctor: boolean;
     isPatient: boolean;
     signOut: () => Promise<void>;
+    refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType>({
     isDoctor: false,
     isPatient: false,
     signOut: async () => { },
+    refreshProfile: async () => { },
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -89,6 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isDoctor: profile?.role === 'doctor',
         isPatient: profile?.role === 'patient',
         signOut,
+        refreshProfile: async () => { if (session) await fetchProfile(session.user.id); },
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,9 +1,10 @@
 import { X } from 'lucide-react-native';
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   FlatList,
   Modal,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -23,6 +24,7 @@ interface PickerModalProps {
   selectedId?: string;
   title?: string;
   emptyMessage?: string;
+  searchPlaceholder?: string;
 }
 
 export function PickerModal({
@@ -33,8 +35,15 @@ export function PickerModal({
   selectedId,
   title = 'Selecionar',
   emptyMessage = 'Nenhuma opção disponível.',
+  searchPlaceholder,
 }: PickerModalProps) {
   const insets = useSafeAreaInsets();
+  const [search, setSearch] = useState('');
+  useEffect(() => { if (visible) setSearch(''); }, [visible]);
+  const normalize = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  const filteredOptions = searchPlaceholder
+    ? options.filter(option => normalize(option.label).includes(normalize(search)))
+    : options;
 
   const handleSelect = useCallback(
     (option: PickerOption) => {
@@ -94,9 +103,22 @@ export function PickerModal({
           </TouchableOpacity>
         </View>
 
+        {searchPlaceholder && (
+          <TextInput
+            accessibilityLabel={searchPlaceholder}
+            placeholder={searchPlaceholder}
+            value={search}
+            onChangeText={setSearch}
+            autoCorrect={false}
+            className="mx-4 mt-4 rounded-xl border border-gray-200 px-4 py-3 text-base text-gray-900"
+          />
+        )}
+
         {/* Options list */}
         <FlatList
-          data={options}
+          data={filteredOptions}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           contentContainerStyle={{ paddingTop: 16, paddingBottom: insets.bottom + 16 }}

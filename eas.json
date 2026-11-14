@@ -7,11 +7,19 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "channel": "development"
+      "channel": "development",
+      "environment": "production",
+      "env": {
+        "EXPO_PUBLIC_BACKEND_TARGET": "remote"
+      }
     },
     "preview": {
       "distribution": "internal",
-      "channel": "preview"
+      "channel": "preview",
+      "environment": "production",
+      "env": {
+        "EXPO_PUBLIC_BACKEND_TARGET": "remote"
+      }
     },
     "production": {
       "autoIncrement": true,
@@ -20,10 +28,17 @@
       "environment": "production",
       "ios": {
         "image": "macos-sequoia-15.6-xcode-26.2"
+      },
+      "env": {
+        "EXPO_PUBLIC_BACKEND_TARGET": "remote"
       }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "ascAppId": "6832781878"
+      }
+    }
   }
 }
